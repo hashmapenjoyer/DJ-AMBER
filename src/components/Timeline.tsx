@@ -3,5 +3,5 @@ export default function Timeline() {
     <div className="timeline">
       <h3>Timeline</h3>
     </div>
-  )
+  );
 }

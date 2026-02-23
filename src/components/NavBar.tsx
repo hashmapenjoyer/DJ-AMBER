@@ -3,5 +3,5 @@ export default function NavBar() {
     <div className="navbar">
       <h2>NavBar</h2>
     </div>
-  )
+  );
 }
