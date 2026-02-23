@@ -3,5 +3,5 @@ export default function NowPlaying() {
     <div className="now-playing">
       <h3>Now Playing</h3>
     </div>
-  )
+  );
 }

@@ -1,5 +1,5 @@
-import { Fade } from "./Fade";
-import { ID } from "./UtilTypes";
+import type { Fade } from "./Fade";
+import type { ID } from "./UtilTypes";
 
 export interface Clip {
     id: ID;

@@ -30,5 +30,5 @@ export default function MusicLibrary() {
         )}
       </div>
     </div>
-  )
+  );
 }
