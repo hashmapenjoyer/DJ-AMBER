@@ -27,8 +27,8 @@ const mockSong: Song = {
 
 export default function NowPlaying() {
   const [isPlaying, setIsPlaying] = useState(false);
-  // const [currentTime, setCurrentTime] = useState(30); // 0:30 seconds
-  // const [currentLyricIndex, setCurrentLyricIndex] = useState(0);
+  const [currentTime] = useState(0); // 0:30 seconds
+  const [currentLyricIndex] = useState(0);
 
   const handlePlay = () => {
     setIsPlaying(true);
