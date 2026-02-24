@@ -7,7 +7,7 @@ This project is organized into 5 independent sections, each with its own fronten
 ### Layout Architecture
 
 ```
-┌─────────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────┐
 │                   NavBar (10%)                   │ Team Member 1
 ├──────────────────┬──────────────────┬────────────┤
 │                  │                  │            │
@@ -15,8 +15,8 @@ This project is organized into 5 independent sections, each with its own fronten
 │   (30% width)    │  (40% width)     │ (30% width)│ Team Members 2, 3, 4
 │                  │                  │            │
 ├──────────────────┴──────────────────┴────────────┤
-│              Timeline (50% height)                │ Team Member 5
-│           Stretches Full Width                    │
+│              Timeline (50% height)               │ Team Member 5
+│           Stretches Full Width                   │
 └──────────────────────────────────────────────────┘
 ```
 
