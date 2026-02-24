@@ -34,11 +34,49 @@
   width: 30%;
   border: 2px solid red;
   display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.library-tabs{
+  display: flex;
+  width: 100%;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.library-tab{
+  flex: 1;
+  padding: var(--space-3) 0;
+  font-size: var(--fs-base);
+  font-weight: var(--fw-medium);
+  font-family: var(--font-primary);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.library-tab:hover {
+  color: var(--text-secondary);
+}
+
+.library-tab.active {
+  color: var(--text-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.library-content {
+  flex: 1;
+  display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.3em;
-  font-weight: bold;
-  box-sizing: border-box;
+}
+
+.library-panel {
+  font-size: var(--fs-lg);
+  color: var(--text-secondary);
 }
 
 /* Now Playing - 40% width */
