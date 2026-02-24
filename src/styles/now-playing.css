@@ -1,0 +1,271 @@
+/* Now Playing Component Styles */
+@import './design-system.css';
+
+.now-playing-container {
+  width: 40vw;
+  background: linear-gradient(135deg, #0a0e27 0%, #0f1829 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+  border: 2px solid red;
+}
+
+.np-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3);
+}
+
+/* Album Cover */
+.np-album-cover-wrapper {
+  width: 100px;
+  height: 100px;
+  border-radius: var(--br-lg);
+  overflow: hidden;
+  border: 2px solid #00cc88;
+  box-shadow: 0 0 20px rgba(0, 204, 136, 0.4);
+  margin-top: 0;
+  flex-shrink: 0;
+}
+
+.np-album-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Main Content */
+.np-main {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: center;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Song Header */
+.np-header {
+  text-align: center;
+  width: 100%;
+}
+
+.np-title {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  color: #ffffff;
+  margin: 0;
+}
+
+.np-artist {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-normal);
+  color: #888888;
+  margin: 0;
+}
+
+/* Progress Bar Section */
+.np-progress-section {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-2);
+}
+
+.np-time {
+  font-size: var(--fs-xs);
+  color: #888888;
+  min-width: 35px;
+  text-align: center;
+  font-family: var(--font-mono);
+}
+
+.np-progress-bar {
+  flex: 1;
+  height: 6px;
+  background-color: #333333;
+  border-radius: var(--br-full);
+  overflow: hidden;
+  cursor: pointer;
+  transition: height var(--transition-base);
+}
+
+.np-progress-bar:hover {
+  height: 8px;
+}
+
+.np-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00cc88, #00ff99);
+  border-radius: var(--br-full);
+  transition: width 0.1s linear;
+}
+
+/* Lyrics Section */
+.np-lyrics-section {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: var(--br-lg);
+  border: 1px solid #222222;
+  overflow-y: auto;
+  min-height: 0;
+  max-height: 200px;
+}
+
+.np-lyrics-section::-webkit-scrollbar {
+  width: 6px;
+}
+
+.np-lyrics-section::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.np-lyrics-section::-webkit-scrollbar-thumb {
+  background: #00cc88;
+  border-radius: var(--br-full);
+}
+
+.np-lyrics-section::-webkit-scrollbar-thumb:hover {
+  background: #00ff99;
+}
+
+.np-lyric-line {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-normal);
+  line-height: 1.3;
+  transition: all var(--transition-base);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--br-sm);
+  cursor: default;
+}
+
+/* Past lyrics - hidden */
+.np-lyric-line.past {
+  color: #444444;
+  opacity: 0.3;
+  display: none;
+}
+
+/* Upcoming lyrics - less prominent */
+.np-lyric-line.upcoming {
+  color: #666666;
+  opacity: 0.5;
+}
+
+/* Current lyric - highlighted in green */
+.np-lyric-line.current {
+  color: #00ff99;
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-xs);
+  background: linear-gradient(
+    90deg,
+    rgba(0, 204, 136, 0.15) 0%,
+    rgba(0, 255, 153, 0.25) 50%,
+    rgba(0, 204, 136, 0.15) 100%
+  );
+  border-left: 3px solid #00cc88;
+  padding-left: calc(var(--space-2) - 1px);
+  animation: highlight-pulse 0.6s ease-out;
+  box-shadow: 0 0 15px rgba(0, 204, 136, 0.3);
+}
+
+@keyframes highlight-pulse {
+  0% {
+    transform: translateX(-10px);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Controls */
+.np-controls {
+  display: flex;
+  gap: var(--space-3);
+  width: 100%;
+  justify-content: center;
+  padding-top: var(--space-2);
+  border-top: 1px solid #222222;
+  flex-shrink: 0;
+}
+
+.np-btn {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  border: 2px solid #00cc88;
+  border-radius: var(--br-md);
+  background-color: transparent;
+  color: #00cc88;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  font-family: var(--font-primary);
+  min-width: 85px;
+}
+
+.np-btn:hover {
+  background-color: #00cc88;
+  color: #000000;
+  box-shadow: 0 0 20px rgba(0, 204, 136, 0.3);
+  transform: translateY(-2px);
+}
+
+.np-btn.active {
+  background-color: #00cc88;
+  color: #000000;
+  box-shadow: 0 0 15px rgba(0, 204, 136, 0.5);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .now-playing-container {
+    width: 40vw;
+  }
+
+  .np-title {
+    font-size: var(--fs-xl);
+  }
+}
+
+@media (max-width: 768px) {
+  .now-playing-container {
+    width: 100%;
+    height: auto;
+    padding: var(--space-4);
+  }
+
+  .np-music-icon {
+    font-size: 1.5rem;
+  }
+
+  .np-title {
+    font-size: var(--fs-lg);
+  }
+
+  .np-artist {
+    font-size: var(--fs-sm);
+  }
+
+  .np-btn {
+    padding: var(--space-1) var(--space-3);
+    font-size: var(--fs-xs);
+    min-width: 80px;
+  }
+}
