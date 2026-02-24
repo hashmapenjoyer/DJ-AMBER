@@ -13,27 +13,27 @@
   --color-primary: #1a73e8;
   --color-primary-light: #5b9bff;
   --color-primary-dark: #1557b0;
-  
+
   /* Accent Colors */
   --color-accent: #ff6b35;
   --color-accent-light: #ff8c5a;
   --color-accent-dark: #e55a2b;
-  
+
   /* Success State */
   --color-success: #34a853;
   --color-success-light: #81c995;
   --color-success-dark: #188038;
-  
+
   /* Warning State */
   --color-warning: #fbbc04;
   --color-warning-light: #fce8b2;
   --color-warning-dark: #f57c00;
-  
+
   /* Error State */
   --color-error: #ea4335;
   --color-error-light: #f28482;
   --color-error-dark: #c5221f;
-  
+
   /* Neutral Colors */
   --color-white: #ffffff;
   --color-black: #000000;
@@ -47,45 +47,47 @@
   --color-gray-700: #374151;
   --color-gray-800: #1f2937;
   --color-gray-900: #111827;
-  
+
   /* Background Colors */
   --bg-primary: #1a1a2e;
   --bg-secondary: #16213e;
   --bg-tertiary: #0f3460;
   --bg-light: #e8e8e8;
-  
+
   /* Text Colors */
   --text-primary: #ffffff;
   --text-secondary: #b0b0b0;
   --text-tertiary: #808080;
   --text-disabled: #505050;
-  
+
   /* Border Colors */
   --border-color: #404040;
   --border-color-light: #505050;
-  
+
   /* Development Colors (for layout visualization) */
   --border-section: #ff4444;
-  
+
   /* ===========================
      TYPOGRAPHY
      =========================== */
-  
+
   /* Font Families */
-  --font-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  --font-primary:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+    sans-serif;
   --font-mono: 'Monaco', 'Menlo', 'Consolas', monospace;
-  
+
   /* Font Sizes */
-  --fs-xs: 0.75rem;      /* 12px */
-  --fs-sm: 0.875rem;     /* 14px */
-  --fs-base: 1rem;       /* 16px */
-  --fs-lg: 1.125rem;     /* 18px */
-  --fs-xl: 1.25rem;      /* 20px */
-  --fs-2xl: 1.5rem;      /* 24px */
-  --fs-3xl: 1.875rem;    /* 30px */
-  --fs-4xl: 2.25rem;     /* 36px */
-  --fs-5xl: 3rem;        /* 48px */
-  
+  --fs-xs: 0.75rem; /* 12px */
+  --fs-sm: 0.875rem; /* 14px */
+  --fs-base: 1rem; /* 16px */
+  --fs-lg: 1.125rem; /* 18px */
+  --fs-xl: 1.25rem; /* 20px */
+  --fs-2xl: 1.5rem; /* 24px */
+  --fs-3xl: 1.875rem; /* 30px */
+  --fs-4xl: 2.25rem; /* 36px */
+  --fs-5xl: 3rem; /* 48px */
+
   /* Font Weights */
   --fw-light: 300;
   --fw-normal: 400;
@@ -93,65 +95,65 @@
   --fw-semibold: 600;
   --fw-bold: 700;
   --fw-extrabold: 800;
-  
+
   /* Line Heights */
   --lh-tight: 1.2;
   --lh-normal: 1.5;
   --lh-relaxed: 1.75;
   --lh-loose: 2;
-  
+
   /* Letter Spacing */
   --ls-tight: -0.5px;
   --ls-normal: 0;
   --ls-wide: 0.5px;
   --ls-wider: 1px;
-  
+
   /* ===========================
      SPACING
      =========================== */
-  
+
   --space-0: 0;
-  --space-1: 0.25rem;    /* 4px */
-  --space-2: 0.5rem;     /* 8px */
-  --space-3: 0.75rem;    /* 12px */
-  --space-4: 1rem;       /* 16px */
-  --space-5: 1.25rem;    /* 20px */
-  --space-6: 1.5rem;     /* 24px */
-  --space-8: 2rem;       /* 32px */
-  --space-10: 2.5rem;    /* 40px */
-  --space-12: 3rem;      /* 48px */
-  --space-16: 4rem;      /* 64px */
-  --space-20: 5rem;      /* 80px */
-  --space-24: 6rem;      /* 96px */
-  
+  --space-1: 0.25rem; /* 4px */
+  --space-2: 0.5rem; /* 8px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem; /* 16px */
+  --space-5: 1.25rem; /* 20px */
+  --space-6: 1.5rem; /* 24px */
+  --space-8: 2rem; /* 32px */
+  --space-10: 2.5rem; /* 40px */
+  --space-12: 3rem; /* 48px */
+  --space-16: 4rem; /* 64px */
+  --space-20: 5rem; /* 80px */
+  --space-24: 6rem; /* 96px */
+
   /* ===========================
      BORDER RADIUS
      =========================== */
-  
+
   --br-none: 0;
-  --br-sm: 0.25rem;      /* 4px */
-  --br-base: 0.375rem;   /* 6px */
-  --br-md: 0.5rem;       /* 8px */
-  --br-lg: 0.75rem;      /* 12px */
-  --br-xl: 1rem;         /* 16px */
-  --br-2xl: 1.5rem;      /* 24px */
+  --br-sm: 0.25rem; /* 4px */
+  --br-base: 0.375rem; /* 6px */
+  --br-md: 0.5rem; /* 8px */
+  --br-lg: 0.75rem; /* 12px */
+  --br-xl: 1rem; /* 16px */
+  --br-2xl: 1.5rem; /* 24px */
   --br-full: 9999px;
-  
+
   /* ===========================
      SHADOWS
      =========================== */
-  
+
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-base: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  
+
   /* ===========================
      Z-INDEX
      =========================== */
-  
+
   --z-hide: -1;
   --z-auto: auto;
   --z-base: 0;
@@ -163,11 +165,11 @@
   --z-popover: 1050;
   --z-tooltip: 1060;
   --z-notification: 1070;
-  
+
   /* ===========================
      TRANSITIONS & ANIMATIONS
      =========================== */
-  
+
   --transition-fast: 150ms ease-in-out;
   --transition-base: 250ms ease-in-out;
   --transition-slower: 350ms ease-in-out;
@@ -178,7 +180,12 @@
    TYPOGRAPHY STYLES
    =========================== */
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   margin: 0;
   font-family: var(--font-primary);
   line-height: var(--lh-tight);
@@ -215,7 +222,9 @@ h6 {
   font-weight: var(--fw-semibold);
 }
 
-p, span, div {
+p,
+span,
+div {
   font-size: var(--fs-base);
   font-weight: var(--fw-normal);
   line-height: var(--lh-normal);
@@ -329,7 +338,9 @@ code {
    INPUT STYLES
    =========================== */
 
-input, textarea, select {
+input,
+textarea,
+select {
   font-family: var(--font-primary);
   font-size: var(--fs-base);
   padding: var(--space-2) var(--space-3);
@@ -340,7 +351,9 @@ input, textarea, select {
   transition: all var(--transition-base);
 }
 
-input:focus, textarea:focus, select:focus {
+input:focus,
+textarea:focus,
+select:focus {
   outline: none;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
@@ -419,59 +432,153 @@ input::placeholder {
    =========================== */
 
 /* Spacing Utilities */
-.mt-0 { margin-top: var(--space-0); }
-.mt-1 { margin-top: var(--space-1); }
-.mt-2 { margin-top: var(--space-2); }
-.mt-3 { margin-top: var(--space-3); }
-.mt-4 { margin-top: var(--space-4); }
-.mt-6 { margin-top: var(--space-6); }
-.mt-8 { margin-top: var(--space-8); }
+.mt-0 {
+  margin-top: var(--space-0);
+}
+.mt-1 {
+  margin-top: var(--space-1);
+}
+.mt-2 {
+  margin-top: var(--space-2);
+}
+.mt-3 {
+  margin-top: var(--space-3);
+}
+.mt-4 {
+  margin-top: var(--space-4);
+}
+.mt-6 {
+  margin-top: var(--space-6);
+}
+.mt-8 {
+  margin-top: var(--space-8);
+}
 
-.mb-0 { margin-bottom: var(--space-0); }
-.mb-1 { margin-bottom: var(--space-1); }
-.mb-2 { margin-bottom: var(--space-2); }
-.mb-3 { margin-bottom: var(--space-3); }
-.mb-4 { margin-bottom: var(--space-4); }
-.mb-6 { margin-bottom: var(--space-6); }
-.mb-8 { margin-bottom: var(--space-8); }
+.mb-0 {
+  margin-bottom: var(--space-0);
+}
+.mb-1 {
+  margin-bottom: var(--space-1);
+}
+.mb-2 {
+  margin-bottom: var(--space-2);
+}
+.mb-3 {
+  margin-bottom: var(--space-3);
+}
+.mb-4 {
+  margin-bottom: var(--space-4);
+}
+.mb-6 {
+  margin-bottom: var(--space-6);
+}
+.mb-8 {
+  margin-bottom: var(--space-8);
+}
 
-.p-2 { padding: var(--space-2); }
-.p-3 { padding: var(--space-3); }
-.p-4 { padding: var(--space-4); }
-.p-6 { padding: var(--space-6); }
+.p-2 {
+  padding: var(--space-2);
+}
+.p-3 {
+  padding: var(--space-3);
+}
+.p-4 {
+  padding: var(--space-4);
+}
+.p-6 {
+  padding: var(--space-6);
+}
 
 /* Text Utilities */
-.text-primary { color: var(--text-primary); }
-.text-secondary { color: var(--text-secondary); }
-.text-tertiary { color: var(--text-tertiary); }
-.text-accent { color: var(--color-accent); }
-.text-success { color: var(--color-success); }
-.text-error { color: var(--color-error); }
+.text-primary {
+  color: var(--text-primary);
+}
+.text-secondary {
+  color: var(--text-secondary);
+}
+.text-tertiary {
+  color: var(--text-tertiary);
+}
+.text-accent {
+  color: var(--color-accent);
+}
+.text-success {
+  color: var(--color-success);
+}
+.text-error {
+  color: var(--color-error);
+}
 
-.text-center { text-align: center; }
-.text-left { text-align: left; }
-.text-right { text-align: right; }
+.text-center {
+  text-align: center;
+}
+.text-left {
+  text-align: left;
+}
+.text-right {
+  text-align: right;
+}
 
-.text-bold { font-weight: var(--fw-bold); }
-.text-semibold { font-weight: var(--fw-semibold); }
-.text-normal { font-weight: var(--fw-normal); }
+.text-bold {
+  font-weight: var(--fw-bold);
+}
+.text-semibold {
+  font-weight: var(--fw-semibold);
+}
+.text-normal {
+  font-weight: var(--fw-normal);
+}
 
 /* Flexbox Utilities */
-.flex { display: flex; }
-.flex-col { flex-direction: column; }
-.flex-row { flex-direction: row; }
-.flex-center { display: flex; align-items: center; justify-content: center; }
-.flex-between { display: flex; align-items: center; justify-content: space-between; }
-.flex-start { display: flex; align-items: flex-start; }
-.flex-end { display: flex; align-items: flex-end; }
-.flex-gap-2 { gap: var(--space-2); }
-.flex-gap-4 { gap: var(--space-4); }
+.flex {
+  display: flex;
+}
+.flex-col {
+  flex-direction: column;
+}
+.flex-row {
+  flex-direction: row;
+}
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.flex-start {
+  display: flex;
+  align-items: flex-start;
+}
+.flex-end {
+  display: flex;
+  align-items: flex-end;
+}
+.flex-gap-2 {
+  gap: var(--space-2);
+}
+.flex-gap-4 {
+  gap: var(--space-4);
+}
 
 /* Opacity Utilities */
-.opacity-50 { opacity: 0.5; }
-.opacity-75 { opacity: 0.75; }
-.opacity-100 { opacity: 1; }
+.opacity-50 {
+  opacity: 0.5;
+}
+.opacity-75 {
+  opacity: 0.75;
+}
+.opacity-100 {
+  opacity: 1;
+}
 
 /* Display Utilities */
-.hidden { display: none !important; }
-.block { display: block; }
+.hidden {
+  display: none !important;
+}
+.block {
+  display: block;
+}
