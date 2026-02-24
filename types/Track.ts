@@ -1,5 +1,5 @@
-import { ID } from "./UtilTypes";
-import { Clip } from "./Clip"
+import type { ID } from "./UtilTypes";
+import type { Clip } from "./Clip"
 
 export interface Track {
     id: ID;
