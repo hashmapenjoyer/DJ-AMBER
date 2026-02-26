@@ -1,7 +1,4 @@
-export enum FadeType {
-    LINEAR,
-    EXPONENTIAL,
-}
+export type FadeType = 'LINEAR' | 'EXPONENTIAL';
 
 export interface Fade {
     type: FadeType;
