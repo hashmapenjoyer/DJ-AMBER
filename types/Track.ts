@@ -1,10 +1,10 @@
-import type { ID } from "./UtilTypes";
+import type { ID, Seconds, Gain } from "./UtilTypes";
 import type { Clip } from "./Clip"
 
 export interface Track {
     id: ID;
     clips: Clip[];
-    gain: number;
+    gain: Gain;
     muted: boolean;
-    getEventsBetween(windowStart: number, windowEnd: number): number[];
+    getEventsBetween(windowStart: Seconds, windowEnd: Seconds): Seconds[];
 }

@@ -38,13 +38,13 @@
   box-sizing: border-box;
 }
 
-.library-tabs{
+.library-tabs {
   display: flex;
   width: 100%;
   border-bottom: 1px solid var(--border-color);
 }
 
-.library-tab{
+.library-tab {
   flex: 1;
   padding: var(--space-3) 0;
   font-size: var(--fs-base);

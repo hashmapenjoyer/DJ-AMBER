@@ -51,11 +51,7 @@ export default function NowPlaying() {
       <div className="np-content">
         {/* Album Cover */}
         <div className="np-album-cover-wrapper">
-          <img 
-            src={mockSong.coverUrl} 
-            alt={`${mockSong.album} cover`}
-            className="np-album-cover"
-          />
+          <img src={mockSong.coverUrl} alt={`${mockSong.album} cover`} className="np-album-cover" />
         </div>
 
         {/* Main Section */}
@@ -91,14 +87,14 @@ export default function NowPlaying() {
 
           {/* Controls */}
           <div className="np-controls">
-            <button 
+            <button
               className={`np-btn np-play-btn ${isPlaying ? 'active' : ''}`}
               onClick={handlePlay}
               title="Play"
             >
               ▶ Play
             </button>
-            <button 
+            <button
               className={`np-btn np-pause-btn ${!isPlaying ? 'active' : ''}`}
               onClick={handlePause}
               title="Pause"
