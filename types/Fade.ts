@@ -1,9 +1,16 @@
-export type FadeType = 'LINEAR' | 'EXPONENTIAL';
+import type {Seconds, Gain} from "./UtilTypes"
+
+export const FadeType = {
+    LINEAR: 0,
+    EXPONENTIAL: 1,
+} as const;
+
+export type FadeType = (typeof FadeType)[keyof typeof FadeType];
 
 export interface Fade {
     type: FadeType;
-    startOffset: number;
-    endOffset: number;
-    startGain: number;
-    endGain: number;
+    startOffset: Seconds;
+    endOffset: Seconds;
+    startGain: Gain;
+    endGain: Gain;
 }
