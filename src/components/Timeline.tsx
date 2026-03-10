@@ -13,7 +13,9 @@ interface TimelineClip {
 const PX_PER_SEC  = 4;
 const TOTAL_TIME = 900;
 const HEADER_HEIGHT = 32;
-const CLIP_HEIGHT = 16;
+const CLIP_HEIGHT = 32;
+const TIMELINE_WIDTH = TOTAL_TIME * PX_PER_SEC;
+const CANVAS_HEIGHT = HEADER_HEIGHT + CLIP_HEIGHT + 48;
 
 const MOCK_CLIPS: TimelineClip[] = [
   { id: '1', name: 'Never Gonna Give You Up', duration: 100, startTime: 0 },
@@ -32,12 +34,9 @@ export default function Timeline() {
   const ticks: number[] = [];
   for (let s = 0; s <= TOTAL_TIME; s += 30) ticks.push(s);
 
-  const timelineWidth = TOTAL_TIME * PX_PER_SEC;
-  const canvasHeight  = HEADER_HEIGHT + CLIP_HEIGHT + 16;
-
   // "Playing"
-  const rafRef     = useRef<number | null>(null);
-  const lastTsRef  = useRef<number | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const lastTsRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (isPlaying) {
@@ -104,7 +103,7 @@ export default function Timeline() {
       {/* Header/Controls */}
       <div className="timeline_header">
         <div className="timeline_controls">
-          <button 
+          <button
             className="timeline_btn" 
             title="Return to start" 
             onClick={() => setPlayhead(0)}>⏮</button>
@@ -116,10 +115,10 @@ export default function Timeline() {
 
       {/* Track */}
       <div ref={scrollRef} className="timeline_scroll_area">
-        <div className="timeline_canvas" style={{ width: timelineWidth, height: canvasHeight}}>
+        <div className="timeline_canvas" style={{ width: TIMELINE_WIDTH, height: CANVAS_HEIGHT}}>
           
           {/* Time Ticks */}
-          <div className="timeline_ticks" style={{ width: timelineWidth }}>
+          <div className="timeline_ticks" style={{ width: TIMELINE_WIDTH }}>
             {ticks.map(s => (
               <div key={s} className="timeline_tick"  style={{ left: s * PX_PER_SEC }}>
                 <span className="timeline_tick_label">{s}</span>
@@ -128,7 +127,7 @@ export default function Timeline() {
           </div>
 
           {/* Lane background */}
-          <div className="timeline_lane" style={{ top: HEADER_HEIGHT, width: timelineWidth }}/>
+          <div className="timeline_lane" style={{ top: HEADER_HEIGHT, width: TIMELINE_WIDTH }}/>
 
           {/* Clips */}
           {clips.map((clip, idx) => {
@@ -159,7 +158,7 @@ export default function Timeline() {
             className="timeline_playhead"
             style={{
               left:   playhead * PX_PER_SEC,
-              height: canvasHeight,
+              height: CANVAS_HEIGHT,
             }}
           >
             <div className="timeline_playhead_handle" />
