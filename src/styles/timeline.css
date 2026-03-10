@@ -53,8 +53,8 @@
 }
 
 .timeline_scroll_area {
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow-x: scroll;
+  overflow-y: visible;
   background-color: var(--timeline-bg);
   position: relative;
   width: 100%;
