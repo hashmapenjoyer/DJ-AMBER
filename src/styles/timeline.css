@@ -100,3 +100,60 @@
   border-top: 1px solid var(--timeline-border);
   border-bottom: 1px solid var(--timeline-border);
 }
+
+.timeline_clip {
+  position: absolute;
+  height: 56px;
+  border: 1px solid;
+  border-radius: var(--br-sm);
+  cursor: grab;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-md);
+  transition: box-shadow var(--transition-fast);
+}
+
+.timeline_clip_label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 var(--space-2) var(--space-1);
+  flex-shrink: 0;
+}
+
+.timeline_clip_name {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  font-family: var(--font-mono);
+  letter-spacing: var(--ls-wide);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 80%;
+}
+
+.timeline_clip_duration {
+  font-size: var(--fs-xs);
+  font-family: var(--font-mono);
+  color: var(--text-disabled);
+  flex-shrink: 0;
+}
+
+.timeline_playhead {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  background-color: var(--color-white);
+  opacity: 0.85;
+  z-index: var(--z-fixed);
+  pointer-events: none;
+}
+
+.timeline_playhead_handle {
+  width: 10px;
+  height: 10px;
+  background-color: var(--color-white);
+  border-radius: 50% 50% 0 0;
+  margin-left: -4px;
+}
