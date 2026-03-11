@@ -51,10 +51,7 @@ export default function NowPlaying() {
       <div className="np-content">
         {/* Album Cover */}
         <div className="np-album-cover-wrapper">
-          <img 
-            src={mockSong.coverUrl} 
-            alt={`${mockSong.album} cover`} 
-            className="np-album-cover" />
+          <img src={mockSong.coverUrl} alt={`${mockSong.album} cover`} className="np-album-cover" />
         </div>
 
         {/* Main Section */}
