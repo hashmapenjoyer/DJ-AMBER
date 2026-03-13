@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useState } from 'react';
 
-type Tab = 'music' | 'sfx'
+type Tab = 'music' | 'sfx';
 
 export default function MusicLibrary() {
-  const [activeTab, setActiveTab] = useState<Tab>('music')
+  const [activeTab, setActiveTab] = useState<Tab>('music');
 
   return (
     <div className="music-library">
