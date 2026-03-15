@@ -53,32 +53,33 @@ export default function HelpModal({ onClose }: HelpModalProps) {
           <section className="help-section">
             <h3 className="help-section-title">Getting Started</h3>
             <p className="help-text">
-              DJ AMBER is a powerful music mixing and sequencing tool. Use it to create, edit, and play custom music
-              tracks with layered clips and effects.
+              DJ AMBER is a powerful music mixing and sequencing tool. Use it to create, edit, and
+              play custom music tracks with layered clips and effects.
             </p>
           </section>
 
           <section className="help-section">
             <h3 className="help-section-title">Music Library</h3>
             <p className="help-text">
-              Browse and select audio clips from the Music Library panel on the left. Search for clips by name or
-              category to quickly find what you need.
+              Browse and select audio clips from the Music Library panel on the left. Search for
+              clips by name or category to quickly find what you need.
             </p>
           </section>
 
           <section className="help-section">
             <h3 className="help-section-title">Timeline</h3>
             <p className="help-text">
-              Drag clips from the Music Library onto the Timeline to add them to your project. Use the Timeline to
-              arrange clips, set timing, and create your composition.
+              Drag clips from the Music Library onto the Timeline to add them to your project. Use
+              the Timeline to arrange clips, set timing, and create your composition.
             </p>
           </section>
 
           <section className="help-section">
             <h3 className="help-section-title">Now Playing</h3>
             <p className="help-text">
-              The Now Playing panel displays the currently selected track with playback controls, progress bar, and
-              real-time lyrics display. Use the play and pause buttons to control playback.
+              The Now Playing panel displays the currently selected track with playback controls,
+              progress bar, and real-time lyrics display. Use the play and pause buttons to control
+              playback.
             </p>
           </section>
 

@@ -29,7 +29,9 @@
   background: linear-gradient(135deg, #0a0e27 0%, #0f1829 100%);
   border: 2px solid #00cc88;
   border-radius: var(--br-2xl);
-  box-shadow: 0 20px 60px rgba(0, 204, 136, 0.25), 0 0 30px rgba(0, 204, 136, 0.15);
+  box-shadow:
+    0 20px 60px rgba(0, 204, 136, 0.25),
+    0 0 30px rgba(0, 204, 136, 0.15);
   max-width: 500px;
   width: 90%;
   max-height: 80vh;
