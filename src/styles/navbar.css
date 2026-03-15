@@ -1,0 +1,85 @@
+/* NavBar Component Styles */
+@import './design-system.css';
+
+.navbar {
+  width: 100%;
+  height: 70px;
+  background: linear-gradient(135deg, #0a0e27 0%, #0f1829 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-6);
+  box-sizing: border-box;
+  border-bottom: 2px solid #00cc88;
+  box-shadow: 0 4px 12px rgba(0, 204, 136, 0.15);
+}
+
+/* Left Section: Logo and App Name */
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex: 0 0 auto;
+}
+
+.navbar-logo-container {
+  width: 50px;
+  height: 50px;
+  border-radius: var(--br-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.navbar-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.navbar-title {
+  font-size: var(--fs-3xl);
+  font-weight: var(--fw-bold);  
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: var(--ls-wide);
+  text-shadow: 0 0 10px rgba(0, 204, 136, 0.3);
+}
+
+/* Right Section: Help Button */
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex: 0 0 auto;
+}
+
+.navbar-help-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--br-lg);
+  background: linear-gradient(135deg, #00cc88 0%, #00ff99 100%);
+  border: 2px solid #00ff99;
+  color: #0f1829;
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-bold);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  box-shadow: 0 0 15px rgba(0, 204, 136, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navbar-help-btn:hover {
+  background: linear-gradient(135deg, #00ff99 0%, #33ffbb 100%);
+  border-color: #33ffbb;
+  box-shadow: 0 0 20px rgba(0, 255, 153, 0.6);
+  transform: scale(1.05);
+}
+
+.navbar-help-btn:active {
+  transform: scale(0.98);
+}
