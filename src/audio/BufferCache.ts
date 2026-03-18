@@ -1,4 +1,4 @@
-import type { ID, Seconds } from "./types";
+import type { ID, Seconds } from './types';
 
 /**
  * decodes and caches AudioBuffers by ID.

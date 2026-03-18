@@ -1,13 +1,6 @@
-import { FadeType } from "../../types/Fade";
-import type {
-  ID,
-  Seconds,
-  Fade,
-  ScheduledEntry,
-  SfxClip,
-  ActiveNode,
-} from "./types";
-import type { BufferCache } from "./BufferCache";
+import { FadeType } from '../../types/Fade';
+import type { ID, Seconds, Fade, ScheduledEntry, SfxClip, ActiveNode } from './types';
+import type { BufferCache } from './BufferCache';
 
 /** how often the scheduling loop fires (ms) */
 const LOOKAHEAD_INTERVAL_MS = 25;
@@ -73,10 +66,7 @@ export class Scheduler {
     if (this.intervalId !== null) {
       clearInterval(this.intervalId);
     }
-    this.intervalId = setInterval(
-      () => this.tick(),
-      LOOKAHEAD_INTERVAL_MS,
-    );
+    this.intervalId = setInterval(() => this.tick(), LOOKAHEAD_INTERVAL_MS);
 
     // immediate first tick to avoid 25ms delay on play
     this.tick();
@@ -212,20 +202,13 @@ export class Scheduler {
     // detect end of set
     if (this.scheduledEntries.length > 0) {
       const lastEntry = this.scheduledEntries[this.scheduledEntries.length - 1];
-      if (
-        currentTransport >= lastEntry.absoluteEnd &&
-        this.activeNodes.size === 0
-      ) {
+      if (currentTransport >= lastEntry.absoluteEnd && this.activeNodes.size === 0) {
         this.onPlaybackEnded?.();
       }
     }
   }
 
-  private scheduleEntry(
-    entry: ScheduledEntry,
-    nowCtx: number,
-    nowTransport: Seconds,
-  ): void {
+  private scheduleEntry(entry: ScheduledEntry, nowCtx: number, nowTransport: Seconds): void {
     const buffer = this.bufferCache.get(entry.bufferId);
     if (!buffer) return;
 
@@ -277,11 +260,7 @@ export class Scheduler {
     });
   }
 
-  private scheduleSfx(
-    sfx: SfxClip,
-    nowCtx: number,
-    nowTransport: Seconds,
-  ): void {
+  private scheduleSfx(sfx: SfxClip, nowCtx: number, nowTransport: Seconds): void {
     const buffer = this.bufferCache.get(sfx.bufferId);
     if (!buffer) return;
 
@@ -352,24 +331,16 @@ export class Scheduler {
       const fadeFraction =
         fade.endOffset === fade.startOffset
           ? 1
-          : (fadeStartLocal - fade.startOffset) /
-            (fade.endOffset - fade.startOffset);
-      const startGain =
-        fade.startGain + (fade.endGain - fade.startGain) * fadeFraction;
+          : (fadeStartLocal - fade.startOffset) / (fade.endOffset - fade.startOffset);
+      const startGain = fade.startGain + (fade.endGain - fade.startGain) * fadeFraction;
 
       gainNode.gain.setValueAtTime(Math.max(startGain, 0.0001), fadeStartCtx);
 
       if (fade.type === FadeType.LINEAR) {
-        gainNode.gain.linearRampToValueAtTime(
-          Math.max(fade.endGain, 0.0001),
-          fadeEndCtx,
-        );
+        gainNode.gain.linearRampToValueAtTime(Math.max(fade.endGain, 0.0001), fadeEndCtx);
       } else {
         // exponentialRamp can't reach 0, so we use an epsilon
-        gainNode.gain.exponentialRampToValueAtTime(
-          Math.max(fade.endGain, 0.0001),
-          fadeEndCtx,
-        );
+        gainNode.gain.exponentialRampToValueAtTime(Math.max(fade.endGain, 0.0001), fadeEndCtx);
       }
     }
   }
@@ -377,20 +348,14 @@ export class Scheduler {
   // utils
 
   private getCurrentTransportTime(): Seconds {
-    return (
-      this.transportTimeAtPlay +
-      (this.ctx.currentTime - this.contextTimeAtPlay)
-    );
+    return this.transportTimeAtPlay + (this.ctx.currentTime - this.contextTimeAtPlay);
   }
 
   private reportSongChange(currentTransport: Seconds): void {
     // find the primary entry at this time (prefer the later song during crossfades)
     for (let i = this.scheduledEntries.length - 1; i >= 0; i--) {
       const entry = this.scheduledEntries[i];
-      if (
-        currentTransport >= entry.absoluteStart &&
-        currentTransport < entry.absoluteEnd
-      ) {
+      if (currentTransport >= entry.absoluteStart && currentTransport < entry.absoluteEnd) {
         if (this.lastReportedEntryId !== entry.entryId) {
           this.lastReportedEntryId = entry.entryId;
           this.onSongChange?.(entry.entryId, entry.title);

@@ -1,11 +1,5 @@
-import type { Fade } from "../../types/Fade";
-import type {
-  ID,
-  Seconds,
-  PlaylistEntry,
-  Transition,
-  ScheduledEntry,
-} from "./types";
+import type { Fade } from '../../types/Fade';
+import type { ID, Seconds, PlaylistEntry, Transition, ScheduledEntry } from './types';
 
 /**
  * manages the ordered playlist and transitions.
@@ -61,20 +55,13 @@ export class PlaylistManager {
     return this.transitions;
   }
 
-  getTransitionBetween(
-    fromEntryId: ID,
-    toEntryId: ID,
-  ): Transition | undefined {
-    return this.transitions.find(
-      (t) => t.fromEntryId === fromEntryId && t.toEntryId === toEntryId,
-    );
+  getTransitionBetween(fromEntryId: ID, toEntryId: ID): Transition | undefined {
+    return this.transitions.find((t) => t.fromEntryId === fromEntryId && t.toEntryId === toEntryId);
   }
 
   setTransition(transition: Transition): void {
     // validate b/c entries must be adjacent
-    const fromIdx = this.entries.findIndex(
-      (e) => e.id === transition.fromEntryId,
-    );
+    const fromIdx = this.entries.findIndex((e) => e.id === transition.fromEntryId);
     const toIdx = this.entries.findIndex((e) => e.id === transition.toEntryId);
     if (fromIdx === -1 || toIdx === -1 || toIdx !== fromIdx + 1) return;
 
@@ -86,9 +73,7 @@ export class PlaylistManager {
 
     // replace existing or add new
     const existingIdx = this.transitions.findIndex(
-      (t) =>
-        t.fromEntryId === transition.fromEntryId &&
-        t.toEntryId === transition.toEntryId,
+      (t) => t.fromEntryId === transition.fromEntryId && t.toEntryId === transition.toEntryId,
     );
     if (existingIdx !== -1) {
       this.transitions[existingIdx] = transition;
@@ -132,10 +117,7 @@ export class PlaylistManager {
       // check for incoming transition (from previous song)
       if (i > 0) {
         const prevEntry = this.entries[i - 1];
-        const incomingTransition = this.getTransitionBetween(
-          prevEntry.id,
-          entry.id,
-        );
+        const incomingTransition = this.getTransitionBetween(prevEntry.id, entry.id);
         if (incomingTransition) {
           fades.push({
             type: incomingTransition.fadeInType,
@@ -150,10 +132,7 @@ export class PlaylistManager {
       // check for outgoing transition (to next song)
       if (i < this.entries.length - 1) {
         const nextEntry = this.entries[i + 1];
-        const outgoingTransition = this.getTransitionBetween(
-          entry.id,
-          nextEntry.id,
-        );
+        const outgoingTransition = this.getTransitionBetween(entry.id, nextEntry.id);
         if (outgoingTransition) {
           fades.push({
             type: outgoingTransition.fadeOutType,

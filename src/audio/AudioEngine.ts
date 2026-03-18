@@ -1,8 +1,8 @@
-import { FadeType } from "../../types/Fade";
-import { EventEmitter } from "./EventEmitter";
-import { BufferCache } from "./BufferCache";
-import { PlaylistManager } from "./PlaylistManager";
-import { Scheduler } from "./Scheduler";
+import { FadeType } from '../../types/Fade';
+import { EventEmitter } from './EventEmitter';
+import { BufferCache } from './BufferCache';
+import { PlaylistManager } from './PlaylistManager';
+import { Scheduler } from './Scheduler';
 import type {
   ID,
   Seconds,
@@ -13,7 +13,7 @@ import type {
   PlaylistEntry,
   ScheduledEntry,
   SfxClip,
-} from "./types";
+} from './types';
 
 /**
  * the main audio engine orchestrator.
@@ -31,7 +31,7 @@ export class AudioEngine extends EventEmitter<AudioEngineEvents> {
   private readonly playlistManager: PlaylistManager;
   private readonly scheduler: Scheduler;
 
-  private transportState: TransportState = "stopped";
+  private transportState: TransportState = 'stopped';
   private transportTimeAtPlay: Seconds = 0;
   private contextTimeAtPlay: number = 0;
   private pausedAt: Seconds = 0;
@@ -65,49 +65,49 @@ export class AudioEngine extends EventEmitter<AudioEngineEvents> {
 
     this.scheduler.setOnPlaybackEnded(() => this.stop());
     this.scheduler.setOnSongChange((entryId, title) => {
-      this.emit("songChange", { entryId, title });
+      this.emit('songChange', { entryId, title });
     });
   }
 
   // transport
 
   async play(): Promise<void> {
-    if (this.transportState === "playing") return;
+    if (this.transportState === 'playing') return;
 
     // browser requires user input to resume AudioContext
-    if (this.ctx.state === "suspended") {
+    if (this.ctx.state === 'suspended') {
       await this.ctx.resume();
     }
 
     this.contextTimeAtPlay = this.ctx.currentTime;
     this.transportTimeAtPlay = this.pausedAt;
-    this.transportState = "playing";
+    this.transportState = 'playing';
 
     this.scheduler.start(this.transportTimeAtPlay, this.contextTimeAtPlay);
-    this.emit("stateChange", { state: "playing" });
+    this.emit('stateChange', { state: 'playing' });
   }
 
   pause(): void {
-    if (this.transportState !== "playing") return;
+    if (this.transportState !== 'playing') return;
 
     this.pausedAt = this.getCurrentTime();
     this.scheduler.stopAll();
-    this.transportState = "paused";
-    this.emit("stateChange", { state: "paused" });
+    this.transportState = 'paused';
+    this.emit('stateChange', { state: 'paused' });
   }
 
   stop(): void {
     this.scheduler.stopAll();
     this.pausedAt = 0;
-    this.transportState = "stopped";
-    this.emit("stateChange", { state: "stopped" });
+    this.transportState = 'stopped';
+    this.emit('stateChange', { state: 'stopped' });
   }
 
   seek(time: Seconds): void {
     const totalDuration = this.getTotalDuration();
     this.pausedAt = Math.max(0, Math.min(time, totalDuration));
 
-    if (this.transportState === "playing") {
+    if (this.transportState === 'playing') {
       this.scheduler.stopAll();
       this.contextTimeAtPlay = this.ctx.currentTime;
       this.transportTimeAtPlay = this.pausedAt;
@@ -118,11 +118,8 @@ export class AudioEngine extends EventEmitter<AudioEngineEvents> {
 
   /** get current transport time */
   getCurrentTime(): Seconds {
-    if (this.transportState === "playing") {
-      return (
-        this.transportTimeAtPlay +
-        (this.ctx.currentTime - this.contextTimeAtPlay)
-      );
+    if (this.transportState === 'playing') {
+      return this.transportTimeAtPlay + (this.ctx.currentTime - this.contextTimeAtPlay);
     }
     return this.pausedAt;
   }
@@ -167,16 +164,13 @@ export class AudioEngine extends EventEmitter<AudioEngineEvents> {
 
   removeFromPlaylist(entryId: ID): void {
     // if this entry is currently playing, fade it out quickly
-    if (this.transportState === "playing") {
+    if (this.transportState === 'playing') {
       const activeNodes = this.scheduler.getActiveNodes();
       const activeNode = activeNodes.get(entryId);
       if (activeNode) {
         const now = this.ctx.currentTime;
         activeNode.gainNode.gain.cancelScheduledValues(now);
-        activeNode.gainNode.gain.setValueAtTime(
-          activeNode.gainNode.gain.value,
-          now,
-        );
+        activeNode.gainNode.gain.setValueAtTime(activeNode.gainNode.gain.value, now);
         activeNode.gainNode.gain.linearRampToValueAtTime(0, now + 0.05);
         try {
           activeNode.sourceNode.stop(now + 0.05);
@@ -236,9 +230,9 @@ export class AudioEngine extends EventEmitter<AudioEngineEvents> {
     return this.playlistManager.getTransitions();
   }
 
-  // SFX 
+  // SFX
 
-  addSfx(sfx: Omit<SfxClip, "id">): ID {
+  addSfx(sfx: Omit<SfxClip, 'id'>): ID {
     const id = crypto.randomUUID();
     const clip: SfxClip = { ...sfx, id };
     this.sfxClips.push(clip);
@@ -306,7 +300,7 @@ export class AudioEngine extends EventEmitter<AudioEngineEvents> {
     this.scheduler.setScheduledEntries(timeline);
     this.scheduler.setSfxClips(this.sfxClips);
 
-    if (this.transportState === "playing") {
+    if (this.transportState === 'playing') {
       // cancel future nodes since they may have moved
       this.scheduler.cancelFutureNodes();
 
@@ -319,8 +313,8 @@ export class AudioEngine extends EventEmitter<AudioEngineEvents> {
       }
     }
 
-    this.emit("timelineChange", { entries: timeline });
-    this.emit("playlistChange", {
+    this.emit('timelineChange', { entries: timeline });
+    this.emit('playlistChange', {
       entries: [...this.playlistManager.getEntries()],
     });
   }

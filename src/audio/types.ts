@@ -1,5 +1,5 @@
-import type { ID, Seconds, Gain } from "../../types/UtilTypes";
-import type { Fade, FadeType } from "../../types/Fade";
+import type { ID, Seconds, Gain } from '../../types/UtilTypes';
+import type { Fade, FadeType } from '../../types/Fade';
 
 /** a song in the playlist */
 export interface PlaylistEntry {
@@ -55,7 +55,7 @@ export interface ActiveNode {
   transportEnd: Seconds;
 }
 
-export type TransportState = "stopped" | "playing" | "paused";
+export type TransportState = 'stopped' | 'playing' | 'paused';
 
 /** events emitted by the AudioEngine */
 export type AudioEngineEvents = {
