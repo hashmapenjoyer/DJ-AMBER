@@ -34,7 +34,7 @@ export interface ScheduledEntry {
   fades: Fade[];
 }
 
-/** a SFX clip placed at some arbitrary absolute time on the timeline */
+/** a SFX clip placed at some absolute time on the timeline */
 export interface SfxClip {
   id: ID;
   bufferId: ID;

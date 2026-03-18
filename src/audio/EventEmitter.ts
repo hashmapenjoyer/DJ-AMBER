@@ -18,7 +18,7 @@ export class EventEmitter<TEvents extends Record<string, unknown>> {
     const set = this.listeners.get(event)!;
     set.add(listener as Listener<never>);
 
-    // return unsubscribe function (convenient for React useEffect cleanup)
+    // return unsubscribe function (for React useEffect cleanup)
     return () => {
       set.delete(listener as Listener<never>);
     };

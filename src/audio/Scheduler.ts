@@ -365,7 +365,7 @@ export class Scheduler {
           fadeEndCtx,
         );
       } else {
-        // exponentialRamp cannot reach 0, so we use an epsilon
+        // exponentialRamp can't reach 0, so we use an epsilon
         gainNode.gain.exponentialRampToValueAtTime(
           Math.max(fade.endGain, 0.0001),
           fadeEndCtx,
