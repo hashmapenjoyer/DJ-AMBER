@@ -32,7 +32,7 @@
 /* Music Library - 30% width */
 .music-library {
   width: 30%;
-  /* border: 2px solid red; */ 
+  /* border: 2px solid red; */
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -148,7 +148,7 @@
 /* Now Playing - 40% width */
 .now-playing {
   width: 40%;
-  /* border: 2px solid red; */ 
+  /* border: 2px solid red; */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -160,7 +160,7 @@
 /* Set List - 30% width */
 .set-list {
   width: 30%;
- /* border: 2px solid red; */ 
+  /* border: 2px solid red; */
   display: flex;
   align-items: center;
   justify-content: center;
