@@ -39,13 +39,13 @@
   background: linear-gradient(135deg, #0a0e27 0%, #0f1829 100%);
 }
 
-.library-tabs{
+.library-tabs {
   display: flex;
   width: 100%;
   border-bottom: 1px solid var(--border-color);
 }
 
-.library-tab{
+.library-tab {
   flex: 1;
   padding: var(--space-3) 0;
   font-size: var(--fs-base);

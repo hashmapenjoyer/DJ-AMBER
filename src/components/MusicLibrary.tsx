@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { mockLibrary } from '../data/mockLibrary';
 import { formatDuration } from '../../types/FormatDuration';
 
-type Tab = 'music' | 'sfx'
+type Tab = 'music' | 'sfx';
 
 export default function MusicLibrary() {
-  const [activeTab, setActiveTab] = useState<Tab>('music')
+  const [activeTab, setActiveTab] = useState<Tab>('music');
 
   const filteredItems = mockLibrary.filter((item) => item.category === activeTab);
 
