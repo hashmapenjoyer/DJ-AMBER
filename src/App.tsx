@@ -52,7 +52,7 @@ function createSilentWav(durationSeconds: number, sampleRate = 44100): ArrayBuff
 }
 
 function App() {
-  const { engine, playlist } = useAudioEngine();
+  const { engine } = useAudioEngine();
   const [setLists, setSetLists] = useState<SetListRecord[]>(INITIAL_SET_LISTS);
   const [activeSetListId, setActiveSetListId] = useState<string>(DEFAULT_SET_LIST_ID);
 
@@ -69,22 +69,18 @@ function App() {
         engine.appendToPlaylist(clip.bufferId, clip.title);
       }
     })();
-    // engine is a stable singleton - this runs exactly once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // engine is a stable singleton — this runs exactly once on mount
+     
   }, [engine]);
 
-  // Suppresses auto-save while programmatically loading a set list into the engine
-  const isSwitchingRef = useRef(false);
-
-  // Auto-save the active set list's track snapshot whenever the engine playlist changes
-  useEffect(() => {
-    if (isSwitchingRef.current) return;
+  const loadSetListIntoEngine = (setList: SetListRecord) => {
+    // Save the current playlist into the outgoing set list before clearing the engine
     setSetLists((prev) =>
       prev.map((sl) =>
         sl.id === activeSetListId
           ? {
               ...sl,
-              tracks: playlist.map(({ bufferId, title, duration }) => ({
+              tracks: engine.getPlaylist().map(({ bufferId, title, duration }) => ({
                 bufferId,
                 title,
                 duration,
@@ -93,10 +89,7 @@ function App() {
           : sl,
       ),
     );
-  }, [playlist, activeSetListId]);
 
-  const loadSetListIntoEngine = (setList: SetListRecord) => {
-    isSwitchingRef.current = true;
     engine.stop();
 
     for (const entry of engine.getPlaylist()) {
@@ -108,11 +101,6 @@ function App() {
         engine.appendToPlaylist(track.bufferId, track.title);
       }
     }
-
-    // setTimeout(0) fires after useEffect's commit phase, so auto-save sees the flag
-    setTimeout(() => {
-      isSwitchingRef.current = false;
-    }, 0);
   };
 
   const handleCreateSetList = () => {

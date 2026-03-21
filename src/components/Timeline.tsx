@@ -65,7 +65,7 @@ export default function Timeline() {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [isPlaying]);
+  }, [isPlaying, engine]);
 
   // Clip dragging
   const dragState = useRef<{ clipId: string; offsetPx: number } | null>(null);
