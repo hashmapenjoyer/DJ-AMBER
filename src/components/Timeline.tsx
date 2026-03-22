@@ -146,6 +146,23 @@ export default function Timeline() {
 
           {/* Lane background */}
           <div className="timeline_lane" style={{ top: HEADER_HEIGHT, width: TIMELINE_WIDTH }} />
+          
+          {/* Overlaps */}
+          {overlaps.map((ov, idx) => {
+            return (
+              <div
+                className="timeline_overlap"
+                key={idx}
+                style={{
+                  borderColor: '#005eff',
+                  left:   ov.start * PX_PER_SEC,
+                  width:  (ov.end - ov.start) * PX_PER_SEC,
+                  top:    HEADER_HEIGHT + 8,
+                  height: 56,
+                }}
+              />
+            );
+          })}
 
           {/* Clips */}
           {clips.map((clip, idx) => {
@@ -158,7 +175,7 @@ export default function Timeline() {
                   left: clip.startTime * PX_PER_SEC,
                   top: HEADER_HEIGHT + 8,
                   width: clip.duration * PX_PER_SEC,
-                  borderColor: '#00dabd',
+                  borderColor: '#a4ffbb',
                   zIndex: 5 + idx,
                 }}
               >

@@ -157,3 +157,11 @@
   border-radius: 50% 50% 0 0;
   margin-left: -4px;
 }
+
+.timeline_overlap {
+  position: absolute;
+  background-color: var(--timeline-overlap-bg);
+  border: 1px solid;
+  border-radius: var(--br-sm);
+  z-index: 10;
+}
