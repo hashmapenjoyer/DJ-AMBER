@@ -87,12 +87,13 @@ export default function Timeline() {
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {
       if (!dragState.current || !scrollRef.current) return;
+      const currentDrag = dragState.current;
       const scrollLeft = scrollRef.current.scrollLeft;
       const rectLeft = scrollRef.current.getBoundingClientRect().left;
       const rawX = e.clientX - rectLeft + scrollLeft;
-      const newStart = Math.max(0, (rawX - dragState.current.offsetPx) / PX_PER_SEC);
+      const newStart = Math.max(0, (rawX - currentDrag.offsetPx) / PX_PER_SEC);
       setClips((prev) =>
-        prev.map((c) => (c.id === dragState.current!.clipId ? { ...c, startTime: newStart } : c)),
+        prev.map((c) => (c.id === currentDrag!.clipId ? { ...c, startTime: newStart } : c)),
       );
     };
     const onMouseUp = () => {
