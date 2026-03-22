@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import '../styles/timeline.css';
+import { formatDuration } from '../../types/FormatDuration';
 
 // Represents the data for the draggable audio blocks
 interface TimelineClip {
@@ -139,7 +140,7 @@ export default function Timeline() {
           <div className="timeline_ticks" style={{ width: TIMELINE_WIDTH }}>
             {ticks.map((s) => (
               <div key={s} className="timeline_tick" style={{ left: s * PX_PER_SEC }}>
-                <span className="timeline_tick_label">{s}</span>
+                <span className="timeline_tick_label">{formatDuration(s)}</span>
               </div>
             ))}
           </div>
@@ -182,7 +183,7 @@ export default function Timeline() {
                 {/* Label */}
                 <div className="timeline_clip_label">
                   <span className="timeline_clip_name">{clip.name}</span>
-                  <span className="timeline_clip_duration">{clip.duration}</span>
+                  <span className="timeline_clip_duration">{formatDuration(clip.duration)}</span>
                 </div>
               </div>
             );
