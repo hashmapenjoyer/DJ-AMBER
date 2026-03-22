@@ -107,6 +107,17 @@ export default function Timeline() {
     };
   }, []);
 
+  // Detecting overlaps 
+  const overlaps: { start: number; end: number }[] = [];
+  for (let i = 0; i < clips.length; i++) {
+    for (let j = i + 1; j < clips.length; j++) {
+      const a = clips[i], b = clips[j];
+      const oStart = Math.max(a.startTime, b.startTime);
+      const oEnd   = Math.min(a.startTime + a.duration, b.startTime + b.duration);
+      if (oEnd > oStart) overlaps.push({ start: oStart, end: oEnd });
+    }
+  }
+
   return (
     <div className="timeline">
       {/* Header/Controls */}
