@@ -160,13 +160,12 @@
 /* Set List - 30% width */
 .set-list {
   width: 30%;
+  min-width: 0;
   /* border: 2px solid red; */
   display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.3em;
-  font-weight: bold;
+  flex-direction: column;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 /* Timeline - full width at bottom */
