@@ -1,6 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import '../styles/timeline.css';
-import { useAudioEngine } from '../audio/UseAudioEngine';
+
+// Represents the data for the draggable audio blocks
+interface TimelineClip {
+  id: string;
+  name: string;
+  duration: number;
+  startTime: number;
+}
 
 // Constants
 const PX_PER_SEC = 4;
@@ -10,27 +17,18 @@ const CLIP_HEIGHT = 32;
 const TIMELINE_WIDTH = TOTAL_TIME * PX_PER_SEC;
 const CANVAS_HEIGHT = HEADER_HEIGHT + CLIP_HEIGHT + 48;
 
-export default function Timeline() {
-  const { engine, timeline, playlist } = useAudioEngine();
+const MOCK_CLIPS: TimelineClip[] = [
+  { id: '1', name: 'Never Gonna Give You Up', duration: 100, startTime: 0 },
+  { id: '2', name: 'All I Want for Chrismas Is You', duration: 150, startTime: 145 },
+  { id: '3', name: 'Revenge', duration: 100, startTime: 290 },
+];
 
+export default function Timeline() {
+  const [clips, setClips] = useState<TimelineClip[]>(MOCK_CLIPS);
   const [playhead, setPlayhead] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  // Visual-only drag position, engine is updated on mouse-up
-  const [dragVisualStart, setDragVisualStart] = useState<{ id: string; startTime: number } | null>(
-    null,
-  );
-
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  // Substitute visual drag position for the clip being dragged
-  const displayClips = timeline.map((entry) => ({
-    id: entry.entryId,
-    name: entry.title,
-    duration: entry.playDuration,
-    startTime:
-      dragVisualStart?.id === entry.entryId ? dragVisualStart.startTime : entry.absoluteStart,
-  }));
 
   // Timeline ticks
   const ticks: number[] = [];
@@ -47,7 +45,7 @@ export default function Timeline() {
           const dt = (ts - lastTsRef.current) / 1000;
           setPlayhead((p) => {
             const next = p + dt;
-            if (next >= engine.getTotalDuration()) {
+            if (next >= 900) {
               setIsPlaying(false);
               return 0;
             } // TODO: THIS IS HARDCODED AND NEEDS TO BE FIXED
@@ -65,7 +63,7 @@ export default function Timeline() {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [isPlaying, engine]);
+  }, [isPlaying]);
 
   // Clip dragging
   const dragState = useRef<{ clipId: string; offsetPx: number } | null>(null);
@@ -74,7 +72,7 @@ export default function Timeline() {
     (e: React.MouseEvent, clipId: string) => {
       e.preventDefault();
       e.stopPropagation();
-      const clip = displayClips.find((c) => c.id === clipId)!;
+      const clip = clips.find((c) => c.id === clipId)!;
       const scrollLeft = scrollRef.current?.scrollLeft ?? 0;
       const rectLeft = scrollRef.current?.getBoundingClientRect().left ?? 0;
       const clickX = e.clientX - rectLeft + scrollLeft;
@@ -83,7 +81,7 @@ export default function Timeline() {
         offsetPx: clickX - clip.startTime * PX_PER_SEC,
       };
     },
-    [displayClips],
+    [clips],
   );
 
   useEffect(() => {
@@ -93,26 +91,12 @@ export default function Timeline() {
       const rectLeft = scrollRef.current.getBoundingClientRect().left;
       const rawX = e.clientX - rectLeft + scrollLeft;
       const newStart = Math.max(0, (rawX - dragState.current.offsetPx) / PX_PER_SEC);
-      setDragVisualStart({ id: dragState.current.clipId, startTime: newStart });
+      setClips((prev) =>
+        prev.map((c) => (c.id === dragState.current!.clipId ? { ...c, startTime: newStart } : c)),
+      );
     };
     const onMouseUp = () => {
-      if (dragState.current && dragVisualStart) {
-        // Resolve new order from visual positions and sync to engine
-        const sorted = [...displayClips].sort((a, b) => a.startTime - b.startTime);
-        const originalOrder = playlist.map((e) => e.id);
-        const newOrder = sorted.map((c) => c.id);
-
-        const draggedId = dragState.current.clipId;
-        const fromIdx = originalOrder.indexOf(draggedId);
-        const toIdx = newOrder.indexOf(draggedId);
-
-        if (fromIdx !== -1 && toIdx !== -1 && fromIdx !== toIdx) {
-          engine.reorderPlaylist(fromIdx, toIdx);
-        }
-      }
-
       dragState.current = null;
-      setDragVisualStart(null);
     };
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
@@ -120,7 +104,7 @@ export default function Timeline() {
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
     };
-  }, [dragVisualStart, displayClips, playlist, engine]);
+  }, []);
 
   return (
     <div className="timeline">
@@ -152,7 +136,7 @@ export default function Timeline() {
           <div className="timeline_lane" style={{ top: HEADER_HEIGHT, width: TIMELINE_WIDTH }} />
 
           {/* Clips */}
-          {displayClips.map((clip, idx) => {
+          {clips.map((clip, idx) => {
             return (
               <div
                 className="timeline_clip"
