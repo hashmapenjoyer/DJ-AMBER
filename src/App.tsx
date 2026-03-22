@@ -70,7 +70,6 @@ function App() {
       }
     })();
     // engine is a stable singleton — this runs exactly once on mount
-     
   }, [engine]);
 
   const loadSetListIntoEngine = (setList: SetListRecord) => {
