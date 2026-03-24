@@ -121,6 +121,25 @@ export class Scheduler {
   }
 
   /**
+   * quick fade-out and stop a single active node (e.g. when its
+   * playlist entry is removed while playing). 50ms ramp avoids clicks.
+   */
+  fadeOutNode(entryId: ID): void {
+    const node = this.activeNodes.get(entryId);
+    if (!node) return;
+
+    const now = this.ctx.currentTime;
+    node.gainNode.gain.cancelScheduledValues(now);
+    node.gainNode.gain.setValueAtTime(node.gainNode.gain.value, now);
+    node.gainNode.gain.linearRampToValueAtTime(0, now + 0.05);
+    try {
+      node.sourceNode.stop(now + 0.05);
+    } catch {
+      // already stopped
+    }
+  }
+
+  /**
    * cancel nodes that haven't started playing yet, but leaves
    * currently-audible nodes untouched
    */

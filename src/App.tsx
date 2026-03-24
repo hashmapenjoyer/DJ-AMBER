@@ -65,8 +65,8 @@ function App() {
     void (async () => {
       for (const clip of DEV_MOCK_CLIPS) {
         const wav = createSilentWav(clip.duration);
-        await engine.loadAudioFile(clip.bufferId, wav);
-        engine.appendToPlaylist(clip.bufferId, clip.title);
+        await engine.buffers.add(clip.bufferId, wav);
+        engine.playlist.append(clip.bufferId, clip.title);
       }
     })();
     // engine is a stable singleton — this runs exactly once on mount
@@ -79,7 +79,7 @@ function App() {
         sl.id === activeSetListId
           ? {
               ...sl,
-              tracks: engine.getPlaylist().map(({ bufferId, title, duration }) => ({
+              tracks: engine.playlist.getEntries().map(({ bufferId, title, duration }) => ({
                 bufferId,
                 title,
                 duration,
@@ -89,15 +89,15 @@ function App() {
       ),
     );
 
-    engine.stop();
+    engine.transport.stop();
 
-    for (const entry of engine.getPlaylist()) {
-      engine.removeFromPlaylist(entry.id);
+    for (const entry of engine.playlist.getEntries()) {
+      engine.playlist.remove(entry.id);
     }
 
     for (const track of setList.tracks) {
-      if (engine.hasBuffer(track.bufferId)) {
-        engine.appendToPlaylist(track.bufferId, track.title);
+      if (engine.buffers.has(track.bufferId)) {
+        engine.playlist.append(track.bufferId, track.title);
       }
     }
   };

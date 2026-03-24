@@ -6,17 +6,21 @@ This should cover everything you need to know to work with the audio engine from
 
 ## Overall Structure
 
-The audio engine is a set of plain TypeScript classes that sit completely outside of React. They own the `AudioContext`, manage the playlist, schedule WebAudio nodes, and emit events when something meaningful changes. React **should only listen and render.**
+The audio engine is a set of plain TypeScript classes that sit completely outside of React. `AudioEngine` is a **mediator** that wires together focused controllers. Each one owns a single responsibility. React **should only listen and render.**
 
 ```
 src/audio/
-|-- AudioEngine.ts       <- the one class you actually talk to
-|-- useAudioEngine.ts    <- the React hook that wraps it
-|-- PlaylistManager.ts   <- playlist + crossfade math
-|-- Scheduler.ts         <- look-ahead scheduling loop
-|-- BufferCache.ts       <- decoded AudioBuffer storage
-|-- EventEmitter.ts      <- typed pub/sub (no external deps)
-|-- types.ts             <- all the shared types
+|-- AudioEngine.ts          <- mediator: wires controllers, emits events
+|-- TransportController.ts  <- play/pause/stop/seek, transport state machine
+|-- PlaylistController.ts   <- playlist + transition CRUD
+|-- SfxController.ts        <- SFX clip management
+|-- VolumeController.ts     <- gain node graph + volume setters
+|-- useAudioEngine.ts       <- the React hook that wraps it
+|-- PlaylistManager.ts      <- playlist + crossfade math (internal)
+|-- Scheduler.ts            <- look-ahead scheduling loop (internal)
+|-- BufferCache.ts           <- decoded AudioBuffer storage (internal)
+|-- EventEmitter.ts         <- typed pub/sub (no external deps)
+|-- types.ts                <- all the shared types
 ```
 
 The node graph looks like this:
@@ -24,8 +28,8 @@ The node graph looks like this:
 ```
 AudioBufferSourceNode
   |--> GainNode (per-clip fades)
-        |--> GainNode (musicTrackGain/sfxTrackGain)
-              |--> GainNode (masterGain)
+        |--> GainNode (musicTrackGain/sfxTrackGain)   [VolumeController]
+              |--> GainNode (masterGain)               [VolumeController]
                     |--> ctx.destination
 ```
 
@@ -59,16 +63,16 @@ I used `useSyncExternalStore` under the hood so it should be pretty easy to use 
 
 ```tsx
 // async bc audio programming on browsers is dumb and painful
-await engine.play();
+await engine.transport.play();
 
 // pause (remembers position)
-engine.pause();
+engine.transport.pause();
 
 // stop (resets to 0)
-engine.stop();
+engine.transport.stop();
 
 // seek to a position in seconds (2:00 in this case)
-engine.seek(120);
+engine.transport.seek(120);
 ```
 
 ### 4. Loading audio files
@@ -79,38 +83,38 @@ Before you can add a song to the playlist, you need to decode and cache its audi
 const handleFileInput = async (file: File) => {
   const arrayBuffer = await file.arrayBuffer();
   const bufferId = crypto.randomUUID();
-  await engine.loadAudioFile(bufferId, arrayBuffer);
+  await engine.buffers.add(bufferId, arrayBuffer);
 
   // now you can add it to the playlist
-  engine.appendToPlaylist(bufferId, file.name);
+  engine.playlist.append(bufferId, file.name);
 };
 ```
 
-`loadAudioFile` resolves with the decoded `AudioBuffer` if you need it, but you don't have to use the return value.
+`engine.buffers.add()` resolves with the decoded `AudioBuffer` if you need it, but you don't have to use the return value.
 
 ### 5. Managing the playlist
 
 ```tsx
 // add to the end
-engine.appendToPlaylist(bufferId, title);
+engine.playlist.append(bufferId, title);
 
 // insert at a specific index
-engine.insertInPlaylist(2, bufferId, title);
+engine.playlist.insert(2, bufferId, title);
 
 // remove by entry ID (not buffer ID!!)
-engine.removeFromPlaylist(entryId);
+engine.playlist.remove(entryId);
 
 // since we're doing drag-and-drop reorder, this is specifically for that use-case
-engine.reorderPlaylist(fromIndex, toIndex);
+engine.playlist.reorder(fromIndex, toIndex);
 
 // read current state
-const entries = engine.getPlaylist(); // ReadonlyArray<PlaylistEntry>
+const entries = engine.playlist.getEntries(); // ReadonlyArray<PlaylistEntry>
 ```
 
 Each `PlaylistEntry` has:
 ```ts
 {
-  id: string;       // entry ID for removeFromPlaylist, transitions, etc.
+  id: string;       // entry ID for remove, transitions, etc.
   bufferId: string; // the decoded audio buffer ID
   title: string;
   duration: number; // seconds
@@ -122,15 +126,15 @@ Each `PlaylistEntry` has:
 ### 6. Crossfade transitions
 
 ```tsx
-// add/update a crossfade (you need both entry IDs from getPlaylist())
-engine.setTransition(fromEntryId, toEntryId, durationSeconds);
+// add/update a crossfade (you need both entry IDs from getEntries())
+engine.playlist.setTransition(fromEntryId, toEntryId, durationSeconds);
 
 // with specific fade curve types
 import { FadeType } from '@/types/Fade';
-engine.setTransition(fromEntryId, toEntryId, 5, FadeType.EXPONENTIAL, FadeType.LINEAR);
+engine.playlist.setTransition(fromEntryId, toEntryId, 5, FadeType.EXPONENTIAL, FadeType.LINEAR);
 
 // remove it
-engine.removeTransition(fromEntryId, toEntryId);
+engine.playlist.removeTransition(fromEntryId, toEntryId);
 ```
 
 Transitions are clamped to the shorter of the two songs' durations, so you can't accidentally create an impossible overlap. They also only work between adjacent entries, so if you reorder the playlist we prune any invalid ones automatically.
@@ -140,8 +144,8 @@ If you change a transition while something is playing, it updates the gain autom
 ### 7. SFX clips
 
 ```tsx
-const sfxId = engine.addSfx({
-  bufferId,           // decoded buffer ID (load it first with loadAudioFile)
+const sfxId = engine.sfx.add({
+  bufferId,           // decoded buffer ID (load it first with buffers.add)
   absoluteStart: 30,  // start at 30s on the timeline
   duration: 5,        // play for 5 seconds
   bufferOffset: 0,    // start from the beginning of the buffer (or trim the start)
@@ -149,7 +153,7 @@ const sfxId = engine.addSfx({
 });
 
 // remove it later
-engine.removeSfx(sfxId);
+engine.sfx.remove(sfxId);
 ```
 
 ### 8. Volume controls
@@ -157,16 +161,16 @@ engine.removeSfx(sfxId);
 Separate gain stages so you can control the overall playlist volume vs. sfx volume.
 
 ```tsx
-engine.setMasterVolume(0.8); // affects everything
-engine.setMusicVolume(0.6);  // affects only the music track
-engine.setSfxVolume(1.0);    // affects only SFX clips
+engine.volume.setMaster(0.8); // affects everything
+engine.volume.setMusic(0.6);  // affects only the music track
+engine.volume.setSfx(1.0);    // affects only SFX clips
 ```
 
 All values are linear gain (`0.0`–`1.0`).
 
 ### 9. The playhead (do NOT use state for this!!)
 
-`engine.getCurrentTime()` is pure arithmetic (`transportTimeAtPlay + elapsed`), so it's ok to call 60 times per second and costs essentially nothing. So help me god if you put it in a React state we will be re-rendering 60 times per second and I will blow up your computer.
+`engine.transport.getCurrentTime()` is pure arithmetic (`transportTimeAtPlay + elapsed`), so it's ok to call 60 times per second and costs essentially nothing. So help me god if you put it in a React state we will be re-rendering 60 times per second and I will blow up your computer.
 
 Just use a `requestAnimationFrame` loop. I AI'd an example for your convenience:
 
@@ -176,8 +180,8 @@ useEffect(() => {
 
   let rafId: number;
   const tick = () => {
-    const t = engine.getCurrentTime(); // cheap, no side effects
-    drawPlayhead(t);                   // update canvas or DOM directly
+    const t = engine.transport.getCurrentTime(); // cheap, no side effects
+    drawPlayhead(t);                             // update canvas or DOM directly
     rafId = requestAnimationFrame(tick);
   };
   rafId = requestAnimationFrame(tick);
@@ -191,9 +195,9 @@ useEffect(() => {
 You can get the raw `AudioBuffer` and `AudioContext` for waveform visualization:
 
 ```tsx
-const ctx = engine.getAudioContext();          // AudioContext
-const buffer = engine.getBuffer(bufferId);     // AudioBuffer | undefined
-const duration = engine.getBufferDuration(id); // Seconds | undefined
+const ctx = engine.ctx;                            // AudioContext
+const buffer = engine.buffers.get(bufferId);       // AudioBuffer | undefined
+const duration = engine.buffers.getDuration(id);   // Seconds | undefined
 ```
 
 The `ScheduledEntry[]` from `timeline` gives you each song's `absoluteStart` and `absoluteEnd` positions on the timeline, which is what you should need to lay out the waveforms correctly.
@@ -201,14 +205,14 @@ The `ScheduledEntry[]` from `timeline` gives you each song's `absoluteStart` and
 ### 11. Misc
 
 ```tsx
-engine.getState();           // 'stopped' | 'playing' | 'paused'
-engine.getTotalDuration();   // total length of the set in seconds
-engine.getCurrentEntry();    // ScheduledEntry | undefined (the currently-playing song)
-engine.getPlaylist();        // ReadonlyArray<PlaylistEntry>
-engine.getTimeline();        // ReadonlyArray<ScheduledEntry>
-engine.getTransitions();     // ReadonlyArray<Transition>
-engine.getSfxClips();        // ReadonlyArray<SfxClip>
-engine.hasBuffer(id);        // boolean (is this buffer loaded?)
+engine.transport.getState();         // 'stopped' | 'playing' | 'paused'
+engine.getTotalDuration();           // total length of the set in seconds
+engine.getCurrentEntry();            // ScheduledEntry | undefined (the currently-playing song)
+engine.playlist.getEntries();        // ReadonlyArray<PlaylistEntry>
+engine.getTimeline();                // ReadonlyArray<ScheduledEntry>
+engine.playlist.getTransitions();    // ReadonlyArray<Transition>
+engine.sfx.getClips();               // ReadonlyArray<SfxClip>
+engine.buffers.has(id);              // boolean (is this buffer loaded?)
 ```
 
 ---
@@ -250,15 +254,13 @@ Each `ScheduledEntry` looks like:
 
 ## How the Scheduler Works
 
-Man I am so sick of writing docs rn
-
-The `Scheduler` uses a lookahead pattern I borrowed from [Chris Wilson](https://www.html5rocks.com/en/tutorials/audio/scheduling/). A `setInterval` fires every 25ms and schedules any WebAudio nodes that fall within the next 200ms of playback.
+The `Scheduler` uses a lookahead pattern I 'borrowed' from [Chris Wilson](https://www.html5rocks.com/en/tutorials/audio/scheduling/). A `setInterval` fires every 25ms and schedules any WebAudio nodes that fall within the next 200ms of playback.
 
 This decouples the scheduling timer (which sucks bc it's JS) from the audio playback itself (which is hardware-precise).
 
 Seeks during playback work by stopping all active nodes and restarting the scheduler from the new position. If the seek lands in the middle of a song, the scheduler computes the correct `bufferOffset` and starts the `AudioBufferSourceNode` at the right point in the buffer.
 
-Live editing (adding/removing songs, changing transitions while playing) is handled by `recomputeAndSync()`, which:
+Live editing (adding/removing songs, changing transitions while playing) is handled by `AudioEngine.recomputeAndSync()`, which:
 1. Recomputes the timeline
 2. Cancels any nodes that haven't started yet (future nodes)
 3. Updates gain automation on currently-audible nodes in-place
@@ -297,8 +299,8 @@ unsub();
 const addTrack = async (file: File) => {
   const bufferId = crypto.randomUUID();
   const arrayBuffer = await file.arrayBuffer();
-  await engine.loadAudioFile(bufferId, arrayBuffer);
-  engine.appendToPlaylist(bufferId, file.name);
+  await engine.buffers.add(bufferId, arrayBuffer);
+  engine.playlist.append(bufferId, file.name);
 };
 ```
 
@@ -309,7 +311,7 @@ useEffect(() => {
   if (transportState !== 'playing') return;
   let id: number;
   const tick = () => {
-    const progress = engine.getCurrentTime() / engine.getTotalDuration();
+    const progress = engine.transport.getCurrentTime() / engine.getTotalDuration();
     progressBarRef.current!.style.width = `${progress * 100}%`;
     id = requestAnimationFrame(tick);
   };
@@ -320,7 +322,7 @@ useEffect(() => {
 // clicking the scrubber, seek directly
 const handleScrubClick = (e: React.MouseEvent) => {
   const pct = e.nativeEvent.offsetX / e.currentTarget.clientWidth;
-  engine.seek(pct * engine.getTotalDuration());
+  engine.transport.seek(pct * engine.getTotalDuration());
 };
 ```
 
@@ -343,7 +345,7 @@ const { engine, timeline } = useAudioEngine();
 const total = engine.getTotalDuration();
 
 return timeline.map(entry => {
-  const buffer = engine.getBuffer(entry.bufferId);
+  const buffer = engine.buffers.get(entry.bufferId);
   const leftPct = (entry.absoluteStart / total) * 100;
   const widthPct = ((entry.absoluteEnd - entry.absoluteStart) / total) * 100;
   return (
@@ -365,6 +367,6 @@ const setCrossfade = (fromIdx: number, durationSeconds: number) => {
   const from = playlist[fromIdx];
   const to = playlist[fromIdx + 1];
   if (!from || !to) return;
-  engine.setTransition(from.id, to.id, durationSeconds);
+  engine.playlist.setTransition(from.id, to.id, durationSeconds);
 };
 ```
