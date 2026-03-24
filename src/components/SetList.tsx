@@ -126,9 +126,10 @@ export default function SetList({
           />
         ) : (
           <button className="setlist-title-btn" onClick={handleRenameStart} title="Click to rename">
-            <span className="setlist-title-text">{activeSetList?.name ?? '—'}</span>
+            <span className="setlist-title-text">{activeSetList?.name ?? '\u2014'}</span>
             <span className="setlist-edit-icon" aria-hidden="true">
-              ✎
+              {/* pencil: \u270E */}
+              {'\u270E'}
             </span>
           </button>
         )}
@@ -140,7 +141,8 @@ export default function SetList({
             title="Delete this set list"
             aria-label="Delete set list"
           >
-            ✕
+            {/* multiplication x: \u2715 */}
+            {'\u2715'}
           </button>
         )}
       </div>
@@ -149,7 +151,8 @@ export default function SetList({
       <div className="setlist-content">
         {trackCount === 0 ? (
           <div className="setlist-empty">
-            <span className="setlist-empty-icon">♪</span>
+            {/* eighth note: \u266A */}
+            <span className="setlist-empty-icon">{'\u266A'}</span>
             <p className="setlist-empty-text">No tracks yet</p>
             <p className="setlist-empty-hint">
               Upload songs and drag them onto the timeline to build your set.
@@ -174,7 +177,8 @@ export default function SetList({
                 onDragEnd={handleDragEnd}
               >
                 <span className="setlist-drag-handle" aria-hidden="true">
-                  ⠿
+                  {/* braille dots (drag handle): \u283F */}
+                  {'\u283F'}
                 </span>
                 <span className="setlist-track-number">{index + 1}</span>
                 <span className="setlist-track-title" title={entry.title}>
@@ -187,7 +191,8 @@ export default function SetList({
                   title="Remove from set list"
                   aria-label={`Remove ${entry.title}`}
                 >
-                  🗑
+                  {/* wastebasket: \u{1F5D1} */}
+                  {'\u{1F5D1}'}
                 </button>
               </li>
             ))}
