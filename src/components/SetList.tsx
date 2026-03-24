@@ -26,6 +26,10 @@ export default function SetList({
   const [renameValue, setRenameValue] = useState('');
   const renameInputRef = useRef<HTMLInputElement>(null);
 
+  // Drag-and-drop state
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
   const activeSetList = setLists.find((sl) => sl.id === activeSetListId);
   const totalDuration = engine.getTotalDuration();
   const trackCount = playlist.length;
@@ -33,7 +37,6 @@ export default function SetList({
   const handleRenameStart = () => {
     setRenameValue(activeSetList?.name ?? '');
     setIsRenaming(true);
-    // Focus is handled by autoFocus on the input
   };
 
   const handleRenameCommit = () => {
@@ -53,6 +56,29 @@ export default function SetList({
     if (!activeSetList) return;
     const confirmed = window.confirm(`Delete "${activeSetList.name}"? This cannot be undone.`);
     if (confirmed) onDeleteSetList(activeSetListId);
+  };
+
+  // Drag handlers
+  const handleDragStart = (index: number) => {
+    setDragIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  };
+
+  const handleDrop = (toIndex: number) => {
+    if (dragIndex !== null && dragIndex !== toIndex) {
+      engine.reorderPlaylist(dragIndex, toIndex);
+    }
+    setDragIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDragIndex(null);
+    setDragOverIndex(null);
   };
 
   return (
@@ -98,9 +124,9 @@ export default function SetList({
           />
         ) : (
           <button className="setlist-title-btn" onClick={handleRenameStart} title="Click to rename">
-            <span className="setlist-title-text">{activeSetList?.name ?? '—'}</span>
+            <span className="setlist-title-text">{activeSetList?.name ?? '\u2014'}</span>
             <span className="setlist-edit-icon" aria-hidden="true">
-              ✎
+              {'\u270E'}
             </span>
           </button>
         )}
@@ -112,7 +138,7 @@ export default function SetList({
             title="Delete this set list"
             aria-label="Delete set list"
           >
-            ✕
+            {'\u2715'}
           </button>
         )}
       </div>
@@ -121,7 +147,7 @@ export default function SetList({
       <div className="setlist-content">
         {trackCount === 0 ? (
           <div className="setlist-empty">
-            <span className="setlist-empty-icon">♪</span>
+            <span className="setlist-empty-icon">{'\u266A'}</span>
             <p className="setlist-empty-text">No tracks yet</p>
             <p className="setlist-empty-hint">
               Upload songs and drag them onto the timeline to build your set.
@@ -130,12 +156,37 @@ export default function SetList({
         ) : (
           <ul className="setlist-track-list">
             {playlist.map((entry, index) => (
-              <li key={entry.id} className="setlist-track-item">
+              <li
+                key={entry.id}
+                className={[
+                  'setlist-track-item',
+                  dragIndex === index ? 'setlist-track-item--dragging' : '',
+                  dragOverIndex === index ? 'setlist-track-item--drag-over' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                draggable
+                onDragStart={() => handleDragStart(index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDrop={() => handleDrop(index)}
+                onDragEnd={handleDragEnd}
+              >
+                <span className="setlist-drag-handle" aria-hidden="true">
+                  {'\u283F'}
+                </span>
                 <span className="setlist-track-number">{index + 1}</span>
                 <span className="setlist-track-title" title={entry.title}>
                   {entry.title}
                 </span>
                 <span className="setlist-track-duration">{formatDuration(entry.duration)}</span>
+                <button
+                  className="setlist-track-remove"
+                  onClick={() => engine.removeFromPlaylist(entry.id)}
+                  title="Remove from set list"
+                  aria-label={`Remove ${entry.title}`}
+                >
+                  {'\u{1F5D1}'}
+                </button>
               </li>
             ))}
           </ul>

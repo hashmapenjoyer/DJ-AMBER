@@ -20,8 +20,8 @@ const DEV_MOCK_CLIPS = [
   { bufferId: 'mock-2', title: 'All I Want for Christmas Is You', duration: 150 },
   { bufferId: 'mock-3', title: 'Revenge', duration: 100 },
   {
-    bufferId: 'mock-4',
-    title: 'Like a Prayer - Battle Royale Mix from "Deadpool and Wolverine"',
+    bufferId: 'mock-3',
+    title: 'Like a Prayer - Battle Royale Mix from "Deadpool & Wolverine"',
     duration: 164,
   },
 ] as const;
@@ -69,24 +69,20 @@ function App() {
         engine.appendToPlaylist(clip.bufferId, clip.title);
       }
     })();
-    // engine is a stable singleton — this runs exactly once on mount
+    // engine is a stable singleton - this runs exactly once on mount
   }, [engine]);
 
   const loadSetListIntoEngine = (setList: SetListRecord) => {
-    // Save the current playlist into the outgoing set list before clearing the engine
+    // Capture before clearing as React may defer the setSetLists updater.
+    const currentTracks = engine.getPlaylist().map(({ bufferId, title, duration }) => ({
+      bufferId,
+      title,
+      duration,
+    }));
+
+    // Save the current playlist into the outgoing set list before clearing the engine.
     setSetLists((prev) =>
-      prev.map((sl) =>
-        sl.id === activeSetListId
-          ? {
-              ...sl,
-              tracks: engine.getPlaylist().map(({ bufferId, title, duration }) => ({
-                bufferId,
-                title,
-                duration,
-              })),
-            }
-          : sl,
-      ),
+      prev.map((sl) => (sl.id === activeSetListId ? { ...sl, tracks: currentTracks } : sl)),
     );
 
     engine.stop();
