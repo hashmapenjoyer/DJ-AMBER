@@ -18,7 +18,7 @@ src/audio/
 |-- useAudioEngine.ts       <- the React hook that wraps it
 |-- PlaylistManager.ts      <- playlist + crossfade math (internal)
 |-- Scheduler.ts            <- look-ahead scheduling loop (internal)
-|-- BufferCache.ts           <- decoded AudioBuffer storage (internal)
+|-- BufferCache.ts          <- decoded AudioBuffer storage (internal)
 |-- EventEmitter.ts         <- typed pub/sub (no external deps)
 |-- types.ts                <- all the shared types
 ```
@@ -223,7 +223,7 @@ engine.buffers.has(id);              // boolean (is this buffer loaded?)
 
 ```
 Playlist: A (180s), B (200s), C (150s)
-Transitions: A→B (5s crossfade), B→C (3s crossfade)
+Transitions: A->B (5s crossfade), B->C (3s crossfade)
 
 A: absoluteStart=0,   absoluteEnd=180,  fades=[fadeOut 175->180]
 B: absoluteStart=175, absoluteEnd=375,  fades=[fadeIn 0->5, fadeOut 197->200]
