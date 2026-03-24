@@ -102,7 +102,6 @@ export default function NowPlaying() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const [currentTime, setCurrentTime] = useState(0);
-  const [totalDuration, setTotalDuration] = useState(0);
   const [waveformData, setWaveformData] = useState<WaveformBuffer | null>(null);
   const [currentLyricIndex] = useState(0);
 
@@ -111,16 +110,9 @@ export default function NowPlaying() {
   const currentSongDuration = currentEntry?.playDuration ?? 0;
   const title = currentEntry?.title ?? 'No song playing';
 
-  // Update total duration from timeline
-  useEffect(() => {
-    const duration = engine.getTotalDuration();
-    setTotalDuration(duration);
-  }, [engine]);
-
   // Load waveform for current song
   useEffect(() => {
     if (!currentEntry) {
-      setWaveformData(null);
       return;
     }
 
@@ -158,7 +150,7 @@ export default function NowPlaying() {
   }, [waveformData, currentTime, currentEntry]);
 
   const handlePlay = () => {
-    engine.play();
+    void engine.play();
   };
 
   const handlePause = () => {
