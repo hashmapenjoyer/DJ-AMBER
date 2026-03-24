@@ -27,7 +27,7 @@ export default function SetList({
   const renameInputRef = useRef<HTMLInputElement>(null);
 
   // Drag-and-drop state
-  const dragIndexRef = useRef<number | null>(null);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const activeSetList = setLists.find((sl) => sl.id === activeSetListId);
@@ -37,7 +37,6 @@ export default function SetList({
   const handleRenameStart = () => {
     setRenameValue(activeSetList?.name ?? '');
     setIsRenaming(true);
-    // Focus is handled by autoFocus on the input
   };
 
   const handleRenameCommit = () => {
@@ -61,7 +60,7 @@ export default function SetList({
 
   // Drag handlers
   const handleDragStart = (index: number) => {
-    dragIndexRef.current = index;
+    setDragIndex(index);
   };
 
   const handleDragOver = (e: React.DragEvent, index: number) => {
@@ -70,16 +69,15 @@ export default function SetList({
   };
 
   const handleDrop = (toIndex: number) => {
-    const fromIndex = dragIndexRef.current;
-    if (fromIndex !== null && fromIndex !== toIndex) {
-      engine.reorderPlaylist(fromIndex, toIndex);
+    if (dragIndex !== null && dragIndex !== toIndex) {
+      engine.reorderPlaylist(dragIndex, toIndex);
     }
-    dragIndexRef.current = null;
+    setDragIndex(null);
     setDragOverIndex(null);
   };
 
   const handleDragEnd = () => {
-    dragIndexRef.current = null;
+    setDragIndex(null);
     setDragOverIndex(null);
   };
 
@@ -128,7 +126,6 @@ export default function SetList({
           <button className="setlist-title-btn" onClick={handleRenameStart} title="Click to rename">
             <span className="setlist-title-text">{activeSetList?.name ?? '\u2014'}</span>
             <span className="setlist-edit-icon" aria-hidden="true">
-              {/* pencil: \u270E */}
               {'\u270E'}
             </span>
           </button>
@@ -141,7 +138,6 @@ export default function SetList({
             title="Delete this set list"
             aria-label="Delete set list"
           >
-            {/* multiplication x: \u2715 */}
             {'\u2715'}
           </button>
         )}
@@ -151,7 +147,6 @@ export default function SetList({
       <div className="setlist-content">
         {trackCount === 0 ? (
           <div className="setlist-empty">
-            {/* eighth note: \u266A */}
             <span className="setlist-empty-icon">{'\u266A'}</span>
             <p className="setlist-empty-text">No tracks yet</p>
             <p className="setlist-empty-hint">
@@ -165,7 +160,7 @@ export default function SetList({
                 key={entry.id}
                 className={[
                   'setlist-track-item',
-                  dragIndexRef.current === index ? 'setlist-track-item--dragging' : '',
+                  dragIndex === index ? 'setlist-track-item--dragging' : '',
                   dragOverIndex === index ? 'setlist-track-item--drag-over' : '',
                 ]
                   .filter(Boolean)
@@ -177,7 +172,6 @@ export default function SetList({
                 onDragEnd={handleDragEnd}
               >
                 <span className="setlist-drag-handle" aria-hidden="true">
-                  {/* braille dots (drag handle): \u283F */}
                   {'\u283F'}
                 </span>
                 <span className="setlist-track-number">{index + 1}</span>
@@ -191,7 +185,6 @@ export default function SetList({
                   title="Remove from set list"
                   aria-label={`Remove ${entry.title}`}
                 >
-                  {/* wastebasket: \u{1F5D1} */}
                   {'\u{1F5D1}'}
                 </button>
               </li>
