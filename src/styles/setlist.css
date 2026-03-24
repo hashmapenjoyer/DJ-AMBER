@@ -226,11 +226,37 @@
   gap: var(--space-3);
   padding: var(--space-2) var(--space-4);
   overflow: hidden;
-  transition: background-color var(--transition-fast);
+  cursor: grab;
+  transition:
+    background-color var(--transition-fast),
+    opacity var(--transition-fast);
 }
 
 .setlist-track-item:nth-child(even) {
   background-color: rgba(255, 255, 255, 0.02);
+}
+
+.setlist-track-item--dragging {
+  opacity: 0.4;
+  cursor: grabbing;
+}
+
+.setlist-track-item--drag-over {
+  border-top: 2px solid #00cc88;
+}
+
+/* Drag Handle */
+.setlist-drag-handle {
+  flex-shrink: 0;
+  font-size: var(--fs-base);
+  color: var(--text-disabled);
+  cursor: grab;
+  transition: color var(--transition-fast);
+  user-select: none;
+}
+
+.setlist-track-item:hover .setlist-drag-handle {
+  color: var(--text-tertiary);
 }
 
 .setlist-track-number {

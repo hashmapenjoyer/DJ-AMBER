@@ -26,6 +26,10 @@ export default function SetList({
   const [renameValue, setRenameValue] = useState('');
   const renameInputRef = useRef<HTMLInputElement>(null);
 
+  // Drag-and-drop state
+  const dragIndexRef = useRef<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
   const activeSetList = setLists.find((sl) => sl.id === activeSetListId);
   const totalDuration = engine.getTotalDuration();
   const trackCount = playlist.length;
@@ -53,6 +57,30 @@ export default function SetList({
     if (!activeSetList) return;
     const confirmed = window.confirm(`Delete "${activeSetList.name}"? This cannot be undone.`);
     if (confirmed) onDeleteSetList(activeSetListId);
+  };
+
+  // Drag handlers
+  const handleDragStart = (index: number) => {
+    dragIndexRef.current = index;
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  };
+
+  const handleDrop = (toIndex: number) => {
+    const fromIndex = dragIndexRef.current;
+    if (fromIndex !== null && fromIndex !== toIndex) {
+      engine.reorderPlaylist(fromIndex, toIndex);
+    }
+    dragIndexRef.current = null;
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    dragIndexRef.current = null;
+    setDragOverIndex(null);
   };
 
   return (
@@ -130,7 +158,24 @@ export default function SetList({
         ) : (
           <ul className="setlist-track-list">
             {playlist.map((entry, index) => (
-              <li key={entry.id} className="setlist-track-item">
+              <li
+                key={entry.id}
+                className={[
+                  'setlist-track-item',
+                  dragIndexRef.current === index ? 'setlist-track-item--dragging' : '',
+                  dragOverIndex === index ? 'setlist-track-item--drag-over' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                draggable
+                onDragStart={() => handleDragStart(index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDrop={() => handleDrop(index)}
+                onDragEnd={handleDragEnd}
+              >
+                <span className="setlist-drag-handle" aria-hidden="true">
+                  ⠿
+                </span>
                 <span className="setlist-track-number">{index + 1}</span>
                 <span className="setlist-track-title" title={entry.title}>
                   {entry.title}
