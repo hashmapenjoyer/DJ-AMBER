@@ -69,8 +69,7 @@ function App() {
         engine.appendToPlaylist(clip.bufferId, clip.title);
       }
     })();
-    // engine is a stable singleton — this runs exactly once on mount
-     
+    // engine is a stable singleton - this runs exactly once on mount
   }, [engine]);
 
   const loadSetListIntoEngine = (setList: SetListRecord) => {

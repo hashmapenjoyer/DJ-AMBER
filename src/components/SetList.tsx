@@ -181,6 +181,14 @@ export default function SetList({
                   {entry.title}
                 </span>
                 <span className="setlist-track-duration">{formatDuration(entry.duration)}</span>
+                <button
+                  className="setlist-track-remove"
+                  onClick={() => engine.removeFromPlaylist(entry.id)}
+                  title="Remove from set list"
+                  aria-label={`Remove ${entry.title}`}
+                >
+                  🗑
+                </button>
               </li>
             ))}
           </ul>
