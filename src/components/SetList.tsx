@@ -178,7 +178,6 @@ export default function SetList({
                 <span className="setlist-track-title" title={entry.title}>
                   {entry.title}
                 </span>
-                <span className="setlist-track-duration">{formatDuration(entry.duration)}</span>
                 <button
                   className="setlist-track-remove"
                   onClick={() => engine.removeFromPlaylist(entry.id)}
@@ -187,6 +186,7 @@ export default function SetList({
                 >
                   {'\u{1F5D1}'}
                 </button>
+                <span className="setlist-track-duration">{formatDuration(entry.duration)}</span>
               </li>
             ))}
           </ul>
