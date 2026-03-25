@@ -274,6 +274,7 @@
   flex: 1;
   min-width: 0;
   font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;

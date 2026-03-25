@@ -263,6 +263,10 @@ export class AudioEngine extends EventEmitter<AudioEngineEvents> {
     return this.bufferCache.has(id);
   }
 
+  removeBuffer(id: ID): void {
+    this.bufferCache.remove(id);
+  }
+
   // volume
 
   setMasterVolume(gain: Gain): void {
