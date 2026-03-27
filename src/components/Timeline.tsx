@@ -53,15 +53,15 @@ export default function Timeline() {
   const timelineRef = useRef(timeline);
   timelineRef.current = timeline;
 
-  // Derive total duration from the engine, with a minimum so the timeline isn't tiny
+  // derive total duration from the engine, with a minimum so the timeline isn't tiny
   const totalDuration = Math.max(MIN_TIMELINE_SECS, engine.getTotalDuration() + 30);
   const timelineWidth = totalDuration * PX_PER_SEC;
 
-  // Build tick marks
+  // build tick marks
   const ticks: number[] = [];
   for (let s = 0; s <= totalDuration; s += TICK_INTERVAL) ticks.push(s);
 
-  // Playhead animation — reads engine.getCurrentTime() in a rAF loop
+  // playhead animation, reads engine.getCurrentTime() in a rAF loop
   useEffect(() => {
     const tick = () => {
       setPlayhead(engine.getCurrentTime());
@@ -73,7 +73,7 @@ export default function Timeline() {
     };
   }, [engine]);
 
-  // Click on the ruler / lane area to seek (skip if a drag just ended)
+  // click on the ruler / lane area to seek (skip if a drag just ended)
   const handleTimelineClick = useCallback(
     (e: React.MouseEvent) => {
       if (justDraggedRef.current) {
@@ -89,7 +89,7 @@ export default function Timeline() {
     [engine],
   );
 
-  // Transport controls
+  // transport controls
   const handlePlayPause = useCallback(() => {
     if (transportState === 'playing') {
       engine.pause();
@@ -102,16 +102,25 @@ export default function Timeline() {
     engine.stop();
   }, [engine]);
 
-  // Start dragging a clip (first clip is fixed at t=0)
-  const onClipMouseDown = useCallback((e: React.MouseEvent, entryId: string, entryIndex: number) => {
-    if (entryIndex === 0) return;
-    e.preventDefault();
-    e.stopPropagation();
-    dragRef.current = { entryId, entryIndex, startMouseX: e.clientX, moved: false, lastDeltaPx: 0 };
-    setDragState({ entryId, entryIndex, deltaPx: 0 });
-  }, []);
+  // start dragging a clip (first clip is fixed at t=0)
+  const onClipMouseDown = useCallback(
+    (e: React.MouseEvent, entryId: string, entryIndex: number) => {
+      if (entryIndex === 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      dragRef.current = {
+        entryId,
+        entryIndex,
+        startMouseX: e.clientX,
+        moved: false,
+        lastDeltaPx: 0,
+      };
+      setDragState({ entryId, entryIndex, deltaPx: 0 });
+    },
+    [],
+  );
 
-  // Global mouse handlers for drag (stable deps — engine is a singleton)
+  // global mouse handlers for drag
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {
       if (!dragRef.current) return;
@@ -163,7 +172,7 @@ export default function Timeline() {
 
   const isPlaying = transportState === 'playing';
 
-  // Compute crossfade overlay regions from adjacent clip overlaps
+  // compute crossfade overlay regions from adjacent clip overlaps
   const crossfades: Array<{ key: string; leftPx: number; widthPx: number; duration: number }> = [];
 
   for (let i = 0; i < timeline.length - 1; i++) {
@@ -172,7 +181,7 @@ export default function Timeline() {
 
     let nextStart = next.absoluteStart;
 
-    // If the next clip is being dragged, use the preview position
+    // if the next clip is being dragged, use the preview position
     if (dragState && dragState.entryIndex === i + 1) {
       const clampedPx = clampDragDelta(next, current, dragState.deltaPx);
       nextStart = next.absoluteStart + clampedPx / PX_PER_SEC;
@@ -230,7 +239,7 @@ export default function Timeline() {
 
             if (isDragging && idx > 0) {
               const prev = timeline[idx - 1];
-              leftPx += clampDragDelta(entry, prev, dragState!.deltaPx);
+              leftPx += clampDragDelta(entry, prev, dragState.deltaPx);
             }
 
             const clipWidth = (entry.absoluteEnd - entry.absoluteStart) * PX_PER_SEC;
@@ -271,11 +280,7 @@ export default function Timeline() {
                 height: CLIP_HEIGHT,
               }}
             >
-              <svg
-                viewBox="0 0 1 1"
-                preserveAspectRatio="none"
-                className="timeline_crossfade_svg"
-              >
+              <svg viewBox="0 0 1 1" preserveAspectRatio="none" className="timeline_crossfade_svg">
                 <line x1="0" y1="0" x2="1" y2="1" />
                 <line x1="0" y1="1" x2="1" y2="0" />
               </svg>
