@@ -115,6 +115,8 @@ export class AudioEngine extends EventEmitter<AudioEngineEvents> {
     if (this.transport.getState() === 'playing') {
       // cancel future nodes since they may have moved
       this.scheduler.cancelFutureNodes();
+      // cancel nodes whose entry moved away from the current playback position
+      this.scheduler.cancelDisplacedNodes();
 
       // update fades on currently-playing nodes (in case transitions changed)
       for (const [id] of this.scheduler.getActiveNodes()) {

@@ -165,6 +165,30 @@ export class Scheduler {
   }
 
   /**
+   * cancel active nodes whose timeline entry has moved away from the
+   * current transport time (e.g. after a setlist reorder)
+   */
+  cancelDisplacedNodes(): void {
+    const currentTransport = this.getCurrentTransportTime();
+
+    for (const [id, node] of this.activeNodes) {
+      const entry = this.scheduledEntries.find((e) => e.entryId === id);
+      // entry was removed or its new time range no longer covers now
+      if (!entry || entry.absoluteStart > currentTransport || entry.absoluteEnd <= currentTransport) {
+        node.sourceNode.onended = null;
+        try {
+          node.sourceNode.stop(0);
+        } catch {
+          // already stopped
+        }
+        node.sourceNode.disconnect();
+        node.gainNode.disconnect();
+        this.activeNodes.delete(id);
+      }
+    }
+  }
+
+  /**
    * update gain automation on a currently-playing node
    * used when a transition changes on the currently-playing song
    */
