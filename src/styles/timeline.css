@@ -52,6 +52,14 @@
   font-weight: var(--fw-bold);
 }
 
+.timeline_time_display {
+  font-size: var(--fs-sm);
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  letter-spacing: var(--ls-wide);
+  min-width: 4ch;
+}
+
 .timeline_scroll_area {
   overflow-x: scroll;
   overflow-y: visible;
@@ -138,6 +146,47 @@
   font-family: var(--font-mono);
   color: var(--text-disabled);
   flex-shrink: 0;
+}
+
+.timeline_clip_dragging {
+  opacity: 0.75;
+  cursor: grabbing !important;
+  box-shadow: var(--shadow-lg), 0 0 8px rgba(0, 218, 189, 0.3);
+}
+
+.timeline_crossfade {
+  position: absolute;
+  z-index: 20;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 218, 189, 0.06);
+  border-left: 1px dashed rgba(0, 218, 189, 0.4);
+  border-right: 1px dashed rgba(0, 218, 189, 0.4);
+  border-radius: var(--br-sm);
+}
+
+.timeline_crossfade_svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.timeline_crossfade_svg line {
+  stroke: rgba(0, 218, 189, 0.4);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.timeline_crossfade_label {
+  position: relative;
+  z-index: 1;
+  font-size: var(--fs-xs);
+  font-family: var(--font-mono);
+  color: rgba(0, 218, 189, 0.85);
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
 }
 
 .timeline_playhead {

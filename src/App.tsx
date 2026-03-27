@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import './App.css';
 import NavBar from './components/NavBar';
 import MusicLibrary from './components/MusicLibrary';
@@ -7,6 +7,7 @@ import SetList from './components/SetList';
 import Timeline from './components/Timeline';
 import { useAudioEngine } from './audio/UseAudioEngine';
 import type { SetListRecord } from '../types/SetListRecord';
+import type { LibraryItem } from '../types/LibraryItem';
 
 const DEFAULT_SET_LIST_ID = 'default-set-list';
 
@@ -14,79 +15,116 @@ const INITIAL_SET_LISTS: SetListRecord[] = [
   { id: DEFAULT_SET_LIST_ID, name: 'Set List 1', tracks: [] },
 ];
 
-// Dev-only mock data - remove once real audio upload is wired
-const DEV_MOCK_CLIPS = [
-  { bufferId: 'mock-1', title: 'Never Gonna Give You Up', duration: 100 },
-  { bufferId: 'mock-2', title: 'All I Want for Christmas Is You', duration: 150 },
-  { bufferId: 'mock-3', title: 'Revenge', duration: 100 },
-  {
-    bufferId: 'mock-4',
-    title: 'Like a Prayer - Battle Royale Mix from "Deadpool and Wolverine"',
-    duration: 164,
-  },
-] as const;
-
-/** Returns a silent WAV ArrayBuffer for the given duration. */
-function createSilentWav(durationSeconds: number, sampleRate = 44100): ArrayBuffer {
-  const numSamples = Math.ceil(sampleRate * durationSeconds);
-  const dataLength = numSamples * 2; // 16-bit mono
-  const buf = new ArrayBuffer(44 + dataLength);
-  const v = new DataView(buf);
-  const str = (offset: number, s: string) => {
-    for (let i = 0; i < s.length; i++) v.setUint8(offset + i, s.charCodeAt(i));
-  };
-  str(0, 'RIFF');
-  v.setUint32(4, 36 + dataLength, true);
-  str(8, 'WAVE');
-  str(12, 'fmt ');
-  v.setUint32(16, 16, true);
-  v.setUint16(20, 1, true);
-  v.setUint16(22, 1, true);
-  v.setUint32(24, sampleRate, true);
-  v.setUint32(28, sampleRate * 2, true);
-  v.setUint16(32, 2, true);
-  v.setUint16(34, 16, true);
-  str(36, 'data');
-  v.setUint32(40, dataLength, true);
-  return buf; // zeroed by default (silence)
-}
-
 function App() {
   const { engine } = useAudioEngine();
   const [setLists, setSetLists] = useState<SetListRecord[]>(INITIAL_SET_LISTS);
   const [activeSetListId, setActiveSetListId] = useState<string>(DEFAULT_SET_LIST_ID);
+  const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([]);
 
-  // Ref guard prevents double-seeding in StrictMode
-  // Remove with DEV_MOCK_CLIPS once upload is real
-  const mockSeededRef = useRef(false);
-  useEffect(() => {
-    if (mockSeededRef.current) return;
-    mockSeededRef.current = true;
-    void (async () => {
-      for (const clip of DEV_MOCK_CLIPS) {
-        const wav = createSilentWav(clip.duration);
-        await engine.buffers.add(clip.bufferId, wav);
-        engine.playlist.append(clip.bufferId, clip.title);
+  // --- Library handlers ---
+
+  const handleLibraryUpload = async (files: File[], category: 'music' | 'sfx'): Promise<void> => {
+    const newItems: LibraryItem[] = [];
+    const duplicates: string[] = [];
+    const failures: string[] = [];
+
+    for (const file of files) {
+      const isDuplicate =
+        libraryItems.some((item) => item.title === file.name && item.category === category) ||
+        newItems.some((item) => item.title === file.name);
+
+      if (isDuplicate) {
+        duplicates.push(file.name);
+        continue;
       }
-    })();
-    // engine is a stable singleton — this runs exactly once on mount
-  }, [engine]);
+
+      try {
+        const bufferId = crypto.randomUUID();
+        const arrayBuffer = await file.arrayBuffer();
+        const audioBuffer = await engine.buffers.add(bufferId, arrayBuffer);
+
+        newItems.push({
+          id: bufferId,
+          title: file.name,
+          duration: Math.round(audioBuffer.duration),
+          category,
+        });
+      } catch {
+        failures.push(file.name);
+      }
+    }
+
+    if (newItems.length > 0) {
+      setLibraryItems((prev) => [...prev, ...newItems]);
+    }
+
+    if (duplicates.length > 0) {
+      window.alert(`Skipped duplicate(s): ${duplicates.join(', ')}`);
+    }
+
+    if (failures.length > 0) {
+      window.alert(
+        `Could not decode: ${failures.join(', ')}\nMake sure the files are valid audio.`,
+      );
+    }
+  };
+
+  const handleLibraryDelete = (id: string) => {
+    const item = libraryItems.find((i) => i.id === id);
+    if (!item) return;
+
+    const activePlaylist = engine.playlist.getEntries();
+    const inActivePlaylist = activePlaylist.some((entry) => entry.bufferId === id);
+    const inSavedSetList = setLists.some(
+      (sl) => sl.id !== activeSetListId && sl.tracks.some((t) => t.bufferId === id),
+    );
+    const inUse = inActivePlaylist || inSavedSetList;
+
+    if (inUse) {
+      const confirmed = window.confirm(
+        `"${item.title}" is in use in a set list. Deleting it will remove it from all set lists. Continue?`,
+      );
+      if (!confirmed) return;
+
+      const snapshot = [...activePlaylist];
+      for (const entry of snapshot) {
+        if (entry.bufferId === id) {
+          engine.playlist.remove(entry.id);
+        }
+      }
+
+      setSetLists((prev) =>
+        prev.map((sl) => ({
+          ...sl,
+          tracks: sl.tracks.filter((t) => t.bufferId !== id),
+        })),
+      );
+    } else {
+      const confirmed = window.confirm(`Delete "${item.title}" from your library?`);
+      if (!confirmed) return;
+    }
+
+    engine.buffers.remove(id);
+    setLibraryItems((prev) => prev.filter((i) => i.id !== id));
+  };
+
+  const handleAddToSetList = (id: string) => {
+    const item = libraryItems.find((i) => i.id === id);
+    if (!item) return;
+    engine.playlist.append(id, item.title);
+  };
+
+  // --- Set list handlers ---
 
   const loadSetListIntoEngine = (setList: SetListRecord) => {
-    // Save the current playlist into the outgoing set list before clearing the engine
+    const currentTracks = engine.playlist.getEntries().map(({ bufferId, title, duration }) => ({
+      bufferId,
+      title,
+      duration,
+    }));
+
     setSetLists((prev) =>
-      prev.map((sl) =>
-        sl.id === activeSetListId
-          ? {
-              ...sl,
-              tracks: engine.playlist.getEntries().map(({ bufferId, title, duration }) => ({
-                bufferId,
-                title,
-                duration,
-              })),
-            }
-          : sl,
-      ),
+      prev.map((sl) => (sl.id === activeSetListId ? { ...sl, tracks: currentTracks } : sl)),
     );
 
     engine.transport.stop();
@@ -145,7 +183,12 @@ function App() {
     <div className="app-container">
       <NavBar />
       <div className="middle-section">
-        <MusicLibrary />
+        <MusicLibrary
+          items={libraryItems}
+          onUpload={handleLibraryUpload}
+          onDelete={handleLibraryDelete}
+          onAddToSetList={handleAddToSetList}
+        />
         <NowPlaying />
         <SetList
           setLists={setLists}
