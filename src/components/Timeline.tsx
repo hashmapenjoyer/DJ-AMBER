@@ -64,7 +64,7 @@ export default function Timeline() {
   // playhead animation, reads engine.getCurrentTime() in a rAF loop
   useEffect(() => {
     const tick = () => {
-      setPlayhead(engine.getCurrentTime());
+      setPlayhead(engine.transport.getCurrentTime());
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
@@ -84,7 +84,7 @@ export default function Timeline() {
       const scrollLeft = scrollRef.current.scrollLeft;
       const rectLeft = scrollRef.current.getBoundingClientRect().left;
       const clickX = e.clientX - rectLeft + scrollLeft;
-      engine.seek(Math.max(0, clickX / PX_PER_SEC));
+      engine.transport.seek(Math.max(0, clickX / PX_PER_SEC));
     },
     [engine],
   );
@@ -92,14 +92,14 @@ export default function Timeline() {
   // transport controls
   const handlePlayPause = useCallback(() => {
     if (transportState === 'playing') {
-      engine.pause();
+      engine.transport.pause();
     } else {
-      engine.play();
+      engine.transport.play();
     }
   }, [engine, transportState]);
 
   const handleReturnToStart = useCallback(() => {
-    engine.stop();
+    engine.transport.stop();
   }, [engine]);
 
   // start dragging a clip (first clip is fixed at t=0)
@@ -151,9 +151,9 @@ export default function Timeline() {
           const newOverlap = currentOverlap - clampedSec;
 
           if (newOverlap >= MIN_TRANSITION_SECS) {
-            engine.setTransition(prevEntry.entryId, draggedEntry.entryId, newOverlap);
+            engine.playlist.setTransition(prevEntry.entryId, draggedEntry.entryId, newOverlap);
           } else {
-            engine.removeTransition(prevEntry.entryId, draggedEntry.entryId);
+            engine.playlist.removeTransition(prevEntry.entryId, draggedEntry.entryId);
           }
         }
       }

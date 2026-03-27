@@ -70,7 +70,7 @@ export default function SetList({
 
   const handleDrop = (toIndex: number) => {
     if (dragIndex !== null && dragIndex !== toIndex) {
-      engine.reorderPlaylist(dragIndex, toIndex);
+      engine.playlist.reorder(dragIndex, toIndex);
     }
     setDragIndex(null);
     setDragOverIndex(null);
