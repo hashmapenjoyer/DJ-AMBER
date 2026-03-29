@@ -174,7 +174,11 @@ export class Scheduler {
     for (const [id, node] of this.activeNodes) {
       const entry = this.scheduledEntries.find((e) => e.entryId === id);
       // entry was removed or its new time range no longer covers now
-      if (!entry || entry.absoluteStart > currentTransport || entry.absoluteEnd <= currentTransport) {
+      if (
+        !entry ||
+        entry.absoluteStart > currentTransport ||
+        entry.absoluteEnd <= currentTransport
+      ) {
         node.sourceNode.onended = null;
         try {
           node.sourceNode.stop(0);

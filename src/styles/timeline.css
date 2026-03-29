@@ -151,7 +151,9 @@
 .timeline_clip_dragging {
   opacity: 0.75;
   cursor: grabbing !important;
-  box-shadow: var(--shadow-lg), 0 0 8px rgba(0, 218, 189, 0.3);
+  box-shadow:
+    var(--shadow-lg),
+    0 0 8px rgba(0, 218, 189, 0.3);
 }
 
 .timeline_crossfade {
