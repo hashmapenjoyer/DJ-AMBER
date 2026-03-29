@@ -10,7 +10,7 @@ const HEADER_HEIGHT = 32;
 const CLIP_HEIGHT = 56;
 const LANE_PADDING = 8;
 const CANVAS_HEIGHT = HEADER_HEIGHT + CLIP_HEIGHT + 48;
-const MIN_TIMELINE_SECS = 300; // always show at least 5 minutes
+const MIN_TIMELINE_SECS = 420; // always show at least 7 minutes
 const TICK_INTERVAL = 30; // a tick every 30 seconds
 const MIN_TRANSITION_SECS = 0.5; // minimum drag-overlap to count as a transition
 
