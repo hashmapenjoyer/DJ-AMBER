@@ -51,7 +51,9 @@ export default function Timeline() {
 
   const justDraggedRef = useRef(false);
   const timelineRef = useRef(timeline);
-  timelineRef.current = timeline;
+  useEffect(() => {
+    timelineRef.current = timeline;
+  });
 
   // derive total duration from the engine, with a minimum so the timeline isn't tiny
   const totalDuration = Math.max(MIN_TIMELINE_SECS, engine.getTotalDuration() + 30);
@@ -94,7 +96,7 @@ export default function Timeline() {
     if (transportState === 'playing') {
       engine.transport.pause();
     } else {
-      engine.transport.play();
+      void engine.transport.play();
     }
   }, [engine, transportState]);
 
