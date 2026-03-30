@@ -16,19 +16,19 @@ function getEngine(): AudioEngine {
  * React hook for the AudioEngine singleton.
  *
  * Re-renders ONLY on discrete events (stateChange, playlistChange, timelineChange, songChange).
- * For continuous time (playhead, progress bar), use engine.getCurrentTime() in a rAF loop
+ * For continuous time (playhead, progress bar), use engine.transport.getCurrentTime() in a rAF loop
  */
 export function useAudioEngine() {
   const engine = getEngine();
 
   const transportState = useSyncExternalStore<TransportState>(
     (onStoreChange) => engine.on('stateChange', () => onStoreChange()),
-    () => engine.getState(),
+    () => engine.transport.getState(),
   );
 
   const playlist = useSyncExternalStore<ReadonlyArray<PlaylistEntry>>(
     (onStoreChange) => engine.on('playlistChange', () => onStoreChange()),
-    () => engine.getPlaylist(),
+    () => engine.playlist.getEntries(),
   );
 
   const timeline = useSyncExternalStore<ReadonlyArray<ScheduledEntry>>(

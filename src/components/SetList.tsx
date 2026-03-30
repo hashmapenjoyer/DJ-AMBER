@@ -70,7 +70,7 @@ export default function SetList({
 
   const handleDrop = (toIndex: number) => {
     if (dragIndex !== null && dragIndex !== toIndex) {
-      engine.reorderPlaylist(dragIndex, toIndex);
+      engine.playlist.reorder(dragIndex, toIndex);
     }
     setDragIndex(null);
     setDragOverIndex(null);
@@ -180,7 +180,7 @@ export default function SetList({
                 </span>
                 <button
                   className="setlist-track-remove"
-                  onClick={() => engine.removeFromPlaylist(entry.id)}
+                  onClick={() => engine.playlist.remove(entry.id)}
                   title="Remove from set list"
                   aria-label={`Remove ${entry.title}`}
                 >

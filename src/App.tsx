@@ -41,7 +41,7 @@ function App() {
       try {
         const bufferId = crypto.randomUUID();
         const arrayBuffer = await file.arrayBuffer();
-        const audioBuffer = await engine.loadAudioFile(bufferId, arrayBuffer);
+        const audioBuffer = await engine.buffers.add(bufferId, arrayBuffer);
 
         newItems.push({
           id: bufferId,
@@ -73,7 +73,7 @@ function App() {
     const item = libraryItems.find((i) => i.id === id);
     if (!item) return;
 
-    const activePlaylist = engine.getPlaylist();
+    const activePlaylist = engine.playlist.getEntries();
     const inActivePlaylist = activePlaylist.some((entry) => entry.bufferId === id);
     const inSavedSetList = setLists.some(
       (sl) => sl.id !== activeSetListId && sl.tracks.some((t) => t.bufferId === id),
@@ -89,7 +89,7 @@ function App() {
       const snapshot = [...activePlaylist];
       for (const entry of snapshot) {
         if (entry.bufferId === id) {
-          engine.removeFromPlaylist(entry.id);
+          engine.playlist.remove(entry.id);
         }
       }
 
@@ -104,20 +104,20 @@ function App() {
       if (!confirmed) return;
     }
 
-    engine.removeBuffer(id);
+    engine.buffers.remove(id);
     setLibraryItems((prev) => prev.filter((i) => i.id !== id));
   };
 
   const handleAddToSetList = (id: string) => {
     const item = libraryItems.find((i) => i.id === id);
     if (!item) return;
-    engine.appendToPlaylist(id, item.title);
+    engine.playlist.append(id, item.title);
   };
 
   // --- Set list handlers ---
 
   const loadSetListIntoEngine = (setList: SetListRecord) => {
-    const currentTracks = engine.getPlaylist().map(({ bufferId, title, duration }) => ({
+    const currentTracks = engine.playlist.getEntries().map(({ bufferId, title, duration }) => ({
       bufferId,
       title,
       duration,
@@ -127,15 +127,15 @@ function App() {
       prev.map((sl) => (sl.id === activeSetListId ? { ...sl, tracks: currentTracks } : sl)),
     );
 
-    engine.stop();
+    engine.transport.stop();
 
-    for (const entry of engine.getPlaylist()) {
-      engine.removeFromPlaylist(entry.id);
+    for (const entry of engine.playlist.getEntries()) {
+      engine.playlist.remove(entry.id);
     }
 
     for (const track of setList.tracks) {
-      if (engine.hasBuffer(track.bufferId)) {
-        engine.appendToPlaylist(track.bufferId, track.title);
+      if (engine.buffers.has(track.bufferId)) {
+        engine.playlist.append(track.bufferId, track.title);
       }
     }
   };
