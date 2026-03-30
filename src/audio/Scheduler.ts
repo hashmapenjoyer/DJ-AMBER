@@ -166,27 +166,26 @@ export class Scheduler {
 
   /**
    * cancel active nodes whose timeline entry has moved away from the
-   * current transport time (e.g. after a setlist reorder)
+   * current transport time (e.g. after a setlist reorder) or whose
+   * entry shifted on the timeline (e.g. a fade was added before it).
+   * shifted nodes will be rescheduled by the next tick at the correct
+   * buffer offset, keeping playback in sync with the absolute timeline.
    */
   cancelDisplacedNodes(): void {
     const currentTransport = this.getCurrentTransportTime();
+    const now = this.ctx.currentTime;
 
     for (const [id, node] of this.activeNodes) {
       const entry = this.scheduledEntries.find((e) => e.entryId === id);
-      // entry was removed or its new time range no longer covers now
+      // entry was removed, its new time range no longer covers now,
+      // or its position shifted on the timeline
       if (
         !entry ||
         entry.absoluteStart > currentTransport ||
-        entry.absoluteEnd <= currentTransport
+        entry.absoluteEnd <= currentTransport ||
+        entry.absoluteStart !== node.transportStart
       ) {
-        node.sourceNode.onended = null;
-        try {
-          node.sourceNode.stop(0);
-        } catch {
-          // already stopped
-        }
-        node.sourceNode.disconnect();
-        node.gainNode.disconnect();
+        this.killNode(node, now);
         this.activeNodes.delete(id);
       }
     }
