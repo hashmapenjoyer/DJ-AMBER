@@ -37,7 +37,7 @@ export default function Timeline() {
     let rafId: number;
     const tick = () => {
       if (playheadRef.current) {
-        playheadRef.current.style.left = `${engine.getCurrentTime() * PX_PER_SEC}px`;
+        playheadRef.current.style.left = `${engine.transport.getCurrentTime() * PX_PER_SEC}px`;
       }
       rafId = requestAnimationFrame(tick);
     };
@@ -48,15 +48,15 @@ export default function Timeline() {
   // Playing / pausing
   const handlePlayPause = useCallback(async () => {
     if (transportState === 'playing') {
-      engine.pause();
+      engine.transport.pause();
     } else {
-      await engine.play();
+      await engine.transport.play();
     }
   }, [transportState, engine]);
   
   // Reset
   const handleReturnToStart = useCallback(() => {
-    engine.seek(0);
+    engine.transport.seek(0);
     if (playheadRef.current) playheadRef.current.style.left = '0px';
   }, [engine]);
  
@@ -128,7 +128,7 @@ export default function Timeline() {
       const newIndex = withMids.findIndex((o) => o.entryId === drag.entryId);
  
       if (newIndex !== drag.originalIndex) {
-        engine.reorderPlaylist(drag.originalIndex, newIndex);
+        engine.playlist.reorder(drag.originalIndex, newIndex);
       }
  
       // Resolve transitions
@@ -144,9 +144,9 @@ export default function Timeline() {
       if (leftNeighbour) {
         const overlapSec = leftNeighbour.absoluteEnd - droppedStartSec;
         if (overlapSec > 0.1) {
-          engine.setTransition(leftNeighbour.entryId, dragged.entryId, overlapSec);
+          engine.playlist.setTransition(leftNeighbour.entryId, dragged.entryId, overlapSec);
         } else {
-          engine.removeTransition(leftNeighbour.entryId, dragged.entryId);
+          engine.playlist.removeTransition(leftNeighbour.entryId, dragged.entryId);
         }
       }
  
@@ -154,9 +154,9 @@ export default function Timeline() {
       if (rightNeighbour) {
         const overlapSec = (droppedStartSec + clipDurationSec) - rightNeighbour.absoluteStart;
         if (overlapSec > 0.1) {
-          engine.setTransition(dragged.entryId, rightNeighbour.entryId, overlapSec);
+          engine.playlist.setTransition(dragged.entryId, rightNeighbour.entryId, overlapSec);
         } else {
-          engine.removeTransition(dragged.entryId, rightNeighbour.entryId);
+          engine.playlist.removeTransition(dragged.entryId, rightNeighbour.entryId);
         }
       }
     },
@@ -203,7 +203,7 @@ export default function Timeline() {
           <button className="timeline_play_btn" onClick={handlePlayPause}>
             {isPlaying ? '⏸' : '▶'}
           </button>
-          <span className="timeline_time_display">{formatDuration(playhead)}</span>
+          <span className="timeline_time_display">{formatDuration(engine.transport.getCurrentTime())}</span>
         </div>
       </div>
  
@@ -211,11 +211,10 @@ export default function Timeline() {
       <div ref={scrollRef} className="timeline_scroll_area">
         <div
           className="timeline_canvas"
-          style={{ width: timelineWidth, height: CANVAS_HEIGHT }}
-          onClick={handleTimelineClick}
+          style={{ width: TIMELINE_WIDTH, height: CANVAS_HEIGHT }}
         >
           {/* Time ticks */}
-          <div className="timeline_ticks" style={{ width: timelineWidth }}>
+          <div className="timeline_ticks" style={{ width: TIMELINE_WIDTH }}>
             {ticks.map((s) => (
               <div key={s} className="timeline_tick" style={{ left: s * PX_PER_SEC }}>
                 <span className="timeline_tick_label">{formatDuration(s)}</span>
