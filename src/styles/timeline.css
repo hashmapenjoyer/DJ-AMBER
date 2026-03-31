@@ -106,6 +106,21 @@
   height: 56px;
   border: 1px solid;
   border-radius: var(--br-sm);
+  border-color: rgb(128, 255, 185);
+  cursor: grab;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-md);
+  transition: box-shadow var(--transition-fast);
+}
+
+.timeline_clip--dragging {
+  position: absolute;
+  height: 56px;
+  border: 1px solid;
+  border-radius: var(--br-sm);
+  border-color: rgb(0, 255, 115);
   cursor: grab;
   overflow: hidden;
   display: flex;
@@ -158,10 +173,11 @@
   margin-left: -4px;
 }
 
-.timeline_overlap {
+.timeline_clip_crossfade {
   position: absolute;
   background-color: var(--timeline-overlap-bg);
   border: 1px solid;
   border-radius: var(--br-sm);
+  border-color: rgb(99, 93, 187);
   z-index: 10;
 }
