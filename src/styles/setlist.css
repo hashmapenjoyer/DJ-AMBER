@@ -226,11 +226,37 @@
   gap: var(--space-3);
   padding: var(--space-2) var(--space-4);
   overflow: hidden;
-  transition: background-color var(--transition-fast);
+  cursor: grab;
+  transition:
+    background-color var(--transition-fast),
+    opacity var(--transition-fast);
 }
 
 .setlist-track-item:nth-child(even) {
   background-color: rgba(255, 255, 255, 0.02);
+}
+
+.setlist-track-item--dragging {
+  opacity: 0.4;
+  cursor: grabbing;
+}
+
+.setlist-track-item--drag-over {
+  border-top: 2px solid #00cc88;
+}
+
+/* Drag Handle */
+.setlist-drag-handle {
+  flex-shrink: 0;
+  font-size: var(--fs-base);
+  color: var(--text-disabled);
+  cursor: grab;
+  transition: color var(--transition-fast);
+  user-select: none;
+}
+
+.setlist-track-item:hover .setlist-drag-handle {
+  color: var(--text-tertiary);
 }
 
 .setlist-track-number {
@@ -248,6 +274,7 @@
   flex: 1;
   min-width: 0;
   font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
@@ -259,6 +286,36 @@
   font-size: var(--fs-xs);
   color: var(--text-tertiary);
   font-family: var(--font-mono);
+}
+
+/* Remove Button */
+.setlist-track-remove {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-xs);
+  background: none;
+  border: none;
+  color: var(--text-disabled);
+  border-radius: var(--br-sm);
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity var(--transition-fast),
+    color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.setlist-track-item:hover .setlist-track-remove {
+  opacity: 1;
+}
+
+.setlist-track-remove:hover {
+  color: var(--color-error);
+  background-color: rgba(234, 67, 53, 0.1);
 }
 
 /* Footer */

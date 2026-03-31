@@ -1,0 +1,238 @@
+classDiagram
+    direction TB
+
+    class EventEmitter~TEvents~ {
+        -listeners: Map~keyof TEvents, Set~Listener~~
+        +on(event, listener) () => void
+        +off(event, listener) void
+        +emit(event, data) void
+    }
+
+    class AudioEngine {
+        +ctx: AudioContext
+        +transport: TransportController
+        +playlist: PlaylistController
+        +sfx: SfxController
+        +volume: VolumeController
+        +buffers: BufferCache
+        -scheduler: Scheduler
+        -playlistManager: PlaylistManager
+        -cachedTimeline: ScheduledEntry[]
+        +getTimeline() ReadonlyArray~ScheduledEntry~
+        +getCurrentEntry() ScheduledEntry | undefined
+        +getTotalDuration() number
+        -handleBeforeRemove(entryId) void
+        -recomputeAndSync() void
+    }
+
+    class TransportController {
+        -ctx: AudioContext
+        -scheduler: Scheduler
+        -getDuration: () => Seconds
+        -onStateChange: (state) => void
+        -state: TransportState
+        -transportTimeAtPlay: Seconds
+        -contextTimeAtPlay: number
+        -pausedAt: Seconds
+        +play() Promise~void~
+        +pause() void
+        +stop() void
+        +seek(time) void
+        +getCurrentTime() Seconds
+        +getState() TransportState
+    }
+
+    class Scheduler {
+        -ctx: AudioContext
+        -bufferCache: BufferCache
+        -musicTrackGain: GainNode
+        -sfxTrackGain: GainNode
+        -intervalId: number | null
+        -activeNodes: Map~ID, ActiveNode~
+        -scheduledEntries: ScheduledEntry[]
+        -sfxClips: SfxClip[]
+        -transportTimeAtPlay: Seconds
+        -contextTimeAtPlay: number
+        -onPlaybackEnded: (() => void) | null
+        -onSongChange: ((entryId, title) => void) | null
+        -lastReportedEntryId: ID | null
+        +setOnPlaybackEnded(cb) void
+        +setOnSongChange(cb) void
+        +start(transportTime, contextTimeAtPlay) void
+        +stopAll() void
+        +setScheduledEntries(entries) void
+        +setSfxClips(clips) void
+        +getActiveNodes() ReadonlyMap~ID, ActiveNode~
+        +fadeOutNode(entryId) void
+        +cancelFutureNodes() ActiveNode[]
+        +cancelDisplacedNodes() void
+        +updateNodeFades(entryId, newFades) void
+        -killNode(node, now) void
+        -tick() void
+        -scheduleEntry(entry, nowCtx, nowTransport) void
+        -scheduleSfx(sfx, nowCtx, nowTransport) void
+        -applyFades(gainNode, fades, clipOffset, playDuration, ctxStartTime) void
+        -getCurrentTransportTime() Seconds
+        -reportSongChange(currentTransport) void
+    }
+
+    class PlaylistController {
+        -playlistManager: PlaylistManager
+        -bufferCache: BufferCache
+        -onChanged: () => void
+        -onBeforeRemove: (entryId) => void
+        +append(bufferId, title) void
+        +insert(index, bufferId, title) void
+        +remove(entryId) void
+        +reorder(fromIndex, toIndex) void
+        +getEntries() ReadonlyArray~PlaylistEntry~
+        +getEntryAtTime(time) ScheduledEntry | undefined
+        +getTotalDuration() Seconds
+        +setTransition(fromEntryId, toEntryId, duration, fadeOutType?, fadeInType?) void
+        +removeTransition(fromEntryId, toEntryId) void
+        +getTransitions() ReadonlyArray~Transition~
+    }
+
+    class PlaylistManager {
+        -entries: PlaylistEntry[]
+        -transitions: Transition[]
+        +getEntries() ReadonlyArray~PlaylistEntry~
+        +appendEntry(entry) void
+        +insertEntry(index, entry) void
+        +removeEntry(entryId) void
+        +moveEntry(fromIndex, toIndex) void
+        +getTransitions() ReadonlyArray~Transition~
+        +getTransitionBetween(fromEntryId, toEntryId) Transition | undefined
+        +setTransition(transition) void
+        +removeTransition(transitionId) void
+        +removeTransitionBetween(fromEntryId, toEntryId) void
+        +computeTimeline() ScheduledEntry[]
+        +getTotalDuration() Seconds
+        +getEntryAtTime(time) ScheduledEntry | undefined
+        -pruneInvalidTransitions() void
+    }
+
+    class BufferCache {
+        -buffers: Map~ID, AudioBuffer~
+        -ctx: AudioContext
+        +add(id, arrayBuffer) Promise~AudioBuffer~
+        +get(id) AudioBuffer | undefined
+        +has(id) boolean
+        +remove(id) void
+        +getDuration(id) Seconds | undefined
+    }
+
+    class SfxController {
+        -clips: SfxClip[]
+        -onChanged: (clips) => void
+        +add(sfx) ID
+        +remove(sfxId) void
+        +getClips() ReadonlyArray~SfxClip~
+    }
+
+    class VolumeController {
+        -ctx: AudioContext
+        +masterGain: GainNode
+        +musicTrackGain: GainNode
+        +sfxTrackGain: GainNode
+        +setMaster(gain) void
+        +setMusic(gain) void
+        +setSfx(gain) void
+    }
+
+    class PlaylistEntry {
+        <<interface>>
+        +id: ID
+        +bufferId: ID
+        +title: string
+        +duration: Seconds
+    }
+
+    class Transition {
+        <<interface>>
+        +id: ID
+        +fromEntryId: ID
+        +toEntryId: ID
+        +duration: Seconds
+        +fadeOutType: FadeType
+        +fadeInType: FadeType
+    }
+
+    class ScheduledEntry {
+        <<interface>>
+        +entryId: ID
+        +bufferId: ID
+        +title: string
+        +absoluteStart: Seconds
+        +absoluteEnd: Seconds
+        +bufferOffset: Seconds
+        +playDuration: Seconds
+        +fades: Fade[]
+    }
+
+    class ActiveNode {
+        <<interface>>
+        +id: ID
+        +sourceNode: AudioBufferSourceNode
+        +gainNode: GainNode
+        +scheduledStartCtx: number
+        +scheduledEndCtx: number
+        +transportStart: Seconds
+        +transportEnd: Seconds
+    }
+
+    class SfxClip {
+        <<interface>>
+        +id: ID
+        +bufferId: ID
+        +absoluteStart: Seconds
+        +duration: Seconds
+        +bufferOffset: Seconds
+        +gain: Gain
+    }
+
+    class Fade {
+        <<interface>>
+        +type: FadeType
+        +startOffset: Seconds
+        +endOffset: Seconds
+        +startGain: Gain
+        +endGain: Gain
+    }
+
+    %% Inheritance
+    AudioEngine --|> EventEmitter : extends
+
+    %% Composition (AudioEngine owns these)
+    AudioEngine *-- TransportController : transport
+    AudioEngine *-- PlaylistController : playlist
+    AudioEngine *-- SfxController : sfx
+    AudioEngine *-- VolumeController : volume
+    AudioEngine *-- BufferCache : buffers
+    AudioEngine *-- Scheduler : scheduler
+    AudioEngine *-- PlaylistManager : playlistManager
+
+    %% Internal composition
+    TransportController o-- Scheduler : controls
+    PlaylistController o-- PlaylistManager : delegates to
+    PlaylistController o-- BufferCache : reads from
+    Scheduler o-- BufferCache : reads from
+
+    %% Audio routing (GainNodes shared via VolumeController)
+    Scheduler ..> VolumeController : uses GainNodes from
+
+    %% Data type usage
+    PlaylistManager --> PlaylistEntry : manages
+    PlaylistManager --> Transition : manages
+    PlaylistManager --> ScheduledEntry : computes
+    Scheduler --> ActiveNode : tracks
+    Scheduler --> ScheduledEntry : schedules
+    Scheduler --> SfxClip : schedules
+    SfxController --> SfxClip : manages
+    ScheduledEntry --> Fade : contains
+
+    %% Callback flows (AudioEngine as mediator)
+    PlaylistController ..> AudioEngine : onChanged / onBeforeRemove
+    TransportController ..> AudioEngine : onStateChange
+    Scheduler ..> AudioEngine : onPlaybackEnded / onSongChange
+    SfxController ..> AudioEngine : onChanged

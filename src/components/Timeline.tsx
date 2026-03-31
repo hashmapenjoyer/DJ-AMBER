@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
-import '../styles/timeline.css';
-import { formatDuration } from '../../types/FormatDuration';
+import { useRef, useEffect, useCallback, useState } from 'react';
 import { useAudioEngine } from '../audio/UseAudioEngine';
+import { formatDuration } from '../../types/FormatDuration';
+import '../styles/timeline.css';
 
  
 // Constants
@@ -203,14 +203,19 @@ export default function Timeline() {
           <button className="timeline_play_btn" onClick={handlePlayPause}>
             {isPlaying ? '⏸' : '▶'}
           </button>
+          <span className="timeline_time_display">{formatDuration(playhead)}</span>
         </div>
       </div>
  
       {/* Track */}
       <div ref={scrollRef} className="timeline_scroll_area">
-        <div className="timeline_canvas" style={{ width: TIMELINE_WIDTH, height: CANVAS_HEIGHT }}>
-          {/* Time Ticks */}
-          <div className="timeline_ticks" style={{ width: TIMELINE_WIDTH }}>
+        <div
+          className="timeline_canvas"
+          style={{ width: timelineWidth, height: CANVAS_HEIGHT }}
+          onClick={handleTimelineClick}
+        >
+          {/* Time ticks */}
+          <div className="timeline_ticks" style={{ width: timelineWidth }}>
             {ticks.map((s) => (
               <div key={s} className="timeline_tick" style={{ left: s * PX_PER_SEC }}>
                 <span className="timeline_tick_label">{formatDuration(s)}</span>
