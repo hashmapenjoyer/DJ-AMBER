@@ -85,7 +85,6 @@ export default function SetList({
       unsubState();
     };
     // engine is a stable singleton - this runs exactly once on mount.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [engine]);
 
   const handleRepeatCycle = () => {
