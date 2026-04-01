@@ -1,8 +1,11 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Shuffle, Repeat, Repeat1 } from 'lucide-react';
 import { useAudioEngine } from '../audio/UseAudioEngine';
 import { formatDuration } from '../../types/FormatDuration';
 import type { SetListRecord } from '../../types/SetListRecord';
 import '../styles/setlist.css';
+
+type RepeatMode = 'off' | 'one' | 'all';
 
 interface SetListProps {
   setLists: SetListRecord[];
@@ -33,6 +36,65 @@ export default function SetList({
   // Shuffle state
   const [isShuffled, setIsShuffled] = useState(false);
   const preShuffleOrderRef = useRef<string[]>([]);
+
+  // Repeat state
+  const [repeatMode, setRepeatMode] = useState<RepeatMode>('off');
+  const repeatModeRef = useRef<RepeatMode>('off');
+  const currentEntryIdRef = useRef<string | null>(null);
+  const wasPlayingRef = useRef(false);
+
+  // Keep repeatModeRef in sync so event callbacks always read the latest mode.
+  useEffect(() => {
+    repeatModeRef.current = repeatMode;
+  }, [repeatMode]);
+
+  // Subscribe to engine events to implement repeat logic.
+  // Uses refs instead of state to avoid stale closures in callbacks.
+  useEffect(() => {
+    currentEntryIdRef.current = engine.getCurrentEntry()?.entryId ?? null;
+
+    const unsubSong = engine.on('songChange', ({ entryId }) => {
+      if (repeatModeRef.current === 'one' && currentEntryIdRef.current !== null) {
+        // Song changed - seek back to the start of the previous song.
+        const prev = engine.getTimeline().find((e) => e.entryId === currentEntryIdRef.current);
+        if (prev) {
+          engine.transport.seek(prev.absoluteStart);
+          return; // Don't update currentEntryIdRef - stay on the same song.
+        }
+      }
+      currentEntryIdRef.current = entryId;
+    });
+
+    const unsubState = engine.on('stateChange', ({ state }) => {
+      if (state === 'playing') {
+        wasPlayingRef.current = true;
+      } else if (state === 'stopped') {
+        if (repeatModeRef.current === 'all' && wasPlayingRef.current) {
+          // Natural end of playlist - restart from the beginning.
+          wasPlayingRef.current = false;
+          engine.transport.seek(0);
+          void engine.transport.play();
+        } else {
+          wasPlayingRef.current = false;
+        }
+      }
+    });
+
+    return () => {
+      unsubSong();
+      unsubState();
+    };
+    // engine is a stable singleton - this runs exactly once on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [engine]);
+
+  const handleRepeatCycle = () => {
+    setRepeatMode((prev) => {
+      if (prev === 'off') return 'one';
+      if (prev === 'one') return 'all';
+      return 'off';
+    });
+  };
 
   const activeSetList = setLists.find((sl) => sl.id === activeSetListId);
   const totalDuration = engine.getTotalDuration();
@@ -194,13 +256,11 @@ export default function SetList({
           <button className="setlist-title-btn" onClick={handleRenameStart} title="Click to rename">
             <span className="setlist-title-text">{activeSetList?.name ?? '\u2014'}</span>
             <span className="setlist-edit-icon" aria-hidden="true">
-              {/* pencil: \u270E */}
               {'\u270E'}
             </span>
           </button>
         )}
 
-        {/* shuffle: \u{1F500} */}
         <button
           className={`setlist-shuffle-btn ${isShuffled ? 'setlist-shuffle-btn--active' : ''}`}
           onClick={handleShuffleToggle}
@@ -208,7 +268,28 @@ export default function SetList({
           aria-label={isShuffled ? 'Restore original order' : 'Shuffle tracks'}
           aria-pressed={isShuffled}
         >
-          {'\u{1F500}'}
+          <Shuffle size={14} />
+        </button>
+
+        <button
+          className={`setlist-repeat-btn ${repeatMode !== 'off' ? 'setlist-repeat-btn--active' : ''}`}
+          onClick={handleRepeatCycle}
+          title={
+            repeatMode === 'off'
+              ? 'Repeat: Off'
+              : repeatMode === 'one'
+                ? 'Repeat: One'
+                : 'Repeat: All'
+          }
+          aria-label={
+            repeatMode === 'off'
+              ? 'Enable repeat one'
+              : repeatMode === 'one'
+                ? 'Enable repeat all'
+                : 'Disable repeat'
+          }
+        >
+          {repeatMode === 'one' ? <Repeat1 size={14} /> : <Repeat size={14} />}
         </button>
 
         {setLists.length > 1 && (
@@ -218,7 +299,6 @@ export default function SetList({
             title="Delete this set list"
             aria-label="Delete set list"
           >
-            {/* multiplication x: \u2715 */}
             {'\u2715'}
           </button>
         )}
@@ -228,7 +308,6 @@ export default function SetList({
       <div className="setlist-content">
         {trackCount === 0 ? (
           <div className="setlist-empty">
-            {/* eighth note: \u266A */}
             <span className="setlist-empty-icon">{'\u266A'}</span>
             <p className="setlist-empty-text">No tracks yet</p>
             <p className="setlist-empty-hint">
@@ -254,7 +333,6 @@ export default function SetList({
                 onDragEnd={handleDragEnd}
               >
                 <span className="setlist-drag-handle" aria-hidden="true">
-                  {/* braille dots (drag handle): \u283F */}
                   {'\u283F'}
                 </span>
                 <span className="setlist-track-number">{index + 1}</span>
@@ -267,7 +345,6 @@ export default function SetList({
                   title="Remove from set list"
                   aria-label={`Remove ${entry.title}`}
                 >
-                  {/* wastebasket: \u{1F5D1} */}
                   {'\u{1F5D1}'}
                 </button>
                 <span className="setlist-track-duration">{formatDuration(entry.duration)}</span>
