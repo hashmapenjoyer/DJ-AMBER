@@ -1,8 +1,8 @@
 import { formatDuration } from '../../../types/FormatDuration';
 import '../../styles/timeline.css';
- 
+
 const HEADER_HEIGHT = 32;
- 
+
 interface TimelineClipProps {
   entryId: string;
   title: string;
@@ -14,7 +14,7 @@ interface TimelineClipProps {
   overlapWidthPx: number;
   onMouseDown: (e: React.MouseEvent, entryId: string) => void;
 }
- 
+
 export default function TimelineClip({
   entryId,
   title,
@@ -27,7 +27,7 @@ export default function TimelineClip({
   onMouseDown,
 }: TimelineClipProps) {
   const clipDuration = widthPx / pxPerSecond; // widthPx = duration * pxPerSecond
- 
+
   return (
     <>
       <div
@@ -46,7 +46,7 @@ export default function TimelineClip({
           <span className="timeline_clip_duration">{formatDuration(clipDuration)}</span>
         </div>
       </div>
- 
+
       {overlapWidthPx > 0 && (
         <div
           className="timeline_clip_overlap"

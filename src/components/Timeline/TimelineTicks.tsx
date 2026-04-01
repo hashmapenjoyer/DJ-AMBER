@@ -1,16 +1,16 @@
 import { formatDuration } from '../../../types/FormatDuration';
 import '../../styles/timeline.css';
- 
+
 interface TimelineTicksProps {
   totalTime: number;
   pxPerSec: number;
   timelineWidth: number;
 }
- 
+
 export default function TimelineTicks({ totalTime, pxPerSec, timelineWidth }: TimelineTicksProps) {
   const ticks: number[] = [];
   for (let s = 0; s <= totalTime; s += 30) ticks.push(s);
- 
+
   return (
     <div className="timeline_ticks" style={{ width: timelineWidth }}>
       {ticks.map((s) => (
@@ -21,4 +21,3 @@ export default function TimelineTicks({ totalTime, pxPerSec, timelineWidth }: Ti
     </div>
   );
 }
- 

@@ -4,30 +4,30 @@ import TimelineControls from './TimelineControls';
 import TimelineTicks from './TimelineTicks';
 import TimelineClip from './TimelineClip';
 import '../../styles/timeline.css';
- 
+
 // Constants
 const PX_PER_SEC = 4;
 const HEADER_HEIGHT = 32;
 const CANVAS_HEIGHT = HEADER_HEIGHT + 32 + 48;
- 
+
 interface DragState {
   entryId: string;
   originalIndex: number;
   grabOffsetPx: number;
   currentLeftPx: number;
 }
- 
+
 export default function Timeline() {
   const { engine, transportState, timeline } = useAudioEngine();
- 
+
   const scrollRef = useRef<HTMLDivElement>(null);
- 
+
   const totalTime = engine.getTotalDuration() || 900;
   const timelineWidth = totalTime * PX_PER_SEC;
- 
+
   // Playhead
   const playheadRef = useRef<HTMLDivElement>(null);
- 
+
   // Code from Ben's docs
   useEffect(() => {
     if (transportState !== 'playing') return;
@@ -41,7 +41,7 @@ export default function Timeline() {
     rafId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafId);
   }, [transportState, engine]);
- 
+
   // Playing / pausing
   const handlePlayPause = useCallback(async () => {
     if (transportState === 'playing') {
@@ -50,48 +50,48 @@ export default function Timeline() {
       await engine.transport.play();
     }
   }, [transportState, engine]);
- 
+
   // Reset
   const handleReturnToStart = useCallback(() => {
     engine.transport.seek(0);
     if (playheadRef.current) playheadRef.current.style.left = '0px';
   }, [engine]);
- 
+
   // dragOverride is React state so the clip re-renders while dragging.
   const [dragOverride, setDragOverride] = useState<{ entryId: string; leftPx: number } | null>(
     null,
   );
- 
+
   // dragRef is a ref so mousemove/mouseup handlers always see current values
   // without needing to be recreated on every render.
   const dragRef = useRef<DragState | null>(null);
- 
+
   const onClipMouseDown = useCallback(
     (e: React.MouseEvent, entryId: string) => {
       e.preventDefault();
       e.stopPropagation();
- 
+
       const idx = timeline.findIndex((en) => en.entryId === entryId);
       if (idx === -1) return;
- 
+
       const entry = timeline[idx];
       const scrollLeft = scrollRef.current?.scrollLeft ?? 0;
       const rectLeft = scrollRef.current?.getBoundingClientRect().left ?? 0;
       const clickCanvasPx = e.clientX - rectLeft + scrollLeft;
       const clipLeftPx = entry.absoluteStart * PX_PER_SEC;
- 
+
       dragRef.current = {
         entryId,
         originalIndex: idx,
         grabOffsetPx: clickCanvasPx - clipLeftPx,
         currentLeftPx: clipLeftPx,
       };
- 
+
       setDragOverride({ entryId, leftPx: clipLeftPx });
     },
     [timeline],
   );
- 
+
   // Drop logic
   //
   // The engine owns playlist order and derives clip positions from that order
@@ -103,14 +103,14 @@ export default function Timeline() {
   // 2. setTransition / removeTransition — based on overlap with neighbours
   //
   // Overlap in pixels / PX_PER_SEC = the crossfade duration in seconds.
- 
+
   const commitDrop = useCallback(
     (drag: DragState) => {
       const droppedStartSec = drag.currentLeftPx / PX_PER_SEC;
       const draggedEntry = timeline[drag.originalIndex];
       const clipDurationSec = draggedEntry.absoluteEnd - draggedEntry.absoluteStart;
       const droppedCentreSec = droppedStartSec + clipDurationSec / 2;
- 
+
       // Resolve new playlist order
       const withMids = timeline.map((en, idx) => ({
         entryId: en.entryId,
@@ -122,20 +122,20 @@ export default function Timeline() {
       }));
       withMids.sort((a, b) => a.midSec - b.midSec);
       const newIndex = withMids.findIndex((o) => o.entryId === drag.entryId);
- 
+
       if (newIndex !== drag.originalIndex) {
         engine.playlist.reorder(drag.originalIndex, newIndex);
       }
- 
+
       // Resolve transitions
       const newTimeline = engine.getTimeline();
       const newIdx = newTimeline.findIndex((en) => en.entryId === drag.entryId);
       if (newIdx === -1) return;
- 
+
       const dragged = newTimeline[newIdx];
       const leftNeighbour = newIdx > 0 ? newTimeline[newIdx - 1] : null;
       const rightNeighbour = newIdx < newTimeline.length - 1 ? newTimeline[newIdx + 1] : null;
- 
+
       // Left overlap: user dragged this clip to start before the left neighbour ends.
       if (leftNeighbour) {
         const overlapSec = leftNeighbour.absoluteEnd - droppedStartSec;
@@ -145,11 +145,10 @@ export default function Timeline() {
           engine.playlist.removeTransition(leftNeighbour.entryId, dragged.entryId);
         }
       }
- 
+
       // Right overlap: handle the case where the dragged clip extends into the right neighbour
       if (rightNeighbour) {
-        const overlapSec =
-          droppedStartSec + clipDurationSec - rightNeighbour.absoluteStart;
+        const overlapSec = droppedStartSec + clipDurationSec - rightNeighbour.absoluteStart;
         if (overlapSec > 0.1) {
           engine.playlist.setTransition(dragged.entryId, rightNeighbour.entryId, overlapSec);
         } else {
@@ -159,7 +158,7 @@ export default function Timeline() {
     },
     [engine, timeline],
   );
- 
+
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {
       if (!dragRef.current || !scrollRef.current) return;
@@ -167,18 +166,18 @@ export default function Timeline() {
       const rectLeft = scrollRef.current.getBoundingClientRect().left;
       const canvasPx = e.clientX - rectLeft + scrollLeft;
       const newLeftPx = Math.max(0, canvasPx - dragRef.current.grabOffsetPx);
- 
+
       dragRef.current.currentLeftPx = newLeftPx;
       setDragOverride({ entryId: dragRef.current.entryId, leftPx: newLeftPx });
     };
- 
+
     const onMouseUp = () => {
       if (!dragRef.current) return;
       commitDrop(dragRef.current);
       dragRef.current = null;
       setDragOverride(null);
     };
- 
+
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
     return () => {
@@ -186,19 +185,21 @@ export default function Timeline() {
       window.removeEventListener('mouseup', onMouseUp);
     };
   }, [commitDrop]);
- 
+
   const isPlaying = transportState === 'playing';
- 
+
   return (
     <div className="timeline">
       {/* Header / Controls */}
       <TimelineControls
         isPlaying={isPlaying}
         currentTime={engine.transport.getCurrentTime()}
-        onPlayPause={ () => { void handlePlayPause(); }}
+        onPlayPause={() => {
+          void handlePlayPause();
+        }}
         onReturnToStart={handleReturnToStart}
       />
- 
+
       {/* Track */}
       <div ref={scrollRef} className="timeline_scroll_area">
         <div className="timeline_canvas" style={{ width: timelineWidth, height: CANVAS_HEIGHT }}>
@@ -208,21 +209,19 @@ export default function Timeline() {
             pxPerSec={PX_PER_SEC}
             timelineWidth={timelineWidth}
           />
- 
+
           {/* Lane background */}
           <div className="timeline_lane" style={{ top: HEADER_HEIGHT, width: timelineWidth }} />
- 
+
           {/* Clips */}
           {timeline.map((entry, idx) => {
             const isDragging = dragOverride?.entryId === entry.entryId;
- 
+
             // During a drag, show the clip at the dragged position.
             // All other clips stay at their engine-computed positions.
-            const leftPx = isDragging
-              ? dragOverride.leftPx
-              : entry.absoluteStart * PX_PER_SEC;
+            const leftPx = isDragging ? dragOverride.leftPx : entry.absoluteStart * PX_PER_SEC;
             const widthPx = (entry.absoluteEnd - entry.absoluteStart) * PX_PER_SEC;
- 
+
             let overlapWidthPx = 0;
             if (idx > 0) {
               const leftNeighbour = timeline[idx - 1];
@@ -234,7 +233,7 @@ export default function Timeline() {
                   : leftNeighbour.absoluteEnd * PX_PER_SEC;
               overlapWidthPx = Math.max(0, neighbourRightPx - leftPx);
             }
- 
+
             return (
               <TimelineClip
                 key={entry.entryId}
@@ -250,7 +249,7 @@ export default function Timeline() {
               />
             );
           })}
- 
+
           {/* Playhead */}
           <div
             ref={playheadRef}

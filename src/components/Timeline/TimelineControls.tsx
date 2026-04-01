@@ -1,13 +1,13 @@
 import { formatDuration } from '../../../types/FormatDuration';
 import '../../styles/timeline.css';
- 
+
 interface TimelineControlsProps {
   isPlaying: boolean;
   currentTime: number;
   onPlayPause: () => void;
   onReturnToStart: () => void;
 }
- 
+
 export default function TimelineControls({
   isPlaying,
   currentTime,
