@@ -1,8 +1,9 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
-import { useAudioEngine } from '../audio/UseAudioEngine';
-import { formatDuration } from '../../types/FormatDuration';
-import '../styles/timeline.css';
-
+import { useAudioEngine } from '../../audio/UseAudioEngine';
+import TimelineControls from './TimelineControls';
+import TimelineTicks from './TimelineTicks';
+import TimelineClip from './TimelineClip';
+import '../../styles/timeline.css';
  
 // Constants
 const PX_PER_SEC = 4;
@@ -24,13 +25,9 @@ export default function Timeline() {
   const totalTime = engine.getTotalDuration() || 900;
   const TIMELINE_WIDTH = totalTime * PX_PER_SEC;
  
-  // Timeline ticks 
-  const ticks: number[] = [];
-  for (let s = 0; s <= totalTime; s += 30) ticks.push(s);
- 
-  // Playhead 
+  // Playhead
   const playheadRef = useRef<HTMLDivElement>(null);
-  
+ 
   // Code from Ben's docs
   useEffect(() => {
     if (transportState !== 'playing') return;
@@ -53,19 +50,18 @@ export default function Timeline() {
       await engine.transport.play();
     }
   }, [transportState, engine]);
-  
+ 
   // Reset
   const handleReturnToStart = useCallback(() => {
     engine.transport.seek(0);
     if (playheadRef.current) playheadRef.current.style.left = '0px';
   }, [engine]);
  
-
   // dragOverride is React state so the clip re-renders while dragging.
   const [dragOverride, setDragOverride] = useState<{ entryId: string; leftPx: number } | null>(
     null,
   );
-
+ 
   // dragRef is a ref so mousemove/mouseup handlers always see current values
   // without needing to be recreated on every render.
   const dragRef = useRef<DragState | null>(null);
@@ -97,17 +93,17 @@ export default function Timeline() {
   );
  
   // Drop logic
-  
+  //
   // The engine owns playlist order and derives clip positions from that order
   // plus any crossfade transition durations. It does NOT accept arbitrary
   // absoluteStart values for music clips. So on drop we translate the pixel
   // position into up to two engine operations:
-  
+  //
   // 1. reorderPlaylist(fromIdx, toIdx)  — if the clip moved past a neighbour
   // 2. setTransition / removeTransition — based on overlap with neighbours
-  
+  //
   // Overlap in pixels / PX_PER_SEC = the crossfade duration in seconds.
-
+ 
   const commitDrop = useCallback(
     (drag: DragState) => {
       const droppedStartSec = drag.currentLeftPx / PX_PER_SEC;
@@ -150,9 +146,10 @@ export default function Timeline() {
         }
       }
  
-      // Right overlap: handle the case where the dragged clip extends into the right neignbor
+      // Right overlap: handle the case where the dragged clip extends into the right neighbour
       if (rightNeighbour) {
-        const overlapSec = (droppedStartSec + clipDurationSec) - rightNeighbour.absoluteStart;
+        const overlapSec =
+          droppedStartSec + clipDurationSec - rightNeighbour.absoluteStart;
         if (overlapSec > 0.1) {
           engine.playlist.setTransition(dragged.entryId, rightNeighbour.entryId, overlapSec);
         } else {
@@ -195,32 +192,22 @@ export default function Timeline() {
   return (
     <div className="timeline">
       {/* Header / Controls */}
-      <div className="timeline_header">
-        <div className="timeline_controls">
-          <button className="timeline_btn" title="Return to start" onClick={handleReturnToStart}>
-            ⏮
-          </button>
-          <button className="timeline_play_btn" onClick={handlePlayPause}>
-            {isPlaying ? '⏸' : '▶'}
-          </button>
-          <span className="timeline_time_display">{formatDuration(engine.transport.getCurrentTime())}</span>
-        </div>
-      </div>
+      <TimelineControls
+        isPlaying={isPlaying}
+        currentTime={engine.transport.getCurrentTime()}
+        onPlayPause={handlePlayPause}
+        onReturnToStart={handleReturnToStart}
+      />
  
       {/* Track */}
       <div ref={scrollRef} className="timeline_scroll_area">
-        <div
-          className="timeline_canvas"
-          style={{ width: TIMELINE_WIDTH, height: CANVAS_HEIGHT }}
-        >
+        <div className="timeline_canvas" style={{ width: TIMELINE_WIDTH, height: CANVAS_HEIGHT }}>
           {/* Time ticks */}
-          <div className="timeline_ticks" style={{ width: TIMELINE_WIDTH }}>
-            {ticks.map((s) => (
-              <div key={s} className="timeline_tick" style={{ left: s * PX_PER_SEC }}>
-                <span className="timeline_tick_label">{formatDuration(s)}</span>
-              </div>
-            ))}
-          </div>
+          <TimelineTicks
+            totalTime={totalTime}
+            pxPerSec={PX_PER_SEC}
+            timelineWidth={TIMELINE_WIDTH}
+          />
  
           {/* Lane background */}
           <div className="timeline_lane" style={{ top: HEADER_HEIGHT, width: TIMELINE_WIDTH }} />
@@ -235,9 +222,8 @@ export default function Timeline() {
               ? dragOverride!.leftPx
               : entry.absoluteStart * PX_PER_SEC;
             const widthPx = (entry.absoluteEnd - entry.absoluteStart) * PX_PER_SEC;
-            const clipDuration = entry.absoluteEnd - entry.absoluteStart;
  
-            let crossfadeWidthPx = 0;
+            let overlapWidthPx = 0;
             if (idx > 0) {
               const leftNeighbour = timeline[idx - 1];
               // If the left neighbour is also being dragged (shouldn't happen, but shit happens lol)
@@ -246,45 +232,22 @@ export default function Timeline() {
                   ? dragOverride!.leftPx +
                     (leftNeighbour.absoluteEnd - leftNeighbour.absoluteStart) * PX_PER_SEC
                   : leftNeighbour.absoluteEnd * PX_PER_SEC;
-              crossfadeWidthPx = Math.max(0, neighbourRightPx - leftPx);
+              overlapWidthPx = Math.max(0, neighbourRightPx - leftPx);
             }
-
-            let clipDiv = <div
-              className={`timeline_clip${isDragging ? ' timeline_clip--dragging' : ''}`}
-              key={entry.entryId}
-              onMouseDown={(e) => onClipMouseDown(e, entry.entryId)}
-              style={{
-                left: leftPx,
-                top: HEADER_HEIGHT + 8,
-                width: widthPx,
-                zIndex: 5 + idx,
-                cursor: isDragging ? 'grabbing' : 'grab',
-              }}
-            >
-              <div className="timeline_clip_label">
-                <span className="timeline_clip_name">{entry.title}</span>
-                <span className="timeline_clip_duration">{formatDuration(clipDuration)}</span>
-              </div>
-            </div>
-
-            let overlapDiv = <div
-              className="timeline_clip_overlap"
-              style={{ 
-                width: crossfadeWidthPx, 
-                left: leftPx,
-                top: HEADER_HEIGHT + 8,
-                zIndex: 10 + idx,
-                cursor: isDragging ? 'grabbing' : 'pointer',
-              }}
-              title={`Crossfade: ${formatDuration(crossfadeWidthPx / PX_PER_SEC)}`}
-            />
-
-            let elements = [clipDiv]
-
-            if (crossfadeWidthPx > 0) elements.push(overlapDiv);
  
             return (
-              elements
+              <TimelineClip
+                key={entry.entryId}
+                entryId={entry.entryId}
+                title={entry.title}
+                leftPx={leftPx}
+                widthPx={widthPx}
+                pxPerSecond={PX_PER_SEC}
+                zIndex={idx}
+                isDragging={isDragging}
+                overlapWidthPx={overlapWidthPx}
+                onMouseDown={onClipMouseDown}
+              />
             );
           })}
  
