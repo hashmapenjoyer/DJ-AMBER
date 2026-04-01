@@ -100,6 +100,12 @@ export default function SetList({
   };
 
   const handleShuffleToggle = () => {
+    // Capture current playback position before reordering changes the timeline.
+    const currentEntry = engine.getCurrentEntry();
+    const offsetWithinSong = currentEntry
+      ? engine.transport.getCurrentTime() - currentEntry.absoluteStart
+      : 0;
+
     if (isShuffled) {
       // Restore pre-shuffle order, filtering out any tracks removed since shuffle was activated.
       const currentIds = new Set(engine.playlist.getEntries().map((e) => e.id));
@@ -109,7 +115,7 @@ export default function SetList({
     } else {
       // Save current order, then shuffle all tracks except the one currently playing.
       preShuffleOrderRef.current = engine.playlist.getEntries().map((e) => e.id);
-      const currentEntryId = engine.getCurrentEntry()?.entryId ?? null;
+      const currentEntryId = currentEntry?.entryId ?? null;
       const others = playlist.filter((e) => e.id !== currentEntryId).map((e) => e.id);
 
       // Fisher-Yates shuffle
@@ -131,6 +137,15 @@ export default function SetList({
 
       applyOrder(shuffled);
       setIsShuffled(true);
+    }
+
+    // After reordering, seek to the same position within the current song.
+    // The song's absoluteStart will have changed in the new timeline layout.
+    if (currentEntry) {
+      const newEntry = engine.getTimeline().find((e) => e.entryId === currentEntry.entryId);
+      if (newEntry) {
+        engine.transport.seek(newEntry.absoluteStart + offsetWithinSong);
+      }
     }
   };
 
