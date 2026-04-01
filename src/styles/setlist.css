@@ -143,10 +143,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--fs-xs);
   background: none;
   border: none;
-  color: var(--text-disabled);
+  color: var(--text-tertiary);
   border-radius: var(--br-sm);
   cursor: pointer;
   transition:
@@ -154,12 +153,38 @@
     background-color var(--transition-fast);
 }
 
-.setlist-shuffle-btn:hover {
+/* Repeat Button */
+.setlist-repeat-btn {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  border-radius: var(--br-sm);
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+/* Ensure SVG icons render at correct size */
+.setlist-shuffle-btn svg,
+.setlist-repeat-btn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.setlist-repeat-btn:hover {
   color: #00cc88;
   background-color: rgba(0, 204, 136, 0.1);
 }
 
-.setlist-shuffle-btn--active {
+.setlist-repeat-btn--active {
   color: #00cc88;
 }
 
