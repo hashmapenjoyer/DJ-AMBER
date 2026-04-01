@@ -23,7 +23,7 @@ export default function Timeline() {
   const scrollRef = useRef<HTMLDivElement>(null);
  
   const totalTime = engine.getTotalDuration() || 900;
-  const TIMELINE_WIDTH = totalTime * PX_PER_SEC;
+  const timelineWidth = totalTime * PX_PER_SEC;
  
   // Playhead
   const playheadRef = useRef<HTMLDivElement>(null);
@@ -195,22 +195,22 @@ export default function Timeline() {
       <TimelineControls
         isPlaying={isPlaying}
         currentTime={engine.transport.getCurrentTime()}
-        onPlayPause={handlePlayPause}
+        onPlayPause={ () => { void handlePlayPause(); }}
         onReturnToStart={handleReturnToStart}
       />
  
       {/* Track */}
       <div ref={scrollRef} className="timeline_scroll_area">
-        <div className="timeline_canvas" style={{ width: TIMELINE_WIDTH, height: CANVAS_HEIGHT }}>
+        <div className="timeline_canvas" style={{ width: timelineWidth, height: CANVAS_HEIGHT }}>
           {/* Time ticks */}
           <TimelineTicks
             totalTime={totalTime}
             pxPerSec={PX_PER_SEC}
-            timelineWidth={TIMELINE_WIDTH}
+            timelineWidth={timelineWidth}
           />
  
           {/* Lane background */}
-          <div className="timeline_lane" style={{ top: HEADER_HEIGHT, width: TIMELINE_WIDTH }} />
+          <div className="timeline_lane" style={{ top: HEADER_HEIGHT, width: timelineWidth }} />
  
           {/* Clips */}
           {timeline.map((entry, idx) => {
@@ -219,7 +219,7 @@ export default function Timeline() {
             // During a drag, show the clip at the dragged position.
             // All other clips stay at their engine-computed positions.
             const leftPx = isDragging
-              ? dragOverride!.leftPx
+              ? dragOverride.leftPx
               : entry.absoluteStart * PX_PER_SEC;
             const widthPx = (entry.absoluteEnd - entry.absoluteStart) * PX_PER_SEC;
  
@@ -229,7 +229,7 @@ export default function Timeline() {
               // If the left neighbour is also being dragged (shouldn't happen, but shit happens lol)
               const neighbourRightPx =
                 dragOverride?.entryId === leftNeighbour.entryId
-                  ? dragOverride!.leftPx +
+                  ? dragOverride.leftPx +
                     (leftNeighbour.absoluteEnd - leftNeighbour.absoluteStart) * PX_PER_SEC
                   : leftNeighbour.absoluteEnd * PX_PER_SEC;
               overlapWidthPx = Math.max(0, neighbourRightPx - leftPx);
