@@ -191,6 +191,7 @@
 
 .timeline_clip_overlap {
   position: absolute;
+  height: 56px;
   background-color: var(--timeline-overlap-bg);
   border: 1px solid;
   border-radius: var(--br-sm);

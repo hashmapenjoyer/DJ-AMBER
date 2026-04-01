@@ -248,33 +248,43 @@ export default function Timeline() {
                   : leftNeighbour.absoluteEnd * PX_PER_SEC;
               crossfadeWidthPx = Math.max(0, neighbourRightPx - leftPx);
             }
+
+            let clipDiv = <div
+              className={`timeline_clip${isDragging ? ' timeline_clip--dragging' : ''}`}
+              key={entry.entryId}
+              onMouseDown={(e) => onClipMouseDown(e, entry.entryId)}
+              style={{
+                left: leftPx,
+                top: HEADER_HEIGHT + 8,
+                width: widthPx,
+                zIndex: 5 + idx,
+                cursor: isDragging ? 'grabbing' : 'grab',
+              }}
+            >
+              <div className="timeline_clip_label">
+                <span className="timeline_clip_name">{entry.title}</span>
+                <span className="timeline_clip_duration">{formatDuration(clipDuration)}</span>
+              </div>
+            </div>
+
+            let overlapDiv = <div
+              className="timeline_clip_overlap"
+              style={{ 
+                width: crossfadeWidthPx, 
+                left: leftPx,
+                top: HEADER_HEIGHT + 8,
+                zIndex: 10 + idx,
+                cursor: isDragging ? 'grabbing' : 'pointer',
+              }}
+              title={`Crossfade: ${formatDuration(crossfadeWidthPx / PX_PER_SEC)}`}
+            />
+
+            let elements = [clipDiv]
+
+            if (crossfadeWidthPx > 0) elements.push(overlapDiv);
  
             return (
-              <div
-                className={`timeline_clip${isDragging ? ' timeline_clip--dragging' : ''}`}
-                key={entry.entryId}
-                onMouseDown={(e) => onClipMouseDown(e, entry.entryId)}
-                style={{
-                  left: leftPx,
-                  top: HEADER_HEIGHT + 8,
-                  width: widthPx,
-                  zIndex: isDragging ? 100 : 5 + idx,
-                  cursor: isDragging ? 'grabbing' : 'grab',
-                }}
-              >
-                {/* Drawing Overlap */}
-                {crossfadeWidthPx > 0 && (
-                  <div
-                    className="timeline_clip_crossfade"
-                    style={{ width: crossfadeWidthPx, height: CANVAS_HEIGHT}}
-                    title={`Crossfade: ${formatDuration(crossfadeWidthPx / PX_PER_SEC)}`}
-                  />
-                )}
-                <div className="timeline_clip_label">
-                  <span className="timeline_clip_name">{entry.title}</span>
-                  <span className="timeline_clip_duration">{formatDuration(clipDuration)}</span>
-                </div>
-              </div>
+              elements
             );
           })}
  
