@@ -30,6 +30,10 @@ export default function SetList({
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
+  // Shuffle state
+  const [isShuffled, setIsShuffled] = useState(false);
+  const preShuffleOrderRef = useRef<string[]>([]);
+
   const activeSetList = setLists.find((sl) => sl.id === activeSetListId);
   const totalDuration = engine.getTotalDuration();
   const trackCount = playlist.length;
@@ -81,6 +85,55 @@ export default function SetList({
     setDragOverIndex(null);
   };
 
+  // Applies a target ordering (by entry ID) to the engine via sequential reorderPlaylist calls.
+  // Tracks a local copy of the current order so index calculations stay correct after each move.
+  const applyOrder = (targetIds: string[]) => {
+    const current = engine.playlist.getEntries().map((e) => e.id);
+    for (let i = 0; i < targetIds.length; i++) {
+      const currentIdx = current.indexOf(targetIds[i]);
+      if (currentIdx !== i) {
+        engine.playlist.reorder(currentIdx, i);
+        const [moved] = current.splice(currentIdx, 1);
+        current.splice(i, 0, moved);
+      }
+    }
+  };
+
+  const handleShuffleToggle = () => {
+    if (isShuffled) {
+      // Restore pre-shuffle order, filtering out any tracks removed since shuffle was activated.
+      const currentIds = new Set(engine.playlist.getEntries().map((e) => e.id));
+      const restored = preShuffleOrderRef.current.filter((id) => currentIds.has(id));
+      applyOrder(restored);
+      setIsShuffled(false);
+    } else {
+      // Save current order, then shuffle all tracks except the one currently playing.
+      preShuffleOrderRef.current = engine.playlist.getEntries().map((e) => e.id);
+      const currentEntryId = engine.getCurrentEntry()?.entryId ?? null;
+      const others = playlist.filter((e) => e.id !== currentEntryId).map((e) => e.id);
+
+      // Fisher-Yates shuffle
+      for (let i = others.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [others[i], others[j]] = [others[j], others[i]];
+      }
+
+      // Rebuild full order: playing track stays in place, rest are shuffled around it
+      const shuffled: string[] = [];
+      let othersIdx = 0;
+      for (const entry of playlist) {
+        if (entry.id === currentEntryId) {
+          shuffled.push(entry.id);
+        } else {
+          shuffled.push(others[othersIdx++]);
+        }
+      }
+
+      applyOrder(shuffled);
+      setIsShuffled(true);
+    }
+  };
+
   return (
     <div className="set-list">
       {/* Set List Picker */}
@@ -126,10 +179,22 @@ export default function SetList({
           <button className="setlist-title-btn" onClick={handleRenameStart} title="Click to rename">
             <span className="setlist-title-text">{activeSetList?.name ?? '\u2014'}</span>
             <span className="setlist-edit-icon" aria-hidden="true">
+              {/* pencil: \u270E */}
               {'\u270E'}
             </span>
           </button>
         )}
+
+        {/* shuffle: \u{1F500} */}
+        <button
+          className={`setlist-shuffle-btn ${isShuffled ? 'setlist-shuffle-btn--active' : ''}`}
+          onClick={handleShuffleToggle}
+          title={isShuffled ? 'Restore original order' : 'Shuffle tracks'}
+          aria-label={isShuffled ? 'Restore original order' : 'Shuffle tracks'}
+          aria-pressed={isShuffled}
+        >
+          {'\u{1F500}'}
+        </button>
 
         {setLists.length > 1 && (
           <button
@@ -138,6 +203,7 @@ export default function SetList({
             title="Delete this set list"
             aria-label="Delete set list"
           >
+            {/* multiplication x: \u2715 */}
             {'\u2715'}
           </button>
         )}
@@ -147,6 +213,7 @@ export default function SetList({
       <div className="setlist-content">
         {trackCount === 0 ? (
           <div className="setlist-empty">
+            {/* eighth note: \u266A */}
             <span className="setlist-empty-icon">{'\u266A'}</span>
             <p className="setlist-empty-text">No tracks yet</p>
             <p className="setlist-empty-hint">
@@ -172,6 +239,7 @@ export default function SetList({
                 onDragEnd={handleDragEnd}
               >
                 <span className="setlist-drag-handle" aria-hidden="true">
+                  {/* braille dots (drag handle): \u283F */}
                   {'\u283F'}
                 </span>
                 <span className="setlist-track-number">{index + 1}</span>
@@ -184,6 +252,7 @@ export default function SetList({
                   title="Remove from set list"
                   aria-label={`Remove ${entry.title}`}
                 >
+                  {/* wastebasket: \u{1F5D1} */}
                   {'\u{1F5D1}'}
                 </button>
                 <span className="setlist-track-duration">{formatDuration(entry.duration)}</span>
