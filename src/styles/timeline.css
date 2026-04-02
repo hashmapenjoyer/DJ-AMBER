@@ -114,6 +114,21 @@
   height: 56px;
   border: 1px solid;
   border-radius: var(--br-sm);
+  border-color: rgb(128, 255, 185);
+  cursor: grab;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-md);
+  transition: box-shadow var(--transition-fast);
+}
+
+.timeline_clip--dragging {
+  position: absolute;
+  height: 56px;
+  border: 1px solid;
+  border-radius: var(--br-sm);
+  border-color: rgb(0, 255, 115);
   cursor: grab;
   overflow: hidden;
   display: flex;
@@ -156,41 +171,6 @@
     0 0 8px rgba(0, 218, 189, 0.3);
 }
 
-.timeline_crossfade {
-  position: absolute;
-  z-index: 20;
-  pointer-events: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 218, 189, 0.06);
-  border-left: 1px dashed rgba(0, 218, 189, 0.4);
-  border-right: 1px dashed rgba(0, 218, 189, 0.4);
-  border-radius: var(--br-sm);
-}
-
-.timeline_crossfade_svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-
-.timeline_crossfade_svg line {
-  stroke: rgba(0, 218, 189, 0.4);
-  stroke-width: 1.5;
-  vector-effect: non-scaling-stroke;
-}
-
-.timeline_crossfade_label {
-  position: relative;
-  z-index: 1;
-  font-size: var(--fs-xs);
-  font-family: var(--font-mono);
-  color: rgba(0, 218, 189, 0.85);
-  text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
-}
-
 .timeline_playhead {
   position: absolute;
   top: 0;
@@ -207,4 +187,13 @@
   background-color: var(--color-white);
   border-radius: 50% 50% 0 0;
   margin-left: -4px;
+}
+
+.timeline_clip_overlap {
+  position: absolute;
+  height: 56px;
+  background-color: var(--timeline-overlap-bg);
+  border: 1px solid;
+  border-radius: var(--br-sm);
+  border-color: rgb(127, 0, 211);
 }
