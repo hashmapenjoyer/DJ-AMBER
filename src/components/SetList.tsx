@@ -1,8 +1,11 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Shuffle, Repeat, Repeat1 } from 'lucide-react';
 import { useAudioEngine } from '../audio/UseAudioEngine';
 import { formatDuration } from '../../types/FormatDuration';
 import type { SetListRecord } from '../../types/SetListRecord';
 import '../styles/setlist.css';
+
+type RepeatMode = 'off' | 'one' | 'all';
 
 interface SetListProps {
   setLists: SetListRecord[];
@@ -29,6 +32,68 @@ export default function SetList({
   // Drag-and-drop state
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  // Shuffle state
+  const [isShuffled, setIsShuffled] = useState(false);
+  const preShuffleOrderRef = useRef<string[]>([]);
+
+  // Repeat state
+  const [repeatMode, setRepeatMode] = useState<RepeatMode>('off');
+  const repeatModeRef = useRef<RepeatMode>('off');
+  const currentEntryIdRef = useRef<string | null>(null);
+  const wasPlayingRef = useRef(false);
+
+  // Keep repeatModeRef in sync so event callbacks always read the latest mode.
+  useEffect(() => {
+    repeatModeRef.current = repeatMode;
+  }, [repeatMode]);
+
+  // Subscribe to engine events to implement repeat logic.
+  // Uses refs instead of state to avoid stale closures in callbacks.
+  useEffect(() => {
+    currentEntryIdRef.current = engine.getCurrentEntry()?.entryId ?? null;
+
+    const unsubSong = engine.on('songChange', ({ entryId }) => {
+      if (repeatModeRef.current === 'one' && currentEntryIdRef.current !== null) {
+        // Song changed - seek back to the start of the previous song.
+        const prev = engine.getTimeline().find((e) => e.entryId === currentEntryIdRef.current);
+        if (prev) {
+          engine.transport.seek(prev.absoluteStart);
+          return; // Don't update currentEntryIdRef - stay on the same song.
+        }
+      }
+      currentEntryIdRef.current = entryId;
+    });
+
+    const unsubState = engine.on('stateChange', ({ state }) => {
+      if (state === 'playing') {
+        wasPlayingRef.current = true;
+      } else if (state === 'stopped') {
+        if (repeatModeRef.current === 'all' && wasPlayingRef.current) {
+          // Natural end of playlist - restart from the beginning.
+          wasPlayingRef.current = false;
+          engine.transport.seek(0);
+          void engine.transport.play();
+        } else {
+          wasPlayingRef.current = false;
+        }
+      }
+    });
+
+    return () => {
+      unsubSong();
+      unsubState();
+    };
+    // engine is a stable singleton - this runs exactly once on mount.
+  }, [engine]);
+
+  const handleRepeatCycle = () => {
+    setRepeatMode((prev) => {
+      if (prev === 'off') return 'one';
+      if (prev === 'one') return 'all';
+      return 'off';
+    });
+  };
 
   const activeSetList = setLists.find((sl) => sl.id === activeSetListId);
   const totalDuration = engine.getTotalDuration();
@@ -81,6 +146,70 @@ export default function SetList({
     setDragOverIndex(null);
   };
 
+  // Applies a target ordering (by entry ID) to the engine via sequential reorderPlaylist calls.
+  // Tracks a local copy of the current order so index calculations stay correct after each move.
+  const applyOrder = (targetIds: string[]) => {
+    const current = engine.playlist.getEntries().map((e) => e.id);
+    for (let i = 0; i < targetIds.length; i++) {
+      const currentIdx = current.indexOf(targetIds[i]);
+      if (currentIdx !== i) {
+        engine.playlist.reorder(currentIdx, i);
+        const [moved] = current.splice(currentIdx, 1);
+        current.splice(i, 0, moved);
+      }
+    }
+  };
+
+  const handleShuffleToggle = () => {
+    // Capture current playback position before reordering changes the timeline.
+    const currentEntry = engine.getCurrentEntry();
+    const offsetWithinSong = currentEntry
+      ? engine.transport.getCurrentTime() - currentEntry.absoluteStart
+      : 0;
+
+    if (isShuffled) {
+      // Restore pre-shuffle order, filtering out any tracks removed since shuffle was activated.
+      const currentIds = new Set(engine.playlist.getEntries().map((e) => e.id));
+      const restored = preShuffleOrderRef.current.filter((id) => currentIds.has(id));
+      applyOrder(restored);
+      setIsShuffled(false);
+    } else {
+      // Save current order, then shuffle all tracks except the one currently playing.
+      preShuffleOrderRef.current = engine.playlist.getEntries().map((e) => e.id);
+      const currentEntryId = currentEntry?.entryId ?? null;
+      const others = playlist.filter((e) => e.id !== currentEntryId).map((e) => e.id);
+
+      // Fisher-Yates shuffle
+      for (let i = others.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [others[i], others[j]] = [others[j], others[i]];
+      }
+
+      // Rebuild full order: playing track stays in place, rest are shuffled around it
+      const shuffled: string[] = [];
+      let othersIdx = 0;
+      for (const entry of playlist) {
+        if (entry.id === currentEntryId) {
+          shuffled.push(entry.id);
+        } else {
+          shuffled.push(others[othersIdx++]);
+        }
+      }
+
+      applyOrder(shuffled);
+      setIsShuffled(true);
+    }
+
+    // After reordering, seek to the same position within the current song.
+    // The song's absoluteStart will have changed in the new timeline layout.
+    if (currentEntry) {
+      const newEntry = engine.getTimeline().find((e) => e.entryId === currentEntry.entryId);
+      if (newEntry) {
+        engine.transport.seek(newEntry.absoluteStart + offsetWithinSong);
+      }
+    }
+  };
+
   return (
     <div className="set-list">
       {/* Set List Picker */}
@@ -130,6 +259,37 @@ export default function SetList({
             </span>
           </button>
         )}
+
+        <button
+          className={`setlist-shuffle-btn ${isShuffled ? 'setlist-shuffle-btn--active' : ''}`}
+          onClick={handleShuffleToggle}
+          title={isShuffled ? 'Restore original order' : 'Shuffle tracks'}
+          aria-label={isShuffled ? 'Restore original order' : 'Shuffle tracks'}
+          aria-pressed={isShuffled}
+        >
+          <Shuffle size={14} />
+        </button>
+
+        <button
+          className={`setlist-repeat-btn ${repeatMode !== 'off' ? 'setlist-repeat-btn--active' : ''}`}
+          onClick={handleRepeatCycle}
+          title={
+            repeatMode === 'off'
+              ? 'Repeat: Off'
+              : repeatMode === 'one'
+                ? 'Repeat: One'
+                : 'Repeat: All'
+          }
+          aria-label={
+            repeatMode === 'off'
+              ? 'Enable repeat one'
+              : repeatMode === 'one'
+                ? 'Enable repeat all'
+                : 'Disable repeat'
+          }
+        >
+          {repeatMode === 'one' ? <Repeat1 size={14} /> : <Repeat size={14} />}
+        </button>
 
         {setLists.length > 1 && (
           <button
