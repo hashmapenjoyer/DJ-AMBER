@@ -153,6 +153,15 @@
     background-color var(--transition-fast);
 }
 
+.setlist-shuffle-btn:hover {
+  color: #00cc88;
+  background-color: rgba(0, 204, 136, 0.1);
+}
+
+.setlist-shuffle-btn--active {
+  color: #00cc88;
+}
+
 /* Repeat Button */
 .setlist-repeat-btn {
   flex-shrink: 0;
