@@ -109,7 +109,7 @@ export default function NowPlaying() {
   const currentSongDuration = currentEntry?.playDuration ?? 0;
   const title = currentEntry?.title ?? 'No song playing';
 
-  const currentBuffer = currentEntry ? engine.getBuffer(currentEntry.bufferId) : null;
+  const currentBuffer = currentEntry ? engine.buffers.get(currentEntry.bufferId) : null;
   const waveformData: WaveformBuffer | null = currentBuffer
     ? generateWaveformData(currentBuffer, 200)
     : null;
@@ -117,7 +117,7 @@ export default function NowPlaying() {
   // Update progress bar based on engine's timeline
   useEffect(() => {
     const updateProgress = () => {
-      const absTime = engine.getCurrentTime();
+      const absTime = engine.transport.getCurrentTime();
       setCurrentTime(absTime);
     };
 
@@ -141,11 +141,11 @@ export default function NowPlaying() {
   }, [waveformData, currentTime, currentEntry]);
 
   const handlePlay = () => {
-    void engine.play();
+    void engine.transport.play();
   };
 
   const handlePause = () => {
-    engine.pause();
+    engine.transport.pause();
   };
 
   const formatTime = (seconds: number) => {
