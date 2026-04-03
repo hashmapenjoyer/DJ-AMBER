@@ -102,7 +102,6 @@ export default function NowPlaying() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const [currentTime, setCurrentTime] = useState(0);
-  const [waveformData, setWaveformData] = useState<WaveformBuffer | null>(null);
   const [currentLyricIndex] = useState(0);
 
   // Get current entry (the playing song)
@@ -110,18 +109,10 @@ export default function NowPlaying() {
   const currentSongDuration = currentEntry?.playDuration ?? 0;
   const title = currentEntry?.title ?? 'No song playing';
 
-  // Load waveform for current song
-  useEffect(() => {
-    if (!currentEntry) {
-      return;
-    }
-
-    const buffer = engine.getBuffer(currentEntry.bufferId);
-    if (buffer) {
-      const waveform = generateWaveformData(buffer, 200);
-      setWaveformData(waveform);
-    }
-  }, [currentEntry, engine]);
+  const currentBuffer = currentEntry ? engine.getBuffer(currentEntry.bufferId) : null;
+  const waveformData: WaveformBuffer | null = currentBuffer
+    ? generateWaveformData(currentBuffer, 200)
+    : null;
 
   // Update progress bar based on engine's timeline
   useEffect(() => {
@@ -172,12 +163,7 @@ export default function NowPlaying() {
       <div className="np-content">
         {/* Waveform Thumbnail */}
         <div className="np-waveform-thumbnail">
-          <canvas
-            ref={canvasRef}
-            width={100}
-            height={100}
-            className="np-waveform-canvas-small"
-          />
+          <canvas ref={canvasRef} width={100} height={100} className="np-waveform-canvas-small" />
         </div>
 
         {/* Main Section */}
