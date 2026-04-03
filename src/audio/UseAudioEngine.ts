@@ -41,11 +41,17 @@ export function useAudioEngine() {
     () => engine.getCurrentEntry()?.title ?? '',
   );
 
+  const currentSongArtist = useSyncExternalStore<string>(
+    (onStoreChange) => engine.on('songChange', () => onStoreChange()),
+    () => engine.getCurrentEntry()?.artist ?? '',
+  );
+
   return {
     engine,
     transportState,
     playlist,
     timeline,
     currentSongTitle,
+    currentSongArtist,
   };
 }

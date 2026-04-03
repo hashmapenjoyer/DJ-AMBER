@@ -148,6 +148,7 @@ export class PlaylistManager {
         entryId: entry.id,
         bufferId: entry.bufferId,
         title: entry.title,
+        artist: entry.artist,
         absoluteStart: cursor,
         absoluteEnd: cursor + entry.duration,
         bufferOffset: 0,

@@ -74,8 +74,8 @@ export class AudioEngine extends EventEmitter<AudioEngineEvents> {
     // scheduler -> mediator wiring
 
     this.scheduler.setOnPlaybackEnded(() => this.transport.stop());
-    this.scheduler.setOnSongChange((entryId, title) => {
-      this.emit('songChange', { entryId, title });
+    this.scheduler.setOnSongChange((entryId, title, artist) => {
+      this.emit('songChange', { entryId, title, artist });
     });
   }
 

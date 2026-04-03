@@ -39,7 +39,7 @@ export class PlaylistController {
 
   // entries
 
-  append(bufferId: ID, title: string): void {
+  append(bufferId: ID, title: string, artist: string): void {
     const duration = this.bufferCache.getDuration(bufferId);
     if (duration === undefined) return;
 
@@ -47,13 +47,14 @@ export class PlaylistController {
       id: crypto.randomUUID(),
       bufferId,
       title,
+      artist,
       duration,
     };
     this.playlistManager.appendEntry(entry);
     this.onChanged();
   }
 
-  insert(index: number, bufferId: ID, title: string): void {
+  insert(index: number, bufferId: ID, title: string, artist: string): void {
     const duration = this.bufferCache.getDuration(bufferId);
     if (duration === undefined) return;
 
@@ -61,6 +62,7 @@ export class PlaylistController {
       id: crypto.randomUUID(),
       bufferId,
       title,
+      artist,
       duration,
     };
     this.playlistManager.insertEntry(index, entry);

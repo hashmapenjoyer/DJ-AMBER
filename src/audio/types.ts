@@ -6,6 +6,7 @@ export interface PlaylistEntry {
   id: ID;
   bufferId: ID;
   title: string;
+  artist: string;
   duration: Seconds;
 }
 
@@ -27,6 +28,7 @@ export interface ScheduledEntry {
   entryId: ID;
   bufferId: ID;
   title: string;
+  artist: string;
   absoluteStart: Seconds;
   absoluteEnd: Seconds;
   bufferOffset: Seconds;
@@ -60,7 +62,7 @@ export type TransportState = 'stopped' | 'playing' | 'paused';
 /** events emitted by the AudioEngine */
 export type AudioEngineEvents = {
   stateChange: { state: TransportState };
-  songChange: { entryId: ID; title: string };
+  songChange: { entryId: ID; title: string; artist: string };
   timelineChange: { entries: ScheduledEntry[] };
   playlistChange: { entries: PlaylistEntry[] };
   error: { message: string; error?: unknown };
