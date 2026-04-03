@@ -26,7 +26,9 @@ export default function NowPlaying() {
       if (!bar) return 0;
       const rect = bar.getBoundingClientRect();
       const fraction = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-      return fraction * engine.getTotalDuration();
+      const entry = engine.getCurrentEntry();
+      if (!entry) return 0;
+      return entry.absoluteStart + fraction * entry.playDuration;
     },
     [engine],
   );
@@ -34,13 +36,15 @@ export default function NowPlaying() {
   // rAF loop — updates fill width and time labels without React state
   useEffect(() => {
     const tick = () => {
-      const current = engine.transport.getCurrentTime();
-      const total = engine.getTotalDuration();
-      const pct = total > 0 ? (current / total) * 100 : 0;
+      const entry = engine.getCurrentEntry();
+      const trackStart = entry?.absoluteStart ?? 0;
+      const trackDuration = entry?.playDuration ?? 0;
+      const current = Math.max(0, engine.transport.getCurrentTime() - trackStart);
+      const pct = trackDuration > 0 ? (current / trackDuration) * 100 : 0;
 
       if (fillRef.current) fillRef.current.style.width = `${pct}%`;
       if (currentTimeRef.current) currentTimeRef.current.textContent = formatDuration(current);
-      if (totalTimeRef.current) totalTimeRef.current.textContent = formatDuration(total);
+      if (totalTimeRef.current) totalTimeRef.current.textContent = formatDuration(trackDuration);
 
       rafRef.current = requestAnimationFrame(tick);
     };
