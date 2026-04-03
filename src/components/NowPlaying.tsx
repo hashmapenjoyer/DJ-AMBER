@@ -10,14 +10,14 @@ export default function NowPlaying() {
   const isPlaying = transportState === 'playing';
   const hasTrack = currentSongTitle !== '';
 
-  // direct DOM refs — updated via rAF to avoid 60fps React re-renders
+  // direct DOM refs, updated via rAF to avoid 60fps React re-renders
   const fillRef = useRef<HTMLDivElement>(null);
   const currentTimeRef = useRef<HTMLSpanElement>(null);
   const totalTimeRef = useRef<HTMLSpanElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
 
-  // drag tracking — ref so mousemove doesn't cause re-renders
+  // drag tracking, ref so mousemove doesn't cause re-renders
   const isDragging = useRef(false);
 
   const getSeekTime = useCallback(
@@ -33,7 +33,7 @@ export default function NowPlaying() {
     [engine],
   );
 
-  // rAF loop — updates fill width and time labels without React state
+  // rAF loop, updates fill width and time labels without React state
   useEffect(() => {
     const tick = () => {
       const entry = engine.getCurrentEntry();
