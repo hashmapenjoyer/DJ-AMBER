@@ -190,19 +190,13 @@
   border: none;
   border-radius: var(--br-sm);
   cursor: pointer;
-  opacity: 0;
   transition:
-    opacity var(--transition-fast),
     color var(--transition-fast),
     background-color var(--transition-fast);
 }
 
-.library-item:hover .library-action-btn {
-  opacity: 1;
-}
-
 .library-add-btn {
-  color: #00cc88;
+  color: var(--text-primary);
   font-weight: var(--fw-bold);
   font-size: var(--fs-lg);
   line-height: 1;
@@ -214,12 +208,12 @@
 }
 
 .library-delete-btn {
-  color: var(--text-disabled);
+  color: var(--text-primary);
 }
 
 .library-delete-btn:hover {
   color: var(--color-error);
-  background-color: rgba(234, 67, 53, 0.1);
+  background-color: rgba(234, 67, 53, 0.15);
 }
 
 .library-item-duration {

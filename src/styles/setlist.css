@@ -360,23 +360,17 @@
   font-size: var(--fs-xs);
   background: none;
   border: none;
-  color: var(--text-disabled);
+  color: var(--text-primary);
   border-radius: var(--br-sm);
   cursor: pointer;
-  opacity: 0;
   transition:
-    opacity var(--transition-fast),
     color var(--transition-fast),
     background-color var(--transition-fast);
 }
 
-.setlist-track-item:hover .setlist-track-remove {
-  opacity: 1;
-}
-
 .setlist-track-remove:hover {
   color: var(--color-error);
-  background-color: rgba(234, 67, 53, 0.1);
+  background-color: rgba(234, 67, 53, 0.15);
 }
 
 /* Footer */

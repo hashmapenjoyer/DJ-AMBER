@@ -9,6 +9,7 @@ import '../../styles/timeline.css';
 const PX_PER_SEC = 4;
 const HEADER_HEIGHT = 32;
 const CANVAS_HEIGHT = HEADER_HEIGHT + 32 + 48;
+const MIN_TIMELINE_LEN = 900;
 
 interface DragState {
   entryId: string;
@@ -22,7 +23,7 @@ export default function Timeline() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const totalTime = engine.getTotalDuration() || 900;
+  const totalTime = Math.max(engine.getTotalDuration(), MIN_TIMELINE_LEN);
   const timelineWidth = totalTime * PX_PER_SEC;
 
   // Playhead
