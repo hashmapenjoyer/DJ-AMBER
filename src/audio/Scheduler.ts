@@ -11,6 +11,17 @@ const SCHEDULE_AHEAD_S: Seconds = 0.2;
 /** grace period, nodes within this window of ctx.currentTime are considered "audible" */
 const AUDIBLE_GRACE_S = 0.05;
 
+const EQUAL_POWER_CURVE_LENGTH = 128;
+
+// fade-out: cos(t * pi/2), 1 -> 0
+const EQUAL_POWER_FADE_OUT = new Float32Array(EQUAL_POWER_CURVE_LENGTH).map((_, i) =>
+  Math.cos((i / (EQUAL_POWER_CURVE_LENGTH - 1)) * (Math.PI / 2)),
+);
+// fade-in: sin(t * pi/2), 0 -> 1
+const EQUAL_POWER_FADE_IN = new Float32Array(EQUAL_POWER_CURVE_LENGTH).map((_, i) =>
+  Math.sin((i / (EQUAL_POWER_CURVE_LENGTH - 1)) * (Math.PI / 2)),
+);
+
 /**
  * Look-ahead scheduler
  *
@@ -385,6 +396,13 @@ export class Scheduler {
 
       if (fade.type === FadeType.LINEAR) {
         gainNode.gain.linearRampToValueAtTime(Math.max(fade.endGain, 0.0001), fadeEndCtx);
+      } else if (fade.type === FadeType.EQUAL_POWER) {
+        const isFadeIn = fade.endGain > fade.startGain;
+        const fullCurve = isFadeIn ? EQUAL_POWER_FADE_IN : EQUAL_POWER_FADE_OUT;
+        // slice from the fraction we've already passed (mid-fade seek)
+        const startIdx = Math.round(fadeFraction * (EQUAL_POWER_CURVE_LENGTH - 1));
+        const curve = startIdx > 0 ? fullCurve.slice(startIdx) : fullCurve;
+        gainNode.gain.setValueCurveAtTime(curve, fadeStartCtx, fadeEndCtx - fadeStartCtx);
       } else {
         // exponentialRamp can't reach 0, so we use an epsilon
         gainNode.gain.exponentialRampToValueAtTime(Math.max(fade.endGain, 0.0001), fadeEndCtx);
