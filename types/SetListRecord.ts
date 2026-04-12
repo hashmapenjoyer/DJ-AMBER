@@ -1,6 +1,7 @@
 export interface SetListTrack {
   bufferId: string;
   title: string;
+  artist: string;
   duration: number;
 }
 

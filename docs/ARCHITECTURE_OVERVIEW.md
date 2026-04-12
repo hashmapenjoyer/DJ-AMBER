@@ -25,7 +25,7 @@ This separation exists because trying to sync `AudioContext` state with React st
 ```
 src/
 ├── audio/                  # The audio engine (pure TypeScript, zero React)
-│   ├── AudioEngine.ts      # The mediator — wires everything together
+│   ├── AudioEngine.ts      # The mediator -- wires everything together
 │   ├── TransportController  # Play/pause/stop/seek state machine
 │   ├── PlaylistController   # Playlist + transition CRUD
 │   ├── PlaylistManager      # Timeline math (internal to PlaylistController)
@@ -109,7 +109,7 @@ AudioEngine (extends EventEmitter<AudioEngineEvents>)
 
 - **Inheritance** is used once: `AudioEngine extends EventEmitter`. This gives the engine typed event emission without pulling in a third-party library.
 - **Composition** is used everywhere else. Controllers are instantiated in `AudioEngine`'s constructor and wired together via callbacks.
-- **Dependency injection** via constructor parameters. Controllers receive callbacks like `onChanged`, `onStateChange`, `onSongChange` — they don't import the things they notify.
+- **Dependency injection** via constructor parameters. Controllers receive callbacks like `onChanged`, `onStateChange`, `onSongChange` -- they don't import the things they notify.
 
 ---
 
@@ -132,7 +132,7 @@ The project enforces a consistent style through ESLint (flat config) + Prettier 
 - **No `I` prefix** on interfaces (`IUser` -> just `User`)
 - **`import type`** for type-only imports
 - **camelCase** for variables/functions, **PascalCase** for types/components
-- **Strict mode** enabled in TypeScript — unused variables are errors, not warnings
+- **Strict mode** enabled in TypeScript -- unused variables are errors, not warnings
 - **2-space indentation**, single quotes, semicolons, trailing commas
 
 CI runs `npm run lint` on every PR to `main`. See [CODING_STANDARDS.md](CODING_STANDARDS.md) for the full rule set.
@@ -157,7 +157,7 @@ const { engine, transportState, playlist, timeline, currentSongTitle } = useAudi
 
 The hook creates a singleton `AudioEngine` instance and subscribes to its events via `useSyncExternalStore`. Components call methods on the engine imperatively (`engine.transport.play()`, `engine.playlist.append(...)`) and receive state updates reactively through the hook's return values.
 
-The five main UI components (NavBar, MusicLibrary, NowPlaying, SetList, Timeline) are independent — each was built by a different team member and they don't import from each other. Shared state flows through the audio engine, not through React props or context drilling.
+The five main UI components (NavBar, MusicLibrary, NowPlaying, SetList, Timeline) are independent -- each was built by a different team member and they don't import from each other. Shared state flows through the audio engine, not through React props or context drilling.
 
 ---
 
@@ -168,8 +168,8 @@ The five main UI components (NavBar, MusicLibrary, NowPlaying, SetList, Timeline
 | **Entry**           | A song in the playlist (`PlaylistEntry`)                                                       |
 | **Transition**      | A crossfade between two adjacent entries                                                       |
 | **Timeline**        | The computed array of `ScheduledEntry` objects with absolute start/end times                   |
-| **Scheduled Entry** | An entry enriched with absolute times and fade curves — what the scheduler actually plays      |
+| **Scheduled Entry** | An entry enriched with absolute times and fade curves -- what the scheduler actually plays      |
 | **Buffer**          | A decoded `AudioBuffer` stored in `BufferCache`                                                |
 | **Transport**       | The play/pause/stop/seek state machine                                                         |
-| **Mediator**        | `AudioEngine` — the class that wires all the controllers together                              |
+| **Mediator**        | `AudioEngine` -- the class that wires all the controllers together                              |
 | **Look-ahead**      | The scheduling strategy: check every 25ms, schedule 200ms ahead, let WebAudio handle precision |

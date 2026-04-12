@@ -33,7 +33,7 @@ export class Scheduler {
   private contextTimeAtPlay: number = 0;
 
   private onPlaybackEnded: (() => void) | null = null;
-  private onSongChange: ((entryId: ID, title: string) => void) | null = null;
+  private onSongChange: ((entryId: ID, title: string, artist: string) => void) | null = null;
   private lastReportedEntryId: ID | null = null;
 
   constructor(
@@ -52,7 +52,7 @@ export class Scheduler {
     this.onPlaybackEnded = cb;
   }
 
-  setOnSongChange(cb: (entryId: ID, title: string) => void): void {
+  setOnSongChange(cb: (entryId: ID, title: string, artist: string) => void): void {
     this.onSongChange = cb;
   }
 
@@ -405,7 +405,7 @@ export class Scheduler {
       if (currentTransport >= entry.absoluteStart && currentTransport < entry.absoluteEnd) {
         if (this.lastReportedEntryId !== entry.entryId) {
           this.lastReportedEntryId = entry.entryId;
-          this.onSongChange?.(entry.entryId, entry.title);
+          this.onSongChange?.(entry.entryId, entry.title, entry.artist);
         }
         return;
       }

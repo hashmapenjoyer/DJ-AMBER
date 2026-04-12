@@ -6,6 +6,7 @@ import NowPlaying from './components/NowPlaying';
 import SetList from './components/SetList';
 import Timeline from './components/Timeline/Timeline';
 import { useAudioEngine } from './audio/UseAudioEngine';
+import { extractMetadata } from './audio/extractMetadata';
 import type { SetListRecord } from '../types/SetListRecord';
 import type { LibraryItem } from '../types/LibraryItem';
 
@@ -30,8 +31,8 @@ function App() {
 
     for (const file of files) {
       const isDuplicate =
-        libraryItems.some((item) => item.title === file.name && item.category === category) ||
-        newItems.some((item) => item.title === file.name);
+        libraryItems.some((item) => item.filename === file.name && item.category === category) ||
+        newItems.some((item) => item.filename === file.name);
 
       if (isDuplicate) {
         duplicates.push(file.name);
@@ -40,14 +41,20 @@ function App() {
 
       try {
         const bufferId = crypto.randomUUID();
-        const arrayBuffer = await file.arrayBuffer();
+        const [arrayBuffer, { title, artist, coverUrl }] = await Promise.all([
+          file.arrayBuffer(),
+          extractMetadata(file),
+        ]);
         const audioBuffer = await engine.buffers.add(bufferId, arrayBuffer);
 
         newItems.push({
           id: bufferId,
-          title: file.name,
+          title,
+          filename: file.name,
+          artist,
           duration: Math.round(audioBuffer.duration),
           category,
+          coverUrl,
         });
       } catch {
         failures.push(file.name);
@@ -111,17 +118,20 @@ function App() {
   const handleAddToSetList = (id: string) => {
     const item = libraryItems.find((i) => i.id === id);
     if (!item) return;
-    engine.playlist.append(id, item.title);
+    engine.playlist.append(id, item.title, item.artist);
   };
 
   // --- Set list handlers ---
 
   const loadSetListIntoEngine = (setList: SetListRecord) => {
-    const currentTracks = engine.playlist.getEntries().map(({ bufferId, title, duration }) => ({
-      bufferId,
-      title,
-      duration,
-    }));
+    const currentTracks = engine.playlist
+      .getEntries()
+      .map(({ bufferId, title, artist, duration }) => ({
+        bufferId,
+        title,
+        artist,
+        duration,
+      }));
 
     setSetLists((prev) =>
       prev.map((sl) => (sl.id === activeSetListId ? { ...sl, tracks: currentTracks } : sl)),
@@ -135,7 +145,7 @@ function App() {
 
     for (const track of setList.tracks) {
       if (engine.buffers.has(track.bufferId)) {
-        engine.playlist.append(track.bufferId, track.title);
+        engine.playlist.append(track.bufferId, track.title, track.artist);
       }
     }
   };
@@ -189,7 +199,7 @@ function App() {
           onDelete={handleLibraryDelete}
           onAddToSetList={handleAddToSetList}
         />
-        <NowPlaying />
+        <NowPlaying libraryItems={libraryItems} />
         <SetList
           setLists={setLists}
           activeSetListId={activeSetListId}
