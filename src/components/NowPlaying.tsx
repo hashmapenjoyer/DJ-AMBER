@@ -3,12 +3,22 @@ import { Music, Play, Pause } from 'lucide-react';
 import '../styles/now-playing.css';
 import { useAudioEngine } from '../audio/UseAudioEngine';
 import { formatDuration } from '../../types/FormatDuration';
+import type { LibraryItem } from '../../types/LibraryItem';
 
-export default function NowPlaying() {
+interface NowPlayingProps {
+  libraryItems: LibraryItem[];
+}
+
+export default function NowPlaying({ libraryItems }: NowPlayingProps) {
   const { engine, currentSongTitle, currentSongArtist, transportState } = useAudioEngine();
 
   const isPlaying = transportState === 'playing';
   const hasTrack = currentSongTitle !== '';
+
+  const currentBufferId = engine.getCurrentEntry()?.bufferId;
+  const coverUrl = currentBufferId
+    ? libraryItems.find((item) => item.id === currentBufferId)?.coverUrl
+    : undefined;
 
   // direct DOM refs — updated via rAF to avoid 60fps React re-renders
   const fillRef = useRef<HTMLDivElement>(null);
@@ -89,9 +99,13 @@ export default function NowPlaying() {
       <div className="np-content">
         {/* Album Cover */}
         <div className="np-album-cover-wrapper">
-          <div className="np-album-cover np-album-cover--placeholder">
-            <Music className="np-music-icon" size={40} strokeWidth={1.5} />
-          </div>
+          {coverUrl ? (
+            <img className="np-album-cover" src={coverUrl} alt="Album cover" />
+          ) : (
+            <div className="np-album-cover np-album-cover--placeholder">
+              <Music className="np-music-icon" size={40} strokeWidth={1.5} />
+            </div>
+          )}
         </div>
 
         {/* Main Section */}

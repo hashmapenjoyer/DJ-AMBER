@@ -41,7 +41,7 @@ function App() {
 
       try {
         const bufferId = crypto.randomUUID();
-        const [arrayBuffer, { title, artist }] = await Promise.all([
+        const [arrayBuffer, { title, artist, coverUrl }] = await Promise.all([
           file.arrayBuffer(),
           extractMetadata(file),
         ]);
@@ -54,6 +54,7 @@ function App() {
           artist,
           duration: Math.round(audioBuffer.duration),
           category,
+          coverUrl,
         });
       } catch {
         failures.push(file.name);
@@ -196,7 +197,7 @@ function App() {
           onDelete={handleLibraryDelete}
           onAddToSetList={handleAddToSetList}
         />
-        <NowPlaying />
+        <NowPlaying libraryItems={libraryItems} />
         <SetList
           setLists={setLists}
           activeSetListId={activeSetListId}

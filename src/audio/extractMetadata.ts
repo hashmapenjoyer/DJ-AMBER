@@ -7,6 +7,7 @@ function stripExtension(filename: string): string {
 export interface TrackMetadata {
   title: string;
   artist: string;
+  coverUrl?: string;
 }
 
 /**
@@ -16,12 +17,22 @@ export interface TrackMetadata {
  */
 export async function extractMetadata(file: File): Promise<TrackMetadata> {
   try {
-    const metadata = await mm.parseBlob(file, { skipCovers: true });
+    const metadata = await mm.parseBlob(file);
+
+    let coverUrl: string | undefined;
+    const picture = metadata.common.picture?.[0];
+    if (picture) {
+      const blob = new Blob([picture.data], { type: picture.format });
+      coverUrl = URL.createObjectURL(blob);
+    }
+
     return {
       title: metadata.common.title ?? stripExtension(file.name),
       artist: metadata.common.artist ?? 'Unknown Artist',
+      coverUrl,
     };
-  } catch {
+  } catch (err) {
+    console.error('[extractMetadata] failed to parse tags:', err);
     return {
       title: stripExtension(file.name),
       artist: 'Unknown Artist',

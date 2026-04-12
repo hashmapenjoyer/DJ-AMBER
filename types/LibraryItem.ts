@@ -9,4 +9,5 @@ export interface LibraryItem {
   artist: string;
   duration: number;
   category: 'music' | 'sfx';
+  coverUrl?: string;
 }
