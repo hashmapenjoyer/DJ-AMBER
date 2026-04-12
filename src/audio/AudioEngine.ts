@@ -9,7 +9,7 @@ import { SfxController } from './SfxController';
 import type { ID, AudioEngineEvents, ScheduledEntry } from './types';
 
 /**
- * mediator — wires the focused controllers together and coordinates
+ * mediator: wires the focused controllers together and coordinates
  * cross-cutting concerns (timeline recomputation, event emission).
  *
  * this is the single object React components interact with via useAudioEngine.
