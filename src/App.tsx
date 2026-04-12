@@ -124,12 +124,14 @@ function App() {
   // --- Set list handlers ---
 
   const loadSetListIntoEngine = (setList: SetListRecord) => {
-    const currentTracks = engine.playlist.getEntries().map(({ bufferId, title, artist, duration }) => ({
-      bufferId,
-      title,
-      artist,
-      duration,
-    }));
+    const currentTracks = engine.playlist
+      .getEntries()
+      .map(({ bufferId, title, artist, duration }) => ({
+        bufferId,
+        title,
+        artist,
+        duration,
+      }));
 
     setSetLists((prev) =>
       prev.map((sl) => (sl.id === activeSetListId ? { ...sl, tracks: currentTracks } : sl)),
