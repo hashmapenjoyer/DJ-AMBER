@@ -22,7 +22,7 @@ export async function extractMetadata(file: File): Promise<TrackMetadata> {
     let coverUrl: string | undefined;
     const picture = metadata.common.picture?.[0];
     if (picture) {
-      const blob = new Blob([picture.data], { type: picture.format });
+      const blob = new Blob([new Uint8Array(picture.data)], { type: picture.format });
       coverUrl = URL.createObjectURL(blob);
     }
 
