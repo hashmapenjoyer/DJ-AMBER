@@ -30,17 +30,15 @@ export default function MusicLibrary({
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
     const fileArray = Array.from(files);
     e.target.value = '';
     setIsLoading(true);
-    try {
-      await onUpload(fileArray, activeTab);
-    } finally {
+    void onUpload(fileArray, activeTab).finally(() => {
       setIsLoading(false);
-    }
+    });
   };
 
   return (
