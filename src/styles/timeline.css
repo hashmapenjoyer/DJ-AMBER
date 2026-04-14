@@ -114,7 +114,7 @@
   height: 56px;
   border: 1px solid;
   border-radius: var(--br-sm);
-  border-color: rgb(128, 255, 185);
+  border-color: rgb(245, 168, 52);
   cursor: grab;
   overflow: hidden;
   display: flex;
@@ -128,7 +128,7 @@
   height: 56px;
   border: 1px solid;
   border-radius: var(--br-sm);
-  border-color: rgb(0, 255, 115);
+  border-color: rgb(218, 135, 7);
   cursor: grab;
   overflow: hidden;
   display: flex;
@@ -168,7 +168,7 @@
   cursor: grabbing !important;
   box-shadow:
     var(--shadow-lg),
-    0 0 8px rgba(0, 218, 189, 0.3);
+    0 0 8px rgba(218, 135, 7, 0.3);
 }
 
 .timeline_playhead {

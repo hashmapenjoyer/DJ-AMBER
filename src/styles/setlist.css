@@ -154,12 +154,12 @@
 }
 
 .setlist-shuffle-btn:hover {
-  color: #00cc88;
-  background-color: rgba(0, 204, 136, 0.1);
+  color: #da8707;
+  background-color: rgba(218, 135, 7, 0.1);
 }
 
 .setlist-shuffle-btn--active {
-  color: #00cc88;
+  color: #da8707;
 }
 
 /* Repeat Button */
@@ -189,12 +189,12 @@
 }
 
 .setlist-repeat-btn:hover {
-  color: #00cc88;
-  background-color: rgba(0, 204, 136, 0.1);
+  color: #da8707;
+  background-color: rgba(218, 135, 7, 0.1);
 }
 
 .setlist-repeat-btn--active {
-  color: #00cc88;
+  color: #da8707;
 }
 
 /* Delete Button */
@@ -304,7 +304,7 @@
 }
 
 .setlist-track-item--drag-over {
-  border-top: 2px solid #00cc88;
+  border-top: 2px solid #da8707;
 }
 
 /* Drag Handle */
@@ -327,7 +327,7 @@
   text-align: right;
   font-size: var(--fs-xs);
   font-weight: var(--fw-semibold);
-  color: #00cc88;
+  color: #da8707;
   font-family: var(--font-mono);
   opacity: 0.8;
 }

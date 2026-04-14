@@ -27,11 +27,11 @@
 
 .help-modal {
   background: linear-gradient(135deg, #0a0e27 0%, #0f1829 100%);
-  border: 2px solid #00cc88;
+  border: 2px solid #da8707;
   border-radius: var(--br-2xl);
   box-shadow:
-    0 20px 60px rgba(0, 204, 136, 0.25),
-    0 0 30px rgba(0, 204, 136, 0.15);
+    0 20px 60px rgba(218, 135, 7, 0.25),
+    0 0 30px rgba(218, 135, 7, 0.15);
   max-width: 500px;
   width: 90%;
   max-height: 80vh;
@@ -58,7 +58,7 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--space-6);
-  border-bottom: 1px solid #00cc88;
+  border-bottom: 1px solid #da8707;
   flex-shrink: 0;
 }
 
@@ -75,7 +75,7 @@
   height: 40px;
   border: none;
   background: transparent;
-  color: #00cc88;
+  color: #da8707;
   font-size: var(--fs-xl);
   cursor: pointer;
   display: flex;
@@ -86,8 +86,8 @@
 }
 
 .help-modal-close:hover {
-  color: #00ff99;
-  background-color: rgba(0, 204, 136, 0.1);
+  color: #f5a834;
+  background-color: rgba(218, 135, 7, 0.1);
 }
 
 /* Content */
@@ -109,12 +109,12 @@
 }
 
 .help-modal-content::-webkit-scrollbar-thumb {
-  background: #00cc88;
+  background: #da8707;
   border-radius: var(--br-full);
 }
 
 .help-modal-content::-webkit-scrollbar-thumb:hover {
-  background: #00ff99;
+  background: #f5a834;
 }
 
 /* Sections */
@@ -127,7 +127,7 @@
 .help-section-title {
   font-size: var(--fs-lg);
   font-weight: var(--fw-bold);
-  color: #00ff99;
+  color: #f5a834;
   margin: 0;
   letter-spacing: var(--ls-wide);
 }
@@ -157,19 +157,19 @@
 }
 
 kbd {
-  background-color: rgba(0, 204, 136, 0.15);
-  border: 1px solid #00cc88;
+  background-color: rgba(218, 135, 7, 0.15);
+  border: 1px solid #da8707;
   border-radius: var(--br-base);
   padding: var(--space-1) var(--space-2);
   font-size: var(--fs-xs);
   font-family: var(--font-mono);
-  color: #00ff99;
+  color: #f5a834;
   font-weight: var(--fw-semibold);
 }
 
 .help-tips li::before {
   content: '✓ ';
-  color: #00cc88;
+  color: #da8707;
   margin-right: var(--space-2);
   font-weight: var(--fw-bold);
 }
@@ -177,7 +177,7 @@ kbd {
 /* Footer */
 .help-modal-footer {
   padding: var(--space-6);
-  border-top: 1px solid #00cc88;
+  border-top: 1px solid #da8707;
   display: flex;
   gap: var(--space-4);
   flex-shrink: 0;
@@ -186,8 +186,8 @@ kbd {
 .help-modal-button {
   flex: 1;
   padding: var(--space-3) var(--space-5);
-  background: linear-gradient(135deg, #00cc88 0%, #00ff99 100%);
-  border: 2px solid #00ff99;
+  background: linear-gradient(135deg, #da8707 0%, #f5a834 100%);
+  border: 2px solid #f5a834;
   color: #0f1829;
   font-size: var(--fs-base);
   font-weight: var(--fw-bold);
@@ -197,7 +197,7 @@ kbd {
 }
 
 .help-modal-button:hover {
-  background: linear-gradient(135deg, #00ff99 0%, #33ffbb 100%);
+  background: linear-gradient(135deg, #f5a834 0%, #ffb85e 100%);
   border-color: #33ffbb;
   box-shadow: 0 0 20px rgba(0, 255, 153, 0.4);
   transform: scale(1.02);

@@ -19,6 +19,7 @@ export default function MusicLibrary({
 }: MusicLibraryProps) {
   const [activeTab, setActiveTab] = useState<Tab>('music');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filteredItems = items
@@ -34,7 +35,10 @@ export default function MusicLibrary({
     if (!files || files.length === 0) return;
     const fileArray = Array.from(files);
     e.target.value = '';
-    void onUpload(fileArray, activeTab);
+    setIsLoading(true);
+    void onUpload(fileArray, activeTab).finally(() => {
+      setIsLoading(false);
+    });
   };
 
   return (
@@ -112,6 +116,13 @@ export default function MusicLibrary({
           </ul>
         )}
       </div>
+
+      {isLoading && (
+        <div className="library-loading">
+          <div className="library-loading-spinner"></div>
+          <p className="library-loading-text">Processing files...</p>
+        </div>
+      )}
 
       <div className="library-upload">
         <input
