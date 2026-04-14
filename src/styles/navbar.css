@@ -10,8 +10,8 @@
   justify-content: space-between;
   padding: 0 var(--space-6);
   box-sizing: border-box;
-  border-bottom: 2px solid #00cc88;
-  box-shadow: 0 4px 12px rgba(0, 204, 136, 0.15);
+  border-bottom: 2px solid #da8707;
+  box-shadow: 0 4px 12px rgba(218, 135, 7, 0.15);
 }
 
 /* Left Section: Logo and App Name */
@@ -45,7 +45,7 @@
   color: #ffffff;
   margin: 0;
   letter-spacing: var(--ls-wide);
-  text-shadow: 0 0 10px rgba(0, 204, 136, 0.3);
+  text-shadow: 0 0 10px #966316;
 }
 
 /* Right Section: Help Button */
@@ -60,23 +60,23 @@
   width: 48px;
   height: 48px;
   border-radius: var(--br-lg);
-  background: linear-gradient(135deg, #00cc88 0%, #00ff99 100%);
-  border: 2px solid #00ff99;
+  background: linear-gradient(135deg, #da8707 0%, #f5a834 100%);
+  border: 2px solid #f5a834;
   color: #0f1829;
   font-size: var(--fs-2xl);
   font-weight: var(--fw-bold);
   cursor: pointer;
   transition: all var(--transition-base);
-  box-shadow: 0 0 15px rgba(0, 204, 136, 0.4);
+  box-shadow: 0 0 15px rgba(218, 135, 7, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .navbar-help-btn:hover {
-  background: linear-gradient(135deg, #00ff99 0%, #33ffbb 100%);
-  border-color: #33ffbb;
-  box-shadow: 0 0 20px rgba(0, 255, 153, 0.6);
+  background: linear-gradient(135deg, #f5a834 0%, #ffb85e 100%);
+  border-color: #ffb85e;
+  box-shadow: 0 0 20px rgba(245, 168, 52, 0.6);
   transform: scale(1.05);
 }
 

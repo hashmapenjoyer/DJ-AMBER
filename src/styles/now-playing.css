@@ -29,8 +29,8 @@
   height: 140px;
   border-radius: var(--br-lg);
   overflow: hidden;
-  border: 2px solid #00cc88;
-  box-shadow: 0 0 20px rgba(0, 204, 136, 0.4);
+  border: 2px solid #da8707;
+  box-shadow: 0 0 20px rgba(218, 135, 7, 0.4);
   margin-top: 0;
   flex-shrink: 0;
   display: flex;
@@ -123,7 +123,7 @@
 
 .np-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #00cc88, #00ff99);
+  background: linear-gradient(90deg, #da8707, #f5a834);
   border-radius: var(--br-full);
 }
 
@@ -145,10 +145,10 @@
   padding: var(--space-1) var(--space-3);
   font-size: var(--fs-xs);
   font-weight: var(--fw-semibold);
-  border: 2px solid #00cc88;
+  border: 2px solid #da8707;
   border-radius: var(--br-md);
   background-color: transparent;
-  color: #00cc88;
+  color: #da8707;
   cursor: pointer;
   transition: all var(--transition-base);
   font-family: var(--font-primary);
@@ -157,16 +157,16 @@
 }
 
 .np-btn:hover {
-  background-color: #00cc88;
+  background-color: #da8707;
   color: #000000;
-  box-shadow: 0 0 20px rgba(0, 204, 136, 0.3);
+  box-shadow: 0 0 20px rgba(218, 135, 7, 0.3);
   transform: translateY(-2px);
 }
 
 .np-btn.active {
-  background-color: #00cc88;
+  background-color: #da8707;
   color: #000000;
-  box-shadow: 0 0 15px rgba(0, 204, 136, 0.5);
+  box-shadow: 0 0 15px rgba(218, 135, 7, 0.5);
 }
 
 /* Responsive Design */
