@@ -37,6 +37,7 @@ export default defineConfig([
       // Variables
       'no-var': 'error',
       'prefer-const': 'error',
+      '@typescript-eslint/no-unused-vars': ['error', { varsIgnorePattern: '^_', argsIgnorePattern: '^_' }],
 
       // Naming conventions
       '@typescript-eslint/naming-convention': [
@@ -44,7 +45,7 @@ export default defineConfig([
         {
           selector: 'default',
           format: ['camelCase'],
-          leadingUnderscore: 'forbid',
+          leadingUnderscore: 'allow',
           trailingUnderscore: 'forbid',
         },
         {

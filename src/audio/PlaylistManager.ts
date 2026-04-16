@@ -1,4 +1,5 @@
 import type { Fade } from '../../types/Fade';
+import { FadeType } from '../../types/Fade';
 import type { ID, Seconds, PlaylistEntry, Transition, ScheduledEntry } from './types';
 
 /**
@@ -118,7 +119,7 @@ export class PlaylistManager {
       if (i > 0) {
         const prevEntry = this.entries[i - 1];
         const incomingTransition = this.getTransitionBetween(prevEntry.id, entry.id);
-        if (incomingTransition) {
+        if (incomingTransition && incomingTransition.fadeInType !== FadeType.NONE) {
           fades.push({
             type: incomingTransition.fadeInType,
             startOffset: 0,
@@ -133,7 +134,7 @@ export class PlaylistManager {
       if (i < this.entries.length - 1) {
         const nextEntry = this.entries[i + 1];
         const outgoingTransition = this.getTransitionBetween(entry.id, nextEntry.id);
-        if (outgoingTransition) {
+        if (outgoingTransition && outgoingTransition.fadeOutType !== FadeType.NONE) {
           fades.push({
             type: outgoingTransition.fadeOutType,
             startOffset: entry.duration - outgoingTransition.duration,
