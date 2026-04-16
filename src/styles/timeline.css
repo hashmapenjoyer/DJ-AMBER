@@ -5,6 +5,9 @@
   --timeline-bg-dark: var(--bg-secondary);
   --timeline-border: var(--border-color);
   --timeline-border-light: var(--border-color-light);
+  --timeline-sfx-color: rgb(56, 189, 190);
+  --timeline-sfx-color-dark: rgb(34, 148, 149);
+  --timeline-sfx-lane-bg: rgba(56, 189, 190, 0.04);
 }
 
 .timeline {
@@ -17,6 +20,8 @@
   user-select: none;
   width: 100%;
   min-width: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 .timeline_header {
@@ -62,11 +67,51 @@
 
 .timeline_scroll_area {
   overflow-x: scroll;
-  overflow-y: visible;
+  overflow-y: hidden;
   background-color: var(--timeline-bg);
   position: relative;
-  width: 100%;
+  flex: 1;
   min-width: 0;
+}
+
+
+.timeline_track_area {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.timeline_lane_labels {
+  flex-shrink: 0;
+  width: 36px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+}
+
+.timeline_lane_label {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.timeline_lane_label span {
+  font-size: var(--fs-xs);
+  font-family: var(--font-mono);
+  color: var(--text-disabled);
+  letter-spacing: var(--ls-wide);
+}
+
+.timeline_lane_label--ticks span {
+  color: var(--text-disabled);
+  opacity: 0.5;
+}
+
+.timeline_lane_label--sfx span {
+  color: var(--timeline-sfx-color-dark);
 }
 
 .timeline_canvas {
@@ -80,6 +125,7 @@
   z-index: var(--z-sticky);
   background-color: var(--timeline-bg-dark);
   border-bottom: 1px solid var(--timeline-border);
+  cursor: pointer;
 }
 
 .timeline_tick {
@@ -101,17 +147,20 @@
   letter-spacing: var(--ls-wide);
 }
 
+
 .timeline_lane {
   position: absolute;
-  height: 72px;
   background-color: rgba(255, 255, 255, 0.015);
   border-top: 1px solid var(--timeline-border);
   border-bottom: 1px solid var(--timeline-border);
 }
 
+.timeline_lane--sfx {
+  background-color: var(--timeline-sfx-lane-bg);
+}
+
 .timeline_clip {
   position: absolute;
-  height: 56px;
   border: 1px solid;
   border-radius: var(--br-sm);
   border-color: rgb(245, 168, 52);
@@ -125,16 +174,41 @@
 
 .timeline_clip--dragging {
   position: absolute;
-  height: 56px;
   border: 1px solid;
   border-radius: var(--br-sm);
   border-color: rgb(218, 135, 7);
+  cursor: grabbing;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-lg), 0 0 8px rgba(218, 135, 7, 0.3);
+  opacity: 0.85;
+}
+
+.timeline_clip--sfx {
+  position: absolute;
+  border: 1px solid;
+  border-radius: var(--br-sm);
+  border-color: var(--timeline-sfx-color);
   cursor: grab;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow-md);
   transition: box-shadow var(--transition-fast);
+}
+
+.timeline_clip--sfx-dragging {
+  position: absolute;
+  border: 1px solid;
+  border-radius: var(--br-sm);
+  border-color: var(--timeline-sfx-color-dark);
+  cursor: grabbing;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-lg), 0 0 8px rgba(56, 189, 190, 0.3);
+  opacity: 0.85;
 }
 
 .timeline_clip_label {
@@ -163,12 +237,12 @@
   flex-shrink: 0;
 }
 
-.timeline_clip_dragging {
-  opacity: 0.75;
-  cursor: grabbing !important;
-  box-shadow:
-    var(--shadow-lg),
-    0 0 8px rgba(218, 135, 7, 0.3);
+.timeline_clip_overlap {
+  position: absolute;
+  background-color: var(--timeline-overlap-bg);
+  border: 1px solid;
+  border-radius: var(--br-sm);
+  border-color: rgb(127, 0, 211);
 }
 
 .timeline_playhead {
@@ -187,13 +261,4 @@
   background-color: var(--color-white);
   border-radius: 50% 50% 0 0;
   margin-left: -4px;
-}
-
-.timeline_clip_overlap {
-  position: absolute;
-  height: 56px;
-  background-color: var(--timeline-overlap-bg);
-  border: 1px solid;
-  border-radius: var(--br-sm);
-  border-color: rgb(127, 0, 211);
 }

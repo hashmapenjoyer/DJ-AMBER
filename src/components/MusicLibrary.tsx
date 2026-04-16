@@ -9,6 +9,7 @@ interface MusicLibraryProps {
   onUpload: (files: File[], category: Tab) => Promise<void>;
   onDelete: (id: string) => void;
   onAddToSetList: (id: string) => void;
+  onAddSfxToTimeline: (id: string) => void;
   onRename: (id: string, newTitle: string) => void;
 }
 
@@ -17,6 +18,7 @@ export default function MusicLibrary({
   onUpload,
   onDelete,
   onAddToSetList,
+  onAddSfxToTimeline,
   onRename,
 }: MusicLibraryProps) {
   const [activeTab, setActiveTab] = useState<Tab>('music');
@@ -26,6 +28,14 @@ export default function MusicLibrary({
   const [renameValue, setRenameValue] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const renameInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAddItem = (id: string) => {
+    if (activeTab === 'sfx') {
+      onAddSfxToTimeline(id);
+    } else {
+      onAddToSetList(id);
+    }
+  };
 
   const filteredItems = items
     .filter((item) => item.category === activeTab)
@@ -171,9 +181,9 @@ export default function MusicLibrary({
                 <div className="library-item-actions">
                   <button
                     className="library-action-btn library-add-btn"
-                    onClick={() => onAddToSetList(item.id)}
-                    title="Add to set list"
-                    aria-label={`Add ${item.title} to set list`}
+                    onClick={() => handleAddItem(item.id)}
+                    title={activeTab === 'sfx' ? 'Add to SFX timeline' : 'Add to set list'}
+                    aria-label={`Add ${item.title} to ${activeTab === 'sfx' ? 'SFX timeline' : 'set list'}`}
                   >
                     +
                   </button>
