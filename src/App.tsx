@@ -22,6 +22,11 @@ function App() {
   const [setLists, setSetLists] = useState<SetListRecord[]>(INITIAL_SET_LISTS);
   const [activeSetListId, setActiveSetListId] = useState<string>(DEFAULT_SET_LIST_ID);
   const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([]);
+  const [sfxClips, setSfxClips] = useState(() => [...engine.sfx.getClips()]);
+
+  // Called by Timeline after a drag-drop repositions an SFX clip, and by
+  // handleAddSfxToTimeline after adding one from the library.
+  const handleSfxChange = () => setSfxClips([...engine.sfx.getClips()]);
 
   // --- Keyboard Shortcuts ---
   useEffect(() => {
@@ -150,6 +155,19 @@ function App() {
     engine.playlist.append(id, item.title, item.artist);
   };
 
+  const handleAddSfxToTimeline = (id: string) => {
+    const item = libraryItems.find((i) => i.id === id);
+    if (!item) return;
+    engine.sfx.add({
+      bufferId: id,
+      absoluteStart: engine.transport.getCurrentTime(),
+      duration: item.duration,
+      bufferOffset: 0,
+      gain: 1.0,
+    });
+    handleSfxChange();
+  };
+
   const handleLibraryRename = (id: string, newTitle: string) => {
     setLibraryItems((prev) =>
       prev.map((item) => (item.id === id ? { ...item, title: newTitle } : item)),
@@ -240,6 +258,7 @@ function App() {
           onUpload={handleLibraryUpload}
           onDelete={handleLibraryDelete}
           onAddToSetList={handleAddToSetList}
+          onAddSfxToTimeline={handleAddSfxToTimeline}
           onRename={handleLibraryRename}
         />
         <NowPlaying libraryItems={libraryItems} />
@@ -252,7 +271,9 @@ function App() {
           onDeleteSetList={handleDeleteSetList}
         />
       </div>
-      <Timeline />
+      <div className="timeline-container">
+        <Timeline sfxClips={sfxClips} onSfxChange={handleSfxChange} />
+      </div>
     </div>
   );
 }

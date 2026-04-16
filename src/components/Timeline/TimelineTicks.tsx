@@ -5,14 +5,30 @@ interface TimelineTicksProps {
   totalTime: number;
   pxPerSec: number;
   timelineWidth: number;
+  height: number;
+  onClick: (e: React.MouseEvent<HTMLDivElement>) => void;
 }
 
-export default function TimelineTicks({ totalTime, pxPerSec, timelineWidth }: TimelineTicksProps) {
+export default function TimelineTicks({
+  totalTime,
+  pxPerSec,
+  timelineWidth,
+  height,
+  onClick,
+}: TimelineTicksProps) {
+  const targetPxPerTick = 80;
+  const rawInterval = targetPxPerTick / pxPerSec;
+
+  // Round to a "nice" number: 1, 2, 5, 10, 15, etcx
+  const niceIntervals = [1, 2, 5, 10, 15, 30, 60, 120, 300, 600, 1200, 3600];
+  const interval =
+    niceIntervals.find((n) => n >= rawInterval) ?? niceIntervals[niceIntervals.length - 1];
+
   const ticks: number[] = [];
-  for (let s = 0; s <= totalTime; s += 30) ticks.push(s);
+  for (let s = 0; s <= totalTime; s += interval) ticks.push(s);
 
   return (
-    <div className="timeline_ticks" style={{ width: timelineWidth }}>
+    <div className="timeline_ticks" style={{ width: timelineWidth, height }} onClick={onClick}>
       {ticks.map((s) => (
         <div key={s} className="timeline_tick" style={{ left: s * pxPerSec }}>
           <span className="timeline_tick_label">{formatDuration(s)}</span>
