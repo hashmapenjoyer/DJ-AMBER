@@ -33,6 +33,7 @@ export class AudioEngine extends EventEmitter<AudioEngineEvents> {
   private readonly scheduler: Scheduler;
   private readonly playlistManager: PlaylistManager;
   private cachedTimeline: ScheduledEntry[] = [];
+  private selectedEntryId: ID | null = null;
 
   constructor() {
     super();
@@ -131,5 +132,19 @@ export class AudioEngine extends EventEmitter<AudioEngineEvents> {
     this.emit('playlistChange', {
       entries: [...this.playlistManager.getEntries()],
     });
+  }
+
+  updateEntryTitle(bufferId: ID, newTitle: string): void {
+    this.playlist.updateTitleByBufferId(bufferId, newTitle);
+  }
+
+  setSelectedEntry(id: ID | null): void {
+    this.selectedEntryId = id;
+    // Emit an event so the Timeline UI knows to highlight the clip
+    this.emit('playlistChange', { entries: [...this.playlistManager.getEntries()] });
+  }
+
+  getSelectedEntryId(): ID | null {
+    return this.selectedEntryId;
   }
 }
