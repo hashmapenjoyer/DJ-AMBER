@@ -60,7 +60,12 @@ export class AudioEngine extends EventEmitter<AudioEngineEvents> {
       (state) => this.emit('stateChange', { state }),
       (time) => {
         const entry = this.playlist.getEntryAtTime(time);
-        if (entry) this.emit('songChange', { entryId: entry.entryId, title: entry.title, artist: entry.artist });
+        if (entry)
+          this.emit('songChange', {
+            entryId: entry.entryId,
+            title: entry.title,
+            artist: entry.artist,
+          });
       },
     );
 
