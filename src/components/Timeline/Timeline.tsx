@@ -239,10 +239,7 @@ export default function Timeline() {
 
   const handleTransitionRemove = useCallback(() => {
     if (!transitionTarget) return;
-    engine.playlist.removeTransition(
-      transitionTarget.fromEntryId,
-      transitionTarget.toEntryId,
-    );
+    engine.playlist.removeTransition(transitionTarget.fromEntryId, transitionTarget.toEntryId);
     setTransitionTarget(null);
   }, [engine, transitionTarget]);
 
@@ -373,27 +370,30 @@ export default function Timeline() {
         </div>
       </div>
 
-      {transitionTarget && (() => {
-        const existing = engine.playlist.getTransitions().find(
-          (t) =>
-            t.fromEntryId === transitionTarget.fromEntryId &&
-            t.toEntryId === transitionTarget.toEntryId,
-        );
-        return (
-          <TransitionModal
-            fromTitle={transitionTarget.fromTitle}
-            toTitle={transitionTarget.toTitle}
-            currentDuration={existing?.duration ?? 3}
-            currentFadeOutType={existing?.fadeOutType ?? FadeType.LINEAR}
-            currentFadeInType={existing?.fadeInType ?? FadeType.LINEAR}
-            maxDuration={transitionTarget.maxDuration}
-            hasExistingTransition={!!existing}
-            onApply={handleTransitionApply}
-            onRemove={handleTransitionRemove}
-            onClose={() => setTransitionTarget(null)}
-          />
-        );
-      })()}
+      {transitionTarget &&
+        (() => {
+          const existing = engine.playlist
+            .getTransitions()
+            .find(
+              (t) =>
+                t.fromEntryId === transitionTarget.fromEntryId &&
+                t.toEntryId === transitionTarget.toEntryId,
+            );
+          return (
+            <TransitionModal
+              fromTitle={transitionTarget.fromTitle}
+              toTitle={transitionTarget.toTitle}
+              currentDuration={existing?.duration ?? 3}
+              currentFadeOutType={existing?.fadeOutType ?? FadeType.LINEAR}
+              currentFadeInType={existing?.fadeInType ?? FadeType.LINEAR}
+              maxDuration={transitionTarget.maxDuration}
+              hasExistingTransition={!!existing}
+              onApply={handleTransitionApply}
+              onRemove={handleTransitionRemove}
+              onClose={() => setTransitionTarget(null)}
+            />
+          );
+        })()}
     </div>
   );
 }

@@ -19,7 +19,11 @@ interface TransitionModalProps {
 const FADE_OPTIONS: { value: FadeTypeValue; label: string; description: string }[] = [
   { value: FadeType.LINEAR, label: 'Linear', description: 'Constant-rate crossfade' },
   { value: FadeType.EXPONENTIAL, label: 'Exponential', description: 'Fast attack, slow tail' },
-  { value: FadeType.EQUAL_POWER, label: 'Equal Power', description: 'Natural-sounding, no volume dip' },
+  {
+    value: FadeType.EQUAL_POWER,
+    label: 'Equal Power',
+    description: 'Natural-sounding, no volume dip',
+  },
 ];
 
 export default function TransitionModal({
