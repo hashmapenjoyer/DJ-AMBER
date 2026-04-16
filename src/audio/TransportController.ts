@@ -13,6 +13,7 @@ export class TransportController {
   private readonly scheduler: Scheduler;
   private readonly getDuration: () => Seconds;
   private readonly onStateChange: (state: TransportState) => void;
+  private readonly onSeek: (time: Seconds) => void;
 
   private state: TransportState = 'stopped';
   private transportTimeAtPlay: Seconds = 0;
@@ -24,11 +25,13 @@ export class TransportController {
     scheduler: Scheduler,
     getDuration: () => Seconds,
     onStateChange: (state: TransportState) => void,
+    onSeek: (time: Seconds) => void = () => {},
   ) {
     this.ctx = ctx;
     this.scheduler = scheduler;
     this.getDuration = getDuration;
     this.onStateChange = onStateChange;
+    this.onSeek = onSeek;
   }
 
   async play(): Promise<void> {
@@ -72,8 +75,10 @@ export class TransportController {
       this.contextTimeAtPlay = this.ctx.currentTime;
       this.transportTimeAtPlay = this.pausedAt;
       this.scheduler.start(this.pausedAt, this.contextTimeAtPlay);
+    } else {
+      // paused/stopped: playhead moves but no audio — notify so song title updates
+      this.onSeek(this.pausedAt);
     }
-    // if paused/stopped, just update pausedAt. playhead moves but no audio
   }
 
   /** pure arithmetic, safe to call 60fps in a rAF loop */

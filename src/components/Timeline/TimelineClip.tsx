@@ -1,20 +1,21 @@
 import { formatDuration } from '../../../types/FormatDuration';
 import '../../styles/timeline.css';
 
-const HEADER_HEIGHT = 32;
-
 interface TimelineClipProps {
   entryId: string;
   title: string;
   leftPx: number;
   widthPx: number;
   pxPerSecond: number;
+  clipTop: number;
+  clipHeight: number;
   zIndex: number;
   isDragging: boolean;
   overlapWidthPx: number;
+  variant: 'music' | 'sfx';
   onMouseDown: (e: React.MouseEvent, entryId: string) => void;
-  onContextMenu: (e: React.MouseEvent, entryId: string) => void;
-  onOverlapClick: (entryId: string) => void;
+  onContextMenu?: (e: React.MouseEvent, entryId: string) => void;
+  onOverlapClick?: (entryId: string) => void;
 }
 
 export default function TimelineClip({
@@ -24,24 +25,33 @@ export default function TimelineClip({
   widthPx,
   zIndex,
   pxPerSecond,
+  clipTop,
+  clipHeight,
   isDragging,
   overlapWidthPx,
+  variant,
   onMouseDown,
   onContextMenu,
   onOverlapClick,
 }: TimelineClipProps) {
-  const clipDuration = widthPx / pxPerSecond; // widthPx = duration * pxPerSecond
+  const clipDuration = widthPx / pxPerSecond;
+
+  const baseClass =
+    variant === 'sfx'
+      ? `timeline_clip timeline_clip--sfx${isDragging ? ' timeline_clip--sfx-dragging' : ''}`
+      : `timeline_clip${isDragging ? ' timeline_clip--dragging' : ''}`;
 
   return (
     <>
       <div
-        className={`timeline_clip${isDragging ? ' timeline_clip--dragging' : ''}`}
+        className={baseClass}
         onMouseDown={(e) => onMouseDown(e, entryId)}
-        onContextMenu={(e) => onContextMenu(e, entryId)}
+        onContextMenu={onContextMenu ? (e) => onContextMenu(e, entryId) : undefined}
         style={{
           left: leftPx,
-          top: HEADER_HEIGHT + 8,
+          top: clipTop,
           width: widthPx,
+          height: clipHeight,
           zIndex: 5 + zIndex,
           cursor: isDragging ? 'grabbing' : 'grab',
         }}
@@ -58,15 +68,20 @@ export default function TimelineClip({
           style={{
             width: overlapWidthPx,
             left: leftPx,
-            top: HEADER_HEIGHT + 8,
+            top: clipTop,
+            height: clipHeight,
             zIndex: 10 + zIndex,
             cursor: isDragging ? 'grabbing' : 'pointer',
           }}
-          title={`Crossfade: ${formatDuration(overlapWidthPx / 4)}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            onOverlapClick(entryId);
-          }}
+          title={`Crossfade: ${formatDuration(overlapWidthPx / pxPerSecond)}`}
+          onClick={
+            onOverlapClick
+              ? (e) => {
+                  e.stopPropagation();
+                  onOverlapClick(entryId);
+                }
+              : undefined
+          }
         />
       )}
     </>

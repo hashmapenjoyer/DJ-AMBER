@@ -58,6 +58,15 @@ export class AudioEngine extends EventEmitter<AudioEngineEvents> {
       this.scheduler,
       () => this.playlistManager.getTotalDuration(),
       (state) => this.emit('stateChange', { state }),
+      (time) => {
+        const entry = this.playlist.getEntryAtTime(time);
+        if (entry)
+          this.emit('songChange', {
+            entryId: entry.entryId,
+            title: entry.title,
+            artist: entry.artist,
+          });
+      },
     );
 
     this.playlist = new PlaylistController(

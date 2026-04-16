@@ -120,4 +120,10 @@ export class PlaylistController {
   getTransitions(): ReadonlyArray<Transition> {
     return this.playlistManager.getTransitions();
   }
+
+  updateTitleByBufferId(bufferId: ID, newTitle: string): void {
+    if (this.playlistManager.updateTitleByBufferId(bufferId, newTitle)) {
+      this.onChanged();
+    }
+  }
 }
