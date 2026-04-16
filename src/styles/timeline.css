@@ -74,7 +74,6 @@
   min-width: 0;
 }
 
-
 .timeline_track_area {
   display: flex;
   flex: 1;
@@ -147,7 +146,6 @@
   letter-spacing: var(--ls-wide);
 }
 
-
 .timeline_lane {
   position: absolute;
   background-color: rgba(255, 255, 255, 0.015);
@@ -181,7 +179,9 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: var(--shadow-lg), 0 0 8px rgba(218, 135, 7, 0.3);
+  box-shadow:
+    var(--shadow-lg),
+    0 0 8px rgba(218, 135, 7, 0.3);
   opacity: 0.85;
 }
 
@@ -207,7 +207,9 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: var(--shadow-lg), 0 0 8px rgba(56, 189, 190, 0.3);
+  box-shadow:
+    var(--shadow-lg),
+    0 0 8px rgba(56, 189, 190, 0.3);
   opacity: 0.85;
 }
 

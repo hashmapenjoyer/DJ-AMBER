@@ -111,8 +111,6 @@ export default function Timeline({ sfxClips, onSfxChange }: TimelineProps) {
     leftPx: number;
   } | null>(null);
 
-
-
   // Music dragging
   const dragRef = useRef<DragState | null>(null);
 
@@ -285,17 +283,20 @@ export default function Timeline({ sfxClips, onSfxChange }: TimelineProps) {
   }, [commitMusicDrop, commitSfxDrop]);
 
   // The playhead will seek to where the user clicks on the ticks
-  const handleTicksClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const scroll = scrollRef.current;
-    if (!scroll) return;
-    const rectLeft = scroll.getBoundingClientRect().left;
-    const canvasPx = e.clientX - rectLeft + scroll.scrollLeft;
-    const seekSec = Math.max(0, Math.min(canvasPx / pxPerSecRef.current, totalTime));
-    engine.transport.seek(seekSec);
-    if (playheadRef.current) {
-      playheadRef.current.style.left = `${seekSec * pxPerSecRef.current}px`;
-    }
-  }, [engine, totalTime]);
+  const handleTicksClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const scroll = scrollRef.current;
+      if (!scroll) return;
+      const rectLeft = scroll.getBoundingClientRect().left;
+      const canvasPx = e.clientX - rectLeft + scroll.scrollLeft;
+      const seekSec = Math.max(0, Math.min(canvasPx / pxPerSecRef.current, totalTime));
+      engine.transport.seek(seekSec);
+      if (playheadRef.current) {
+        playheadRef.current.style.left = `${seekSec * pxPerSecRef.current}px`;
+      }
+    },
+    [engine, totalTime],
+  );
 
   // Scrolling on the ticks section will zoom in/out, resizing clips
   const handleTicksWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
@@ -339,100 +340,100 @@ export default function Timeline({ sfxClips, onSfxChange }: TimelineProps) {
         </div>
 
         <div ref={scrollRef} className="timeline_scroll_area">
-        <div className="timeline_canvas" style={{ width: timelineWidth, height: canvasHeight }}>
-          {/* Time ticks */}
-          <TimelineTicks
-            totalTime={totalTime}
-            pxPerSec={pxPerSec}
-            timelineWidth={timelineWidth}
-            height={ticksRowHeight}
-            onWheel={handleTicksWheel}
-            onClick={handleTicksClick}
-          />
+          <div className="timeline_canvas" style={{ width: timelineWidth, height: canvasHeight }}>
+            {/* Time ticks */}
+            <TimelineTicks
+              totalTime={totalTime}
+              pxPerSec={pxPerSec}
+              timelineWidth={timelineWidth}
+              height={ticksRowHeight}
+              onWheel={handleTicksWheel}
+              onClick={handleTicksClick}
+            />
 
-          {/* Music lane background */}
-          <div
-            className="timeline_lane"
-            style={{ top: musicLaneTop, width: timelineWidth, height: laneHeight }}
-          />
+            {/* Music lane background */}
+            <div
+              className="timeline_lane"
+              style={{ top: musicLaneTop, width: timelineWidth, height: laneHeight }}
+            />
 
-          {/* SFX lane background */}
-          <div
-            className="timeline_lane timeline_lane--sfx"
-            style={{ top: sfxLaneTop, width: timelineWidth, height: laneHeight }}
-          />
+            {/* SFX lane background */}
+            <div
+              className="timeline_lane timeline_lane--sfx"
+              style={{ top: sfxLaneTop, width: timelineWidth, height: laneHeight }}
+            />
 
-          {/* Music clips */}
-          {timeline.map((entry, idx) => {
-            const isDragging = musicDragOverride?.entryId === entry.entryId;
-            const leftPx = isDragging ? musicDragOverride.leftPx : entry.absoluteStart * pxPerSec;
-            const widthPx = (entry.absoluteEnd - entry.absoluteStart) * pxPerSec;
+            {/* Music clips */}
+            {timeline.map((entry, idx) => {
+              const isDragging = musicDragOverride?.entryId === entry.entryId;
+              const leftPx = isDragging ? musicDragOverride.leftPx : entry.absoluteStart * pxPerSec;
+              const widthPx = (entry.absoluteEnd - entry.absoluteStart) * pxPerSec;
 
-            let overlapWidthPx = 0;
-            if (idx > 0) {
-              const leftNeighbour = timeline[idx - 1];
-              // If the left neighbour is also being dragged (shouldn't happen, but shit happens lol)
-              const neighbourRightPx =
-                musicDragOverride?.entryId === leftNeighbour.entryId
-                  ? musicDragOverride.leftPx +
-                    (leftNeighbour.absoluteEnd - leftNeighbour.absoluteStart) * pxPerSec
-                  : leftNeighbour.absoluteEnd * pxPerSec;
-              overlapWidthPx = Math.max(0, neighbourRightPx - leftPx);
-            }
+              let overlapWidthPx = 0;
+              if (idx > 0) {
+                const leftNeighbour = timeline[idx - 1];
+                // If the left neighbour is also being dragged (shouldn't happen, but shit happens lol)
+                const neighbourRightPx =
+                  musicDragOverride?.entryId === leftNeighbour.entryId
+                    ? musicDragOverride.leftPx +
+                      (leftNeighbour.absoluteEnd - leftNeighbour.absoluteStart) * pxPerSec
+                    : leftNeighbour.absoluteEnd * pxPerSec;
+                overlapWidthPx = Math.max(0, neighbourRightPx - leftPx);
+              }
 
-            return (
-              <TimelineClip
-                key={entry.entryId}
-                entryId={entry.entryId}
-                title={entry.title}
-                leftPx={leftPx}
-                widthPx={widthPx}
-                pxPerSecond={pxPerSec}
-                clipTop={musicClipTop}
-                clipHeight={clipHeight}
-                zIndex={idx}
-                isDragging={isDragging}
-                overlapWidthPx={overlapWidthPx}
-                variant="music"
-                onMouseDown={onMusicClipMouseDown}
-              />
-            );
-          })}
+              return (
+                <TimelineClip
+                  key={entry.entryId}
+                  entryId={entry.entryId}
+                  title={entry.title}
+                  leftPx={leftPx}
+                  widthPx={widthPx}
+                  pxPerSecond={pxPerSec}
+                  clipTop={musicClipTop}
+                  clipHeight={clipHeight}
+                  zIndex={idx}
+                  isDragging={isDragging}
+                  overlapWidthPx={overlapWidthPx}
+                  variant="music"
+                  onMouseDown={onMusicClipMouseDown}
+                />
+              );
+            })}
 
-          {/* SFX clips */}
-          {sfxClips.map((clip, idx) => {
-            const isDragging = sfxDragOverride?.sfxId === clip.id;
-            const leftPx = isDragging ? sfxDragOverride.leftPx : clip.absoluteStart * pxPerSec;
-            const widthPx = clip.duration * pxPerSec;
+            {/* SFX clips */}
+            {sfxClips.map((clip, idx) => {
+              const isDragging = sfxDragOverride?.sfxId === clip.id;
+              const leftPx = isDragging ? sfxDragOverride.leftPx : clip.absoluteStart * pxPerSec;
+              const widthPx = clip.duration * pxPerSec;
 
-            return (
-              <TimelineClip
-                key={clip.id}
-                entryId={clip.id}
-                title={clip.bufferId}
-                leftPx={leftPx}
-                widthPx={widthPx}
-                pxPerSecond={pxPerSec}
-                clipTop={sfxClipTop}
-                clipHeight={clipHeight}
-                zIndex={idx}
-                isDragging={isDragging}
-                overlapWidthPx={0}
-                variant="sfx"
-                onMouseDown={onSfxClipMouseDown}
-              />
-            );
-          })}
+              return (
+                <TimelineClip
+                  key={clip.id}
+                  entryId={clip.id}
+                  title={clip.bufferId}
+                  leftPx={leftPx}
+                  widthPx={widthPx}
+                  pxPerSecond={pxPerSec}
+                  clipTop={sfxClipTop}
+                  clipHeight={clipHeight}
+                  zIndex={idx}
+                  isDragging={isDragging}
+                  overlapWidthPx={0}
+                  variant="sfx"
+                  onMouseDown={onSfxClipMouseDown}
+                />
+              );
+            })}
 
-          {/* Playhead */}
-          <div
-            ref={playheadRef}
-            className="timeline_playhead"
-            style={{ left: 0, height: canvasHeight }}
-          >
-            <div className="timeline_playhead_handle" />
+            {/* Playhead */}
+            <div
+              ref={playheadRef}
+              className="timeline_playhead"
+              style={{ left: 0, height: canvasHeight }}
+            >
+              <div className="timeline_playhead_handle" />
+            </div>
           </div>
-        </div>
         </div>
       </div>
     </div>
