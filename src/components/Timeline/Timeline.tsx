@@ -298,9 +298,9 @@ export default function Timeline({ sfxClips, onSfxChange }: TimelineProps) {
     [engine, totalTime],
   );
 
-  // Attach a non-passive wheel listener to the scroll area so preventDefault()
-  // actually works (React's synthetic onWheel is passive since React 17).
-  // Also handles zoom so it works anywhere on the timeline, not just the ticks.
+  // attach a non-passive wheel listener to the scroll area so preventDefault()
+  // actually works
+  // also handles zoom so it works anywhere on the timeline
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
