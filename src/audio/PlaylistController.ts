@@ -120,20 +120,4 @@ export class PlaylistController {
   getTransitions(): ReadonlyArray<Transition> {
     return this.playlistManager.getTransitions();
   }
-
-  updateTitleByBufferId(bufferId: ID, newTitle: string): void {
-    const entries = this.playlistManager.getEntries();
-    let changed = false;
-
-    entries.forEach((entry) => {
-      if (entry.bufferId === bufferId) {
-        entry.title = newTitle;
-        changed = true;
-      }
-    });
-
-    if (changed) {
-      this.onChanged();
-    }
-  }
 }
