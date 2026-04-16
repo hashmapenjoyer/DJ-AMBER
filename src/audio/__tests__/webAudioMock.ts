@@ -81,7 +81,6 @@ export class MockAudioBufferSourceNode {
     this.stopCalls.push(when);
   }
 
-  /** test helper: fire the onended callback */
   triggerEnded(): void {
     this.onended?.();
   }

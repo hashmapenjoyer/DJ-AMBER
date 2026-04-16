@@ -113,9 +113,9 @@ describe('PlaylistController', () => {
       expect(onChanged).toHaveBeenCalledTimes(1);
     });
 
-    it('still calls onChanged even when the transition was rejected (non-adjacent)', () => {
-      // Documents current behavior: PlaylistController does not check the
-      // return value of PlaylistManager.setTransition.
+    it.fails('should not call onChanged when the transition is rejected (non-adjacent)', () => {
+      // TODO: PlaylistController should check the return value of
+      // PlaylistManager.setTransition and skip the callback when rejected.
       const { ctrl, pm, onChanged } = setup({ 'buf-1': 10, 'buf-2': 10, 'buf-3': 10 });
       ctrl.append('buf-1', 'A', '');
       ctrl.append('buf-2', 'B', '');
@@ -124,7 +124,7 @@ describe('PlaylistController', () => {
       onChanged.mockClear();
       ctrl.setTransition(a.id, c.id, 2);
       expect(pm.getTransitions()).toHaveLength(0);
-      expect(onChanged).toHaveBeenCalledTimes(1);
+      expect(onChanged).not.toHaveBeenCalled();
     });
   });
 

@@ -14,7 +14,6 @@ function makeFile(name: string): File {
 describe('extractMetadata', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // stub URL.createObjectURL (jsdom may not have it for blob)
     if (!URL.createObjectURL) {
       (URL as any).createObjectURL = vi.fn(() => 'blob:mock');
     }
