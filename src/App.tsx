@@ -34,10 +34,15 @@ function App() {
       // Spacebar: Play/Pause
       if (e.code === 'Space') {
         e.preventDefault(); // Prevents the page from jumping down
-        if (engine.transport.getState() === 'playing') {
+
+        const state = engine.transport.getState();
+
+        if (state === 'playing') {
           engine.transport.pause();
         } else {
-          engine.transport.play();
+          engine.transport.play().catch((err: unknown) => {
+            console.error('Playback failed to start:', err);
+          });
         }
       }
       // Delete/Backspace: Remove Selected Clip
