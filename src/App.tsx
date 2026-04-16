@@ -122,6 +122,14 @@ function App() {
     engine.playlist.append(id, item.title, item.artist);
   };
 
+  const handleLibraryRename = (id: string, newTitle: string) => {
+    setLibraryItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, title: newTitle } : item)),
+    );
+
+    engine.playlist.updateTitleByBufferId(id, newTitle);
+  };
+
   // --- Set list handlers ---
 
   const loadSetListIntoEngine = (setList: SetListRecord) => {
@@ -204,6 +212,7 @@ function App() {
           onUpload={handleLibraryUpload}
           onDelete={handleLibraryDelete}
           onAddToSetList={handleAddToSetList}
+          onRename={handleLibraryRename}
         />
         <NowPlaying libraryItems={libraryItems} />
         <SetList

@@ -190,6 +190,17 @@ export class PlaylistManager {
     return undefined;
   }
 
+  updateTitleByBufferId(bufferId: ID, newTitle: string): boolean {
+    let changed = false;
+    for (const entry of this.entries) {
+      if (entry.bufferId === bufferId) {
+        entry.title = newTitle;
+        changed = true;
+      }
+    }
+    return changed;
+  }
+
   // util (singular)
 
   private pruneInvalidTransitions(): void {
