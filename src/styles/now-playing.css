@@ -208,13 +208,9 @@
   appearance: none;
   height: 4px;
   border-radius: var(--br-full);
+  background: #333333;
   cursor: pointer;
   outline: none;
-  transition: height var(--transition-base);
-}
-
-.np-filter-slider:hover {
-  height: 6px;
 }
 
 .np-filter-slider::-webkit-slider-thumb {

@@ -181,9 +181,6 @@ export default function NowPlaying({ libraryItems }: NowPlayingProps) {
                 max={100}
                 value={hpSlider}
                 onChange={handleHpChange}
-                style={{
-                  background: `linear-gradient(to right, #da8707 0%, #da8707 ${hpSlider}%, #333333 ${hpSlider}%, #333333 100%)`,
-                }}
               />
               <span className={`np-filter-value ${hpActive ? 'np-filter-value--active' : ''}`}>
                 {hpActive ? `${formatFreq(hpFreq)} Hz` : 'OFF'}
@@ -198,9 +195,6 @@ export default function NowPlaying({ libraryItems }: NowPlayingProps) {
                 max={100}
                 value={lpSlider}
                 onChange={handleLpChange}
-                style={{
-                  background: `linear-gradient(to right, #da8707 0%, #da8707 ${lpSlider}%, #333333 ${lpSlider}%, #333333 100%)`,
-                }}
               />
               <span className={`np-filter-value ${lpActive ? 'np-filter-value--active' : ''}`}>
                 {lpActive ? `${formatFreq(lpFreq)} Hz` : 'OFF'}
