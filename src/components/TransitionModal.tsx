@@ -17,6 +17,7 @@ interface TransitionModalProps {
 }
 
 const FADE_OPTIONS: { value: FadeTypeValue; label: string; description: string }[] = [
+  { value: FadeType.NONE, label: 'None', description: 'Hard cut, no crossfade' },
   { value: FadeType.LINEAR, label: 'Linear', description: 'Constant-rate crossfade' },
   { value: FadeType.EXPONENTIAL, label: 'Exponential', description: 'Fast attack, slow tail' },
   {
