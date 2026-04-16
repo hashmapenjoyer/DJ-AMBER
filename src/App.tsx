@@ -127,7 +127,7 @@ function App() {
       prev.map((item) => (item.id === id ? { ...item, title: newTitle } : item)),
     );
 
-    engine.updateEntryTitle(id, newTitle);
+    engine.playlist.updateTitleByBufferId(id, newTitle);
   };
 
   // --- Set list handlers ---

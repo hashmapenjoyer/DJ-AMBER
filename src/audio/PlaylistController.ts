@@ -122,17 +122,7 @@ export class PlaylistController {
   }
 
   updateTitleByBufferId(bufferId: ID, newTitle: string): void {
-    const entries = this.playlistManager.getEntries();
-    let changed = false;
-
-    entries.forEach((entry) => {
-      if (entry.bufferId === bufferId) {
-        entry.title = newTitle;
-        changed = true;
-      }
-    });
-
-    if (changed) {
+    if (this.playlistManager.updateTitleByBufferId(bufferId, newTitle)) {
       this.onChanged();
     }
   }
