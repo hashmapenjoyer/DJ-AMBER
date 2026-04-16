@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
 import NavBar from './components/NavBar';
 import MusicLibrary from './components/MusicLibrary';
@@ -22,6 +22,29 @@ function App() {
   const [setLists, setSetLists] = useState<SetListRecord[]>(INITIAL_SET_LISTS);
   const [activeSetListId, setActiveSetListId] = useState<string>(DEFAULT_SET_LIST_ID);
   const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([]);
+
+  // --- Keyboard Shortcuts ---
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      // Ignore shortcuts if the user is typing in an input or textarea
+      const isTyping =
+        e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement;
+      if (isTyping) return;
+
+      // Spacebar: Play/Pause
+      if (e.code === 'Space') {
+        e.preventDefault(); // Prevents the page from jumping down
+        if (engine.transport.getState() === 'playing') {
+          engine.transport.pause();
+        } else {
+          engine.transport.play();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [engine]);
 
   // --- Library handlers ---
 
