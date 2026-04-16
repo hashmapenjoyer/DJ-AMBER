@@ -582,10 +582,3 @@ input::placeholder {
 .block {
   display: block;
 }
-
-.library-item-rename-input {
-  flex: 1;
-  min-width: 0;
-  padding: var(--space-1) var(--space-2);
-  font-size: var(--fs-sm);
-}
