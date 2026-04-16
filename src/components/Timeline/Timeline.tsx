@@ -68,9 +68,6 @@ export default function Timeline() {
 
   const onClipMouseDown = useCallback(
     (e: React.MouseEvent, entryId: string) => {
-      // Tell the engine this clip is now the "selected" one
-      engine.setSelectedEntry(entryId);
-
       e.preventDefault();
       e.stopPropagation();
 
@@ -92,7 +89,7 @@ export default function Timeline() {
 
       setDragOverride({ entryId, leftPx: clipLeftPx });
     },
-    [engine, timeline],
+    [timeline],
   );
 
   // Drop logic

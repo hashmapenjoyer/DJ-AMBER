@@ -45,16 +45,6 @@ function App() {
           });
         }
       }
-      // Delete/Backspace: Remove Selected Clip
-      if (e.key === 'Delete' || e.key === 'Backspace') {
-        const selectedId = engine.getSelectedEntryId();
-
-        if (selectedId) {
-          engine.playlist.remove(selectedId);
-          engine.setSelectedEntry(null);
-          e.preventDefault();
-        }
-      }
     };
 
     window.addEventListener('keydown', handleGlobalKeyDown);
