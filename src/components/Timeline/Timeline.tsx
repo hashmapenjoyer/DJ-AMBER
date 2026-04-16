@@ -327,13 +327,13 @@ export default function Timeline({ sfxClips, onSfxChange }: TimelineProps) {
       <div className="timeline_track_area">
         {/* Label sidebar */}
         <div className="timeline_lane_labels">
-          <div className="timeline_lane_label timeline_lane_label--ticks" style={{ height: ticksRowHeight }}>
+          <div className="timeline_lane_label" style={{ height: ticksRowHeight }}>
             <span>TX</span>
           </div>
           <div className="timeline_lane_label" style={{ height: laneHeight }}>
             <span>MX</span>
           </div>
-          <div className="timeline_lane_label timeline_lane_label--sfx" style={{ height: laneHeight }}>
+          <div className="timeline_lane_label" style={{ height: laneHeight }}>
             <span>SFX</span>
           </div>
         </div>
