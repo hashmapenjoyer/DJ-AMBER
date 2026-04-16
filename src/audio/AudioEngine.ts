@@ -132,4 +132,8 @@ export class AudioEngine extends EventEmitter<AudioEngineEvents> {
       entries: [...this.playlistManager.getEntries()],
     });
   }
+
+  updateEntryTitle(bufferId: ID, newTitle: string): void {
+    this.playlist.updateTitleByBufferId(bufferId, newTitle);
+  }
 }
