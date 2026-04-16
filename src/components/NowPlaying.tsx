@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { Music, Play, Pause } from 'lucide-react';
 import '../styles/now-playing.css';
 import { useAudioEngine } from '../audio/UseAudioEngine';
@@ -11,6 +11,35 @@ interface NowPlayingProps {
 
 export default function NowPlaying({ libraryItems }: NowPlayingProps) {
   const { engine, currentSongTitle, currentSongArtist, transportState } = useAudioEngine();
+
+  // slider positions: HP 0-100 maps to 20-2000 Hz, LP 0-100 maps to 200-20000 Hz
+  const [hpSlider, setHpSlider] = useState(0);
+  const [lpSlider, setLpSlider] = useState(100);
+
+  const sliderToHighpass = (v: number) => 20 * Math.pow(100, v / 100);
+  const sliderToLowpass = (v: number) => 200 * Math.pow(100, v / 100);
+
+  const formatFreq = (hz: number): string => {
+    if (hz >= 1000) return `${(hz / 1000).toFixed(hz >= 10000 ? 0 : 1)}k`;
+    return `${Math.round(hz)}`;
+  };
+
+  const handleHpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = Number(e.target.value);
+    setHpSlider(v);
+    engine.volume.setHighpass(sliderToHighpass(v));
+  };
+
+  const handleLpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = Number(e.target.value);
+    setLpSlider(v);
+    engine.volume.setLowpass(sliderToLowpass(v));
+  };
+
+  const hpFreq = sliderToHighpass(hpSlider);
+  const lpFreq = sliderToLowpass(lpSlider);
+  const hpActive = hpSlider > 0;
+  const lpActive = lpSlider < 100;
 
   const isPlaying = transportState === 'playing';
   const hasTrack = currentSongTitle !== '';
@@ -138,6 +167,45 @@ export default function NowPlaying({ libraryItems }: NowPlayingProps) {
               {isPlaying ? <Pause size={14} /> : <Play size={14} />}
               {isPlaying ? 'Pause' : 'Play'}
             </button>
+          </div>
+
+          {/* Filters */}
+          <div className="np-filter-section">
+            <span className="np-filter-title">Filters</span>
+            <div className="np-filter-row">
+              <span className="np-filter-label">HP</span>
+              <input
+                type="range"
+                className="np-filter-slider"
+                min={0}
+                max={100}
+                value={hpSlider}
+                onChange={handleHpChange}
+                style={{
+                  background: `linear-gradient(to right, #da8707 0%, #da8707 ${hpSlider}%, #333333 ${hpSlider}%, #333333 100%)`,
+                }}
+              />
+              <span className={`np-filter-value ${hpActive ? 'np-filter-value--active' : ''}`}>
+                {hpActive ? `${formatFreq(hpFreq)} Hz` : 'OFF'}
+              </span>
+            </div>
+            <div className="np-filter-row">
+              <span className="np-filter-label">LP</span>
+              <input
+                type="range"
+                className="np-filter-slider"
+                min={0}
+                max={100}
+                value={lpSlider}
+                onChange={handleLpChange}
+                style={{
+                  background: `linear-gradient(to right, #da8707 0%, #da8707 ${lpSlider}%, #333333 ${lpSlider}%, #333333 100%)`,
+                }}
+              />
+              <span className={`np-filter-value ${lpActive ? 'np-filter-value--active' : ''}`}>
+                {lpActive ? `${formatFreq(lpFreq)} Hz` : 'OFF'}
+              </span>
+            </div>
           </div>
         </div>
       </div>
