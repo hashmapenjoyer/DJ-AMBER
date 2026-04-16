@@ -13,6 +13,8 @@ interface TimelineClipProps {
   isDragging: boolean;
   overlapWidthPx: number;
   onMouseDown: (e: React.MouseEvent, entryId: string) => void;
+  onContextMenu: (e: React.MouseEvent, entryId: string) => void;
+  onOverlapClick: (entryId: string) => void;
 }
 
 export default function TimelineClip({
@@ -25,6 +27,8 @@ export default function TimelineClip({
   isDragging,
   overlapWidthPx,
   onMouseDown,
+  onContextMenu,
+  onOverlapClick,
 }: TimelineClipProps) {
   const clipDuration = widthPx / pxPerSecond; // widthPx = duration * pxPerSecond
 
@@ -33,6 +37,7 @@ export default function TimelineClip({
       <div
         className={`timeline_clip${isDragging ? ' timeline_clip--dragging' : ''}`}
         onMouseDown={(e) => onMouseDown(e, entryId)}
+        onContextMenu={(e) => onContextMenu(e, entryId)}
         style={{
           left: leftPx,
           top: HEADER_HEIGHT + 8,
@@ -58,6 +63,10 @@ export default function TimelineClip({
             cursor: isDragging ? 'grabbing' : 'pointer',
           }}
           title={`Crossfade: ${formatDuration(overlapWidthPx / 4)}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onOverlapClick(entryId);
+          }}
         />
       )}
     </>

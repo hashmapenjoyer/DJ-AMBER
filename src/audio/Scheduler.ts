@@ -2,6 +2,8 @@ import { FadeType } from '../../types/Fade';
 import type { ID, Seconds, Fade, ScheduledEntry, SfxClip, ActiveNode } from './types';
 import type { BufferCache } from './BufferCache';
 
+const EQUAL_POWER_CURVE_LENGTH = 128;
+
 /** how often the scheduling loop fires (ms) */
 const LOOKAHEAD_INTERVAL_MS = 25;
 
@@ -383,10 +385,25 @@ export class Scheduler {
 
       gainNode.gain.setValueAtTime(Math.max(startGain, 0.0001), fadeStartCtx);
 
-      if (fade.type === FadeType.LINEAR) {
+      if (fade.type === FadeType.EQUAL_POWER) {
+        const duration = fadeEndCtx - fadeStartCtx;
+        if (duration > 0) {
+          const curve = new Float32Array(EQUAL_POWER_CURVE_LENGTH);
+          const isFadeOut = fade.endGain < fade.startGain;
+          const safeEnd = Math.max(fade.endGain, 0.0001);
+          const safeStart = Math.max(startGain, 0.0001);
+          for (let i = 0; i < EQUAL_POWER_CURVE_LENGTH; i++) {
+            const t = i / (EQUAL_POWER_CURVE_LENGTH - 1);
+            curve[i] = isFadeOut
+              ? safeStart * Math.cos(t * Math.PI * 0.5)
+              : safeEnd * Math.sin(t * Math.PI * 0.5);
+            curve[i] = Math.max(curve[i], 0.0001);
+          }
+          gainNode.gain.setValueCurveAtTime(curve, fadeStartCtx, duration);
+        }
+      } else if (fade.type === FadeType.LINEAR) {
         gainNode.gain.linearRampToValueAtTime(Math.max(fade.endGain, 0.0001), fadeEndCtx);
       } else {
-        // exponentialRamp can't reach 0, so we use an epsilon
         gainNode.gain.exponentialRampToValueAtTime(Math.max(fade.endGain, 0.0001), fadeEndCtx);
       }
     }

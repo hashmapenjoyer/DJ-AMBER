@@ -3,6 +3,7 @@ import type {Seconds, Gain} from "./UtilTypes"
 export const FadeType = {
     LINEAR: 0,
     EXPONENTIAL: 1,
+    EQUAL_POWER: 2,
 } as const;
 
 export type FadeType = (typeof FadeType)[keyof typeof FadeType];
