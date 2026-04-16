@@ -36,7 +36,7 @@ interface TimelineProps {
 }
 
 export default function Timeline({ sfxClips, onSfxChange }: TimelineProps) {
-  const { engine, transportState, timeline } = useAudioEngine();
+  const { engine, timeline } = useAudioEngine();
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const totalTime = engine.getTotalDuration() || 900;
@@ -87,7 +87,6 @@ export default function Timeline({ sfxClips, onSfxChange }: TimelineProps) {
   const playheadRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (transportState !== 'playing') return;
     let rafId: number;
     const tick = () => {
       if (playheadRef.current) {
@@ -97,7 +96,7 @@ export default function Timeline({ sfxClips, onSfxChange }: TimelineProps) {
     };
     rafId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafId);
-  }, [transportState, engine]);
+  }, [engine]);
 
   // Drag states
   // Two separate override states so music and SFX clips never interfere.
