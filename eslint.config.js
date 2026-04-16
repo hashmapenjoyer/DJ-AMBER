@@ -1,14 +1,14 @@
-import js from '@eslint/js'
-import globals from 'globals'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
-import reactPlugin from 'eslint-plugin-react'
-import tseslint from 'typescript-eslint'
-import prettierConfig from 'eslint-config-prettier'
-import { defineConfig, globalIgnores } from 'eslint/config'
+import js from '@eslint/js';
+import globals from 'globals';
+import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
+import reactPlugin from 'eslint-plugin-react';
+import tseslint from 'typescript-eslint';
+import prettierConfig from 'eslint-config-prettier';
+import { defineConfig, globalIgnores } from 'eslint/config';
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'node_modules']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -90,7 +90,7 @@ export default defineConfig([
         'error',
         {
           selector: "PropertyDefinition[key.type='PrivateName']",
-          message: "Use TypeScript `private` keyword instead of # private fields.",
+          message: 'Use TypeScript `private` keyword instead of # private fields.',
         },
       ],
 
@@ -135,16 +135,10 @@ export default defineConfig([
       ],
 
       // Use "as Foo" syntax, not "<Foo>"
-      '@typescript-eslint/consistent-type-assertions': [
-        'error',
-        { assertionStyle: 'as' },
-      ],
+      '@typescript-eslint/consistent-type-assertions': ['error', { assertionStyle: 'as' }],
 
       // import type for type-only imports
-      '@typescript-eslint/consistent-type-imports': [
-        'error',
-        { prefer: 'type-imports' },
-      ],
+      '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
 
       // Warn on any
       '@typescript-eslint/no-explicit-any': 'warn',
@@ -160,11 +154,7 @@ export default defineConfig([
   {
     // Relaxed rules for test files and mocks — tests need flexibility
     // to spy on internals, stub untyped globals, and assert on mock shapes.
-    files: [
-      'src/**/__tests__/**/*.ts',
-      'src/**/*.{test,spec}.ts',
-      'vitest.config.ts',
-    ],
+    files: ['src/**/__tests__/**/*.ts', 'src/**/*.{test,spec}.ts', 'vitest.config.ts'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
@@ -179,4 +169,4 @@ export default defineConfig([
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
   },
-])
+]);

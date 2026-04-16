@@ -90,9 +90,6 @@ export default function HelpModal({ onClose }: HelpModalProps) {
                 <kbd>Spacebar</kbd> - Play/Pause
               </li>
               <li>
-                <kbd>Delete</kbd> - Remove selected clip
-              </li>
-              <li>
                 <kbd>Esc</kbd> - Close this help modal
               </li>
             </ul>
