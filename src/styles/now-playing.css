@@ -169,6 +169,116 @@
   box-shadow: 0 0 15px rgba(218, 135, 7, 0.5);
 }
 
+/* Filters */
+.np-filter-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-top: var(--space-1);
+  border-top: 1px solid #222222;
+}
+
+.np-filter-title {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  color: #555555;
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wider);
+  text-align: center;
+}
+
+.np-filter-rows {
+  display: flex;
+  gap: var(--space-6);
+  width: 100%;
+}
+
+.np-filter-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.np-filter-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.np-filter-label {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  color: #888888;
+  min-width: 18px;
+}
+
+.np-filter-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 11px;
+  padding: 0 6px;
+  margin: 0;
+  border-radius: var(--br-full);
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+}
+
+.np-filter-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: var(--br-full);
+  background: transparent;
+}
+
+.np-filter-slider::-moz-range-track {
+  height: 4px;
+  border-radius: var(--br-full);
+  background: transparent;
+}
+
+.np-filter-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #da8707;
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(218, 135, 7, 0.5);
+  transition: box-shadow var(--transition-base);
+}
+
+.np-filter-slider:hover::-webkit-slider-thumb {
+  box-shadow: 0 0 12px rgba(218, 135, 7, 0.7);
+}
+
+.np-filter-slider::-moz-range-thumb {
+  width: 11px;
+  height: 11px;
+  border: none;
+  border-radius: 50%;
+  background: #da8707;
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(218, 135, 7, 0.5);
+}
+
+.np-filter-value {
+  font-size: var(--fs-xs);
+  color: #555555;
+  text-align: right;
+  font-family: var(--font-mono);
+  transition: color var(--transition-base);
+}
+
+.np-filter-value--active {
+  color: #da8707;
+}
+
 /* Responsive Design */
 @media (max-width: 1200px) {
   .now-playing-container {
