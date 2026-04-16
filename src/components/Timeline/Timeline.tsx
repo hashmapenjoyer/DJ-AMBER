@@ -298,29 +298,33 @@ export default function Timeline({ sfxClips, onSfxChange }: TimelineProps) {
     [engine, totalTime],
   );
 
-  // Scrolling on the ticks section will zoom in/out, resizing clips
-  const handleTicksWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const scroll = scrollRef.current;
-    if (!scroll) return;
+  // Attach a non-passive wheel listener to the scroll area so preventDefault()
+  // actually works (React's synthetic onWheel is passive since React 17).
+  // Also handles zoom so it works anywhere on the timeline, not just the ticks.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
 
-    const oldPps = pxPerSecRef.current;
-    const delta = e.deltaY !== 0 ? e.deltaY : -e.deltaX;
-    const factor = 1 - delta * ZOOM_SENSITIVITY;
-    const newPps = Math.min(MAX_PX_PER_SEC, Math.max(MIN_PX_PER_SEC, oldPps * factor));
-    if (newPps === oldPps) return;
+      const oldPps = pxPerSecRef.current;
+      const delta = e.deltaY !== 0 ? e.deltaY : -e.deltaX;
+      const factor = 1 - delta * ZOOM_SENSITIVITY;
+      const newPps = Math.min(MAX_PX_PER_SEC, Math.max(MIN_PX_PER_SEC, oldPps * factor));
+      if (newPps === oldPps) return;
 
-    const rectLeft = scroll.getBoundingClientRect().left;
-    const mouseOffsetInViewport = e.clientX - rectLeft;
-    const mouseTimeSec = (scroll.scrollLeft + mouseOffsetInViewport) / oldPps;
-    const newScrollLeft = mouseTimeSec * newPps - mouseOffsetInViewport;
+      const rectLeft = el.getBoundingClientRect().left;
+      const mouseOffsetInViewport = e.clientX - rectLeft;
+      const mouseTimeSec = (el.scrollLeft + mouseOffsetInViewport) / oldPps;
+      const newScrollLeft = mouseTimeSec * newPps - mouseOffsetInViewport;
 
-    setPxPerSec(newPps);
-    requestAnimationFrame(() => {
-      if (scrollRef.current) {
-        scrollRef.current.scrollLeft = Math.max(0, newScrollLeft);
-      }
-    });
+      setPxPerSec(newPps);
+      requestAnimationFrame(() => {
+        el.scrollLeft = Math.max(0, newScrollLeft);
+      });
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
   }, []);
 
   return (
@@ -347,7 +351,6 @@ export default function Timeline({ sfxClips, onSfxChange }: TimelineProps) {
               pxPerSec={pxPerSec}
               timelineWidth={timelineWidth}
               height={ticksRowHeight}
-              onWheel={handleTicksWheel}
               onClick={handleTicksClick}
             />
 

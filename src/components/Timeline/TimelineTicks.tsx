@@ -6,7 +6,6 @@ interface TimelineTicksProps {
   pxPerSec: number;
   timelineWidth: number;
   height: number;
-  onWheel: (e: React.WheelEvent<HTMLDivElement>) => void;
   onClick: (e: React.MouseEvent<HTMLDivElement>) => void;
 }
 
@@ -15,7 +14,6 @@ export default function TimelineTicks({
   pxPerSec,
   timelineWidth,
   height,
-  onWheel,
   onClick,
 }: TimelineTicksProps) {
   const targetPxPerTick = 80;
@@ -33,7 +31,6 @@ export default function TimelineTicks({
     <div
       className="timeline_ticks"
       style={{ width: timelineWidth, height }}
-      onWheel={onWheel}
       onClick={onClick}
     >
       {ticks.map((s) => (
