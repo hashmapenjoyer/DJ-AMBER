@@ -18,6 +18,7 @@ const INITIAL_SET_LISTS: SetListRecord[] = [
 
 function App() {
   const { engine } = useAudioEngine();
+  const [masterVolume, setMasterVolume] = useState(1);
   const [setLists, setSetLists] = useState<SetListRecord[]>(INITIAL_SET_LISTS);
   const [activeSetListId, setActiveSetListId] = useState<string>(DEFAULT_SET_LIST_ID);
   const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([]);
@@ -189,9 +190,14 @@ function App() {
     }
   };
 
+  const handleMasterVolumeChange = (value: number) => {
+    setMasterVolume(value);
+    engine.volume.setMaster(value);
+  };
+
   return (
     <div className="app-container">
-      <NavBar />
+      <NavBar masterVolume={masterVolume} onMasterVolumeChange={handleMasterVolumeChange} />
       <div className="middle-section">
         <MusicLibrary
           items={libraryItems}
