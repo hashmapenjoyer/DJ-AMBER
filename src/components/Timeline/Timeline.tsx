@@ -8,6 +8,9 @@ import '../../styles/timeline.css';
 // Zoom limits (px per second)
 const MIN_PX_PER_SEC = 0.5;
 const MAX_PX_PER_SEC = 64;
+
+// Empty runway appended after all content so the canvas always extends past what's visible
+const TIMELINE_TAIL_SEC = 3600;
 const ZOOM_SENSITIVITY = 0.001;
 
 // Vertical margin inside each lane (px above and below a clip)
@@ -40,6 +43,14 @@ export default function Timeline({ sfxClips, onSfxChange }: TimelineProps) {
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const totalTime = engine.getTotalDuration() || 900;
+  const effectiveDuration = totalTime + TIMELINE_TAIL_SEC;
+
+  // we need these for the wheel handler bc react
+  const effectiveDurationRef = useRef(effectiveDuration);
+  useEffect(() => {
+    effectiveDurationRef.current = effectiveDuration;
+  }, [effectiveDuration]);
+  const containerWidthRef = useRef(800);
 
   // Resizing (tbh idk how good this implementation is, but it works :) )
   const [containerSize, setContainerSize] = useState({ width: 800, height: 240 });
@@ -48,6 +59,7 @@ export default function Timeline({ sfxClips, onSfxChange }: TimelineProps) {
     const el = scrollRef.current;
     if (!el) return;
     const ro = new ResizeObserver(([entry]) => {
+      containerWidthRef.current = entry.contentRect.width;
       setContainerSize({
         width: entry.contentRect.width,
         height: entry.contentRect.height,
@@ -82,7 +94,7 @@ export default function Timeline({ sfxClips, onSfxChange }: TimelineProps) {
     pxPerSecRef.current = pxPerSec;
   }, [pxPerSec]);
 
-  const timelineWidth = totalTime * pxPerSec;
+  const timelineWidth = effectiveDuration * pxPerSec;
 
   const playheadRef = useRef<HTMLDivElement>(null);
 
@@ -309,7 +321,12 @@ export default function Timeline({ sfxClips, onSfxChange }: TimelineProps) {
       const oldPps = pxPerSecRef.current;
       const delta = e.deltaY !== 0 ? e.deltaY : -e.deltaX;
       const factor = 1 - delta * ZOOM_SENSITIVITY;
-      const newPps = Math.min(MAX_PX_PER_SEC, Math.max(MIN_PX_PER_SEC, oldPps * factor));
+      // prevent zooming out enough to see the canvas end
+      const minPps = Math.max(
+        MIN_PX_PER_SEC,
+        containerWidthRef.current / effectiveDurationRef.current,
+      );
+      const newPps = Math.min(MAX_PX_PER_SEC, Math.max(minPps, oldPps * factor));
       if (newPps === oldPps) return;
 
       const rectLeft = el.getBoundingClientRect().left;
@@ -346,7 +363,7 @@ export default function Timeline({ sfxClips, onSfxChange }: TimelineProps) {
           <div className="timeline_canvas" style={{ width: timelineWidth, height: canvasHeight }}>
             {/* Time ticks */}
             <TimelineTicks
-              totalTime={totalTime}
+              totalTime={effectiveDuration}
               pxPerSec={pxPerSec}
               timelineWidth={timelineWidth}
               height={ticksRowHeight}
