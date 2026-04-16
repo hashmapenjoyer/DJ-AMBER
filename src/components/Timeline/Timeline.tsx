@@ -64,7 +64,7 @@ export default function Timeline({ sfxClips, onSfxChange }: TimelineProps) {
   const lanesHeight = trackAreaHeight - ticksRowHeight;
   const laneHeight = Math.floor(lanesHeight / 2);
 
-  const CANVAS_HEIGHT = ticksRowHeight + laneHeight * 2;
+  const canvasHeight = ticksRowHeight + laneHeight * 2;
 
   const musicLaneTop = ticksRowHeight;
   const sfxLaneTop = ticksRowHeight + laneHeight;
@@ -339,7 +339,7 @@ export default function Timeline({ sfxClips, onSfxChange }: TimelineProps) {
         </div>
 
         <div ref={scrollRef} className="timeline_scroll_area">
-        <div className="timeline_canvas" style={{ width: timelineWidth, height: CANVAS_HEIGHT }}>
+        <div className="timeline_canvas" style={{ width: timelineWidth, height: canvasHeight }}>
           {/* Time ticks */}
           <TimelineTicks
             totalTime={totalTime}
@@ -428,7 +428,7 @@ export default function Timeline({ sfxClips, onSfxChange }: TimelineProps) {
           <div
             ref={playheadRef}
             className="timeline_playhead"
-            style={{ left: 0, height: CANVAS_HEIGHT }}
+            style={{ left: 0, height: canvasHeight }}
           >
             <div className="timeline_playhead_handle" />
           </div>
