@@ -28,11 +28,7 @@ export default function TimelineTicks({
   for (let s = 0; s <= totalTime; s += interval) ticks.push(s);
 
   return (
-    <div
-      className="timeline_ticks"
-      style={{ width: timelineWidth, height }}
-      onClick={onClick}
-    >
+    <div className="timeline_ticks" style={{ width: timelineWidth, height }} onClick={onClick}>
       {ticks.map((s) => (
         <div key={s} className="timeline_tick" style={{ left: s * pxPerSec }}>
           <span className="timeline_tick_label">{formatDuration(s)}</span>
