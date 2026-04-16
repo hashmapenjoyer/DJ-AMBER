@@ -106,6 +106,21 @@ export class MockAudioBuffer {
   }
 }
 
+export class MockBiquadFilterNode {
+  type: BiquadFilterType = 'lowpass';
+  frequency = new MockAudioParam();
+  connected: unknown[] = [];
+
+  connect(dest: unknown): unknown {
+    this.connected.push(dest);
+    return dest;
+  }
+
+  disconnect(): void {
+    this.connected = [];
+  }
+}
+
 export class MockAudioContext {
   currentTime = 0;
   state: 'suspended' | 'running' | 'closed' = 'suspended';
@@ -113,12 +128,23 @@ export class MockAudioContext {
 
   private gainNodes: MockGainNode[] = [];
   private sourceNodes: MockAudioBufferSourceNode[] = [];
+  private biquadFilterNodes: MockBiquadFilterNode[] = [];
   private decodeDuration = 180;
 
   createGain(): MockGainNode {
     const node = new MockGainNode();
     this.gainNodes.push(node);
     return node;
+  }
+
+  createBiquadFilter(): MockBiquadFilterNode {
+    const node = new MockBiquadFilterNode();
+    this.biquadFilterNodes.push(node);
+    return node;
+  }
+
+  getCreatedBiquadFilterNodes(): MockBiquadFilterNode[] {
+    return [...this.biquadFilterNodes];
   }
 
   createBufferSource(): MockAudioBufferSourceNode {

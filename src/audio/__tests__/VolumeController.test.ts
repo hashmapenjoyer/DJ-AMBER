@@ -23,11 +23,15 @@ describe('VolumeController', () => {
       expect(master.connected).toContain(ctx.destination);
     });
 
-    it('connects musicTrackGain to masterGain', () => {
-      const { vc } = setup();
+    it('connects musicTrackGain through filters to masterGain', () => {
+      const { vc, ctx } = setup();
 
+      // musicTrackGain -> highpassFilter -> lowpassFilter -> masterGain
+      const [highpass, lowpass] = ctx.getCreatedBiquadFilterNodes();
       const music = vc.musicTrackGain as any;
-      expect(music.connected).toContain(vc.masterGain);
+      expect(music.connected).toContain(highpass);
+      expect((highpass as any).connected).toContain(lowpass);
+      expect((lowpass as any).connected).toContain(vc.masterGain);
     });
 
     it('connects sfxTrackGain to masterGain', () => {
