@@ -172,33 +172,39 @@ export default function NowPlaying({ libraryItems }: NowPlayingProps) {
           {/* Filters */}
           <div className="np-filter-section">
             <span className="np-filter-title">Filters</span>
-            <div className="np-filter-row">
-              <span className="np-filter-label">HP</span>
-              <input
-                type="range"
-                className="np-filter-slider"
-                min={0}
-                max={100}
-                value={hpSlider}
-                onChange={handleHpChange}
-              />
-              <span className={`np-filter-value ${hpActive ? 'np-filter-value--active' : ''}`}>
-                {hpActive ? `${formatFreq(hpFreq)} Hz` : 'OFF'}
-              </span>
-            </div>
-            <div className="np-filter-row">
-              <span className="np-filter-label">LP</span>
-              <input
-                type="range"
-                className="np-filter-slider"
-                min={0}
-                max={100}
-                value={lpSlider}
-                onChange={handleLpChange}
-              />
-              <span className={`np-filter-value ${lpActive ? 'np-filter-value--active' : ''}`}>
-                {lpActive ? `${formatFreq(lpFreq)} Hz` : 'OFF'}
-              </span>
+            <div className="np-filter-rows">
+              <div className="np-filter-row">
+                <div className="np-filter-row-header">
+                  <span className="np-filter-label">HP</span>
+                  <span className={`np-filter-value ${hpActive ? 'np-filter-value--active' : ''}`}>
+                    {hpActive ? `${formatFreq(hpFreq)} Hz` : 'OFF'}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  className="np-filter-slider"
+                  min={0}
+                  max={100}
+                  value={hpSlider}
+                  onChange={handleHpChange}
+                />
+              </div>
+              <div className="np-filter-row">
+                <div className="np-filter-row-header">
+                  <span className="np-filter-label">LP</span>
+                  <span className={`np-filter-value ${lpActive ? 'np-filter-value--active' : ''}`}>
+                    {lpActive ? `${formatFreq(lpFreq)} Hz` : 'OFF'}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  className="np-filter-slider"
+                  min={0}
+                  max={100}
+                  value={lpSlider}
+                  onChange={handleLpChange}
+                />
+              </div>
             </div>
           </div>
         </div>
