@@ -1,4 +1,5 @@
 import { formatDuration } from '../../../types/FormatDuration';
+import ClipWaveform from './ClipWaveform';
 import { FadeType } from '../../../types/Fade';
 import type { FadeType as FadeTypeValue } from '../../../types/Fade';
 import { curvePath, FADE_OUT_COLOR, FADE_IN_COLOR } from '../fadeCurves';
@@ -7,6 +8,9 @@ import '../../styles/timeline.css';
 interface TimelineClipProps {
   entryId: string;
   title: string;
+  bufferId: string;
+  bufferOffset: number;
+  playDuration: number;
   leftPx: number;
   widthPx: number;
   pxPerSecond: number;
@@ -24,9 +28,16 @@ interface TimelineClipProps {
   onOverlapClick?: (entryId: string) => void;
 }
 
+// tuned to feel present without fighting the label for attention
+const MUSIC_WAVEFORM_COLOR = 'rgba(245, 168, 52, 0.55)';
+const SFX_WAVEFORM_COLOR = 'rgba(56, 189, 190, 0.55)';
+
 export default function TimelineClip({
   entryId,
   title,
+  bufferId,
+  bufferOffset,
+  playDuration,
   leftPx,
   widthPx,
   zIndex,
@@ -51,6 +62,8 @@ export default function TimelineClip({
       ? `timeline_clip timeline_clip--sfx${isDragging ? ' timeline_clip--sfx-dragging' : ''}${selectedSuffix}`
       : `timeline_clip${isDragging ? ' timeline_clip--dragging' : ''}${selectedSuffix}`;
 
+  const waveformColor = variant === 'sfx' ? SFX_WAVEFORM_COLOR : MUSIC_WAVEFORM_COLOR;
+
   return (
     <>
       <div
@@ -66,6 +79,14 @@ export default function TimelineClip({
           cursor: isDragging ? 'grabbing' : 'grab',
         }}
       >
+        <ClipWaveform
+          bufferId={bufferId}
+          bufferOffset={bufferOffset}
+          playDuration={playDuration}
+          widthPx={widthPx}
+          heightPx={clipHeight}
+          color={waveformColor}
+        />
         <div className="timeline_clip_label">
           <span className="timeline_clip_name">{title}</span>
           <span className="timeline_clip_duration">{formatDuration(clipDuration)}</span>

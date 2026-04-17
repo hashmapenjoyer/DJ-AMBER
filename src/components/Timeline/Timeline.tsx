@@ -1,4 +1,5 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { FadeType } from '../../../types/Fade';
 import type { FadeType as FadeTypeValue } from '../../../types/Fade';
 import { useAudioEngine } from '../../audio/UseAudioEngine';
@@ -569,10 +570,14 @@ export default function Timeline({ sfxClips, libraryItems, onSfxChange }: Timeli
       const mouseTimeSec = (el.scrollLeft + mouseOffsetInViewport) / oldPps;
       const newScrollLeft = mouseTimeSec * newPps - mouseOffsetInViewport;
 
-      setPxPerSec(newPps);
-      requestAnimationFrame(() => {
-        el.scrollLeft = Math.max(0, newScrollLeft);
-      });
+      // Keep the ref fresh so rapid back-to-back wheel events don't read a
+      // stale oldPps (the useEffect that syncs the ref won't have run yet)
+      pxPerSecRef.current = newPps;
+      // flushSync commits the wider/narrower timeline before we set scrollLeft,
+      // otherwise the browser clamps against the stale scrollWidth and the
+      // zoom anchor drifts
+      flushSync(() => setPxPerSec(newPps));
+      el.scrollLeft = Math.max(0, newScrollLeft);
     };
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => el.removeEventListener('wheel', onWheel);
@@ -656,6 +661,9 @@ export default function Timeline({ sfxClips, libraryItems, onSfxChange }: Timeli
                     key={entry.entryId}
                     entryId={entry.entryId}
                     title={entry.title}
+                    bufferId={entry.bufferId}
+                    bufferOffset={entry.bufferOffset}
+                    playDuration={entry.playDuration}
                     leftPx={leftPx}
                     widthPx={widthPx}
                     pxPerSecond={pxPerSec}
@@ -687,6 +695,9 @@ export default function Timeline({ sfxClips, libraryItems, onSfxChange }: Timeli
                   key={clip.id}
                   entryId={clip.id}
                   title={libraryItems.find((i) => i.id === clip.bufferId)?.title ?? clip.bufferId}
+                  bufferId={clip.bufferId}
+                  bufferOffset={clip.bufferOffset}
+                  playDuration={clip.duration}
                   leftPx={leftPx}
                   widthPx={widthPx}
                   pxPerSecond={pxPerSec}

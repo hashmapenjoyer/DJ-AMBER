@@ -1,5 +1,6 @@
 import { EventEmitter } from './EventEmitter';
 import { BufferCache } from './BufferCache';
+import { WaveformCache } from './WaveformCache';
 import { PlaylistManager } from './PlaylistManager';
 import { Scheduler } from './Scheduler';
 import { TransportController } from './TransportController';
@@ -29,6 +30,7 @@ export class AudioEngine extends EventEmitter<AudioEngineEvents> {
   readonly sfx: SfxController;
   readonly volume: VolumeController;
   readonly buffers: BufferCache;
+  readonly waveforms: WaveformCache;
 
   private readonly scheduler: Scheduler;
   private readonly playlistManager: PlaylistManager;
@@ -41,7 +43,11 @@ export class AudioEngine extends EventEmitter<AudioEngineEvents> {
     // subsystems
 
     this.volume = new VolumeController(this.ctx);
-    this.buffers = new BufferCache(this.ctx);
+    this.waveforms = new WaveformCache();
+    this.buffers = new BufferCache(this.ctx, {
+      onAdd: (id, buffer) => this.waveforms.add(id, buffer),
+      onRemove: (id) => this.waveforms.remove(id),
+    });
     this.playlistManager = new PlaylistManager();
 
     this.scheduler = new Scheduler(
