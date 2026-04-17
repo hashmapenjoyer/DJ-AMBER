@@ -615,6 +615,9 @@ export default function Timeline({ sfxClips, libraryItems, onSfxChange }: Timeli
                   key={entry.entryId}
                   entryId={entry.entryId}
                   title={entry.title}
+                  bufferId={entry.bufferId}
+                  bufferOffset={entry.bufferOffset}
+                  playDuration={entry.playDuration}
                   leftPx={leftPx}
                   widthPx={widthPx}
                   pxPerSecond={pxPerSec}
@@ -643,6 +646,9 @@ export default function Timeline({ sfxClips, libraryItems, onSfxChange }: Timeli
                   key={clip.id}
                   entryId={clip.id}
                   title={libraryItems.find((i) => i.id === clip.bufferId)?.title ?? clip.bufferId}
+                  bufferId={clip.bufferId}
+                  bufferOffset={clip.bufferOffset}
+                  playDuration={clip.duration}
                   leftPx={leftPx}
                   widthPx={widthPx}
                   pxPerSecond={pxPerSec}

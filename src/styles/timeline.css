@@ -213,12 +213,21 @@
   opacity: 0.85;
 }
 
+.timeline_clip_waveform {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: block;
+}
+
 .timeline_clip_label {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0 var(--space-2) var(--space-1);
   flex-shrink: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .timeline_clip_name {

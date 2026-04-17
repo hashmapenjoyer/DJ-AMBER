@@ -98,11 +98,18 @@ export class MockAudioBuffer {
   readonly duration: number;
   readonly sampleRate: number;
   readonly numberOfChannels: number;
+  readonly length: number;
 
   constructor(duration: number, sampleRate = 44100, numberOfChannels = 2) {
     this.duration = duration;
     this.sampleRate = sampleRate;
     this.numberOfChannels = numberOfChannels;
+    // WaveformCache iterates over samples; keep this tiny so tests stay fast.
+    this.length = Math.min(Math.floor(duration * sampleRate), 1024);
+  }
+
+  getChannelData(_channel: number): Float32Array {
+    return new Float32Array(this.length);
   }
 }
 
