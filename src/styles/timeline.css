@@ -297,6 +297,14 @@
   border: 1px solid;
   border-radius: var(--br-sm);
   border-color: rgb(127, 0, 211);
+  overflow: hidden;
+}
+
+.timeline_clip_overlap_curves {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: block;
 }
 
 .timeline_playhead {
