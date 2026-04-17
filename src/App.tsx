@@ -62,11 +62,11 @@ function App() {
     const duplicates: string[] = [];
     const failures: string[] = [];
 
-    // Snapshot existing hashes once so we don't restart the scan as items stream in.
+    // Snapshot existing hashes once so we don't restart the scan as items stream in
     const existingHashes = new Set(
       libraryItems.filter((item) => item.category === category).map((item) => item.hash),
     );
-    // Claimed within this batch — prevents two identical files from both being added.
+    // Claimed within this batch, prevents two identical files from both being added
     const claimedHashes = new Set<string>();
 
     const processFile = async (file: File): Promise<void> => {
