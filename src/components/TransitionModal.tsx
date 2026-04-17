@@ -17,7 +17,7 @@ interface TransitionModalProps {
 }
 
 const FADE_OPTIONS: { value: FadeTypeValue; label: string; description: string }[] = [
-  { value: FadeType.NONE, label: 'None', description: 'Hard cut, no crossfade' },
+  { value: FadeType.NONE, label: 'None', description: 'Clips overlap, no gain curve' },
   { value: FadeType.LINEAR, label: 'Linear', description: 'Constant-rate crossfade' },
   { value: FadeType.EXPONENTIAL, label: 'Exponential', description: 'Fast attack, slow tail' },
   {
@@ -26,6 +26,164 @@ const FADE_OPTIONS: { value: FadeTypeValue; label: string; description: string }
     description: 'Natural-sounding, no volume dip',
   },
 ];
+
+// ---- Curve helpers ----
+
+function fadeGain(type: FadeTypeValue, t: number): number {
+  switch (type) {
+    case FadeType.LINEAR:
+      return 1 - t;
+    case FadeType.EXPONENTIAL:
+      return Math.pow(1 - t, 2);
+    case FadeType.EQUAL_POWER:
+      return Math.cos((t * Math.PI) / 2);
+    default: // NONE
+      return 1;
+  }
+}
+
+function curvePath(
+  type: FadeTypeValue,
+  w: number,
+  h: number,
+  invert: boolean,
+  pad: number,
+  steps: number,
+): string {
+  const inner = h - 2 * pad;
+  return Array.from({ length: steps + 1 }, (_, i) => {
+    const t = i / steps;
+    const g = invert ? fadeGain(type, 1 - t) : fadeGain(type, t);
+    const x = (t * w).toFixed(1);
+    const y = (pad + (1 - g) * inner).toFixed(1);
+    return `${i === 0 ? 'M' : 'L'} ${x},${y}`;
+  }).join(' ');
+}
+
+// ---- SVG components ----
+
+function MiniCurveIcon({ type }: { type: FadeTypeValue }) {
+  const w = 48,
+    h = 26,
+    pad = 3,
+    steps = 40;
+
+  if (type === FadeType.NONE) {
+    const overlapStart = w / 3;
+    const overlapEnd = (w * 2) / 3;
+    return (
+      <svg viewBox={`0 0 ${w} ${h}`} className="fade-mini-icon" aria-hidden="true">
+        <path
+          d={`M 0,${pad} H ${overlapEnd}`}
+          stroke="#f5a834"
+          strokeWidth="1.5"
+          fill="none"
+          strokeLinecap="round"
+        />
+        <path
+          d={`M ${overlapStart},${pad} H ${w}`}
+          stroke="#4de0c0"
+          strokeWidth="1.5"
+          fill="none"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }
+
+  const outPath = curvePath(type, w, h, false, pad, steps);
+  const inPath = curvePath(type, w, h, true, pad, steps);
+
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className="fade-mini-icon" aria-hidden="true">
+      <path d={outPath} stroke="#f5a834" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+      <path d={inPath} stroke="#4de0c0" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function CrossfadePreview({ type }: { type: FadeTypeValue }) {
+  const w = 280,
+    h = 70,
+    pad = 6,
+    steps = 60;
+
+  if (type === FadeType.NONE) {
+    const overlapStart = w / 3;
+    const overlapEnd = (w * 2) / 3;
+    const lineY = pad + 8;
+    return (
+      <svg viewBox={`0 0 ${w} ${h}`} className="fade-crossfade-preview" aria-hidden="true">
+        <rect x={0} y={0} width={w} height={h} fill="rgba(0,0,0,0.2)" rx="6" />
+        <rect
+          x={pad}
+          y={pad}
+          width={overlapEnd - pad}
+          height={h - 2 * pad}
+          fill="rgba(245,168,52,0.12)"
+          rx="3"
+        />
+        <rect
+          x={overlapStart}
+          y={pad}
+          width={w - overlapStart - pad}
+          height={h - 2 * pad}
+          fill="rgba(77,224,192,0.1)"
+          rx="3"
+        />
+        <rect
+          x={overlapStart}
+          y={pad}
+          width={overlapEnd - overlapStart}
+          height={h - 2 * pad}
+          fill="rgba(180,255,220,0.07)"
+          rx="3"
+        />
+        <path
+          d={`M ${pad + 2},${lineY} H ${overlapEnd}`}
+          stroke="#f5a834"
+          strokeWidth="2.5"
+          fill="none"
+          strokeLinecap="round"
+        />
+        <path
+          d={`M ${overlapStart},${lineY} H ${w - pad - 2}`}
+          stroke="#4de0c0"
+          strokeWidth="2.5"
+          fill="none"
+          strokeLinecap="round"
+        />
+        <text x={pad + 8} y={h - pad - 4} fill="#f5a834" fontSize="10" opacity="0.7">
+          A
+        </text>
+        <text x={w - pad - 14} y={h - pad - 4} fill="#4de0c0" fontSize="10" opacity="0.7">
+          B
+        </text>
+      </svg>
+    );
+  }
+
+  const outFull = curvePath(type, w, h, false, pad, steps);
+  const inFull = curvePath(type, w, h, true, pad, steps);
+  const aFill = `${outFull} L ${w},${h - pad} L 0,${h - pad} Z`;
+  const bFill = `${inFull} L ${w},${h - pad} L 0,${h - pad} Z`;
+
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className="fade-crossfade-preview" aria-hidden="true">
+      <rect x={0} y={0} width={w} height={h} fill="rgba(0,0,0,0.2)" rx="6" />
+      <path d={aFill} fill="rgba(245,168,52,0.15)" />
+      <path d={bFill} fill="rgba(77,224,192,0.12)" />
+      <path d={outFull} stroke="#f5a834" strokeWidth="2" fill="none" strokeLinecap="round" />
+      <path d={inFull} stroke="#4de0c0" strokeWidth="2" fill="none" strokeLinecap="round" />
+      <text x={pad + 8} y={pad + 14} fill="#f5a834" fontSize="10" opacity="0.7">
+        A
+      </text>
+      <text x={w - pad - 14} y={h - pad - 4} fill="#4de0c0" fontSize="10" opacity="0.7">
+        B
+      </text>
+    </svg>
+  );
+}
 
 export default function TransitionModal({
   fromTitle,
@@ -98,11 +256,13 @@ export default function TransitionModal({
                   className={`transition-type-card${fadeType === opt.value ? ' selected' : ''}`}
                   onClick={() => setFadeType(opt.value)}
                 >
+                  <MiniCurveIcon type={opt.value} />
                   <span className="transition-type-label">{opt.label}</span>
                   <span className="transition-type-desc">{opt.description}</span>
                 </button>
               ))}
             </div>
+            <CrossfadePreview type={fadeType} />
           </section>
 
           <section className="transition-section">
