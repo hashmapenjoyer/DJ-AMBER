@@ -221,8 +221,14 @@ export default function Timeline({ sfxClips, libraryItems, onSfxChange }: Timeli
   // 2. setTransition / removeTransition — based on overlap with neighbours
   //
   // Overlap in pixels / pxPerSec = the crossfade duration in seconds.
+  // Ripple vs slip semantics:
+  //   Default (ripple): only recompute the LEFT-side transition. The engine packs clips
+  //   back-to-back, so leaving the right transition alone naturally pushes downstream
+  //   clips along by the same delta, preserving B-C when the user only meant to edit A-B.
+  //   Slip (Alt held): recompute both sides as a free-form move. After a reorder the old
+  //   right neighbour isn't adjacent anymore, so we fall back to slip there too.
   const commitMusicDrop = useCallback(
-    (drag: MusicDragState) => {
+    (drag: MusicDragState, isSlip: boolean) => {
       const pps = pxPerSecRef.current;
       const droppedStartSec = drag.currentLeftPx / pps;
       const draggedEntry = timeline[drag.originalIndex];
@@ -239,8 +245,9 @@ export default function Timeline({ sfxClips, libraryItems, onSfxChange }: Timeli
       }));
       withMids.sort((a, b) => a.midSec - b.midSec);
       const newIndex = withMids.findIndex((o) => o.entryId === drag.entryId);
+      const reordered = newIndex !== drag.originalIndex;
 
-      if (newIndex !== drag.originalIndex) {
+      if (reordered) {
         engine.playlist.reorder(drag.originalIndex, newIndex);
       }
 
@@ -261,7 +268,7 @@ export default function Timeline({ sfxClips, libraryItems, onSfxChange }: Timeli
         }
       }
 
-      if (rightNeighbour) {
+      if (rightNeighbour && (isSlip || reordered)) {
         const overlapSec = droppedStartSec + clipDurationSec - rightNeighbour.absoluteStart;
         if (overlapSec > 0.1) {
           engine.playlist.setTransition(dragged.entryId, rightNeighbour.entryId, overlapSec);
@@ -307,10 +314,10 @@ export default function Timeline({ sfxClips, libraryItems, onSfxChange }: Timeli
       }
     };
 
-    const onMouseUp = () => {
+    const onMouseUp = (e: MouseEvent) => {
       if (!dragRef.current) return;
       if (dragRef.current.kind === 'music') {
-        commitMusicDrop(dragRef.current);
+        commitMusicDrop(dragRef.current, e.altKey);
         setMusicDragOverride(null);
       } else {
         commitSfxDrop(dragRef.current);
