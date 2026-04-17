@@ -62,7 +62,7 @@ export default function NavBar({ masterVolume, onMasterVolumeChange }: NavBarPro
             title="Help"
             aria-label="Open help modal"
           >
-            ?
+            FAQ
           </button>
         </div>
       </nav>

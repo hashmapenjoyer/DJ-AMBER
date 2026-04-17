@@ -1,4 +1,5 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { FadeType } from '../../../types/Fade';
 import type { FadeType as FadeTypeValue } from '../../../types/Fade';
 import { useAudioEngine } from '../../audio/UseAudioEngine';
@@ -221,8 +222,14 @@ export default function Timeline({ sfxClips, libraryItems, onSfxChange }: Timeli
   // 2. setTransition / removeTransition — based on overlap with neighbours
   //
   // Overlap in pixels / pxPerSec = the crossfade duration in seconds.
+  // Ripple vs slip semantics:
+  //   Default (ripple): only recompute the LEFT-side transition. The engine packs clips
+  //   back-to-back, so leaving the right transition alone naturally pushes downstream
+  //   clips along by the same delta, preserving B-C when the user only meant to edit A-B.
+  //   Slip (Alt held): recompute both sides as a free-form move. After a reorder the old
+  //   right neighbour isn't adjacent anymore, so we fall back to slip there too.
   const commitMusicDrop = useCallback(
-    (drag: MusicDragState) => {
+    (drag: MusicDragState, isSlip: boolean) => {
       const pps = pxPerSecRef.current;
       const droppedStartSec = drag.currentLeftPx / pps;
       const draggedEntry = timeline[drag.originalIndex];
@@ -239,8 +246,9 @@ export default function Timeline({ sfxClips, libraryItems, onSfxChange }: Timeli
       }));
       withMids.sort((a, b) => a.midSec - b.midSec);
       const newIndex = withMids.findIndex((o) => o.entryId === drag.entryId);
+      const reordered = newIndex !== drag.originalIndex;
 
-      if (newIndex !== drag.originalIndex) {
+      if (reordered) {
         engine.playlist.reorder(drag.originalIndex, newIndex);
       }
 
@@ -252,19 +260,41 @@ export default function Timeline({ sfxClips, libraryItems, onSfxChange }: Timeli
       const leftNeighbour = newIdx > 0 ? newTimeline[newIdx - 1] : null;
       const rightNeighbour = newIdx < newTimeline.length - 1 ? newTimeline[newIdx + 1] : null;
 
+      // Preserve existing fade types across the drop so users don't lose their
+      // chosen curve every time they nudge a clip.
+      const existingTransitions = engine.playlist.getTransitions();
+
       if (leftNeighbour) {
         const overlapSec = leftNeighbour.absoluteEnd - droppedStartSec;
         if (overlapSec > 0.1) {
-          engine.playlist.setTransition(leftNeighbour.entryId, dragged.entryId, overlapSec);
+          const existing = existingTransitions.find(
+            (t) => t.fromEntryId === leftNeighbour.entryId && t.toEntryId === dragged.entryId,
+          );
+          engine.playlist.setTransition(
+            leftNeighbour.entryId,
+            dragged.entryId,
+            overlapSec,
+            existing?.fadeOutType,
+            existing?.fadeInType,
+          );
         } else {
           engine.playlist.removeTransition(leftNeighbour.entryId, dragged.entryId);
         }
       }
 
-      if (rightNeighbour) {
+      if (rightNeighbour && (isSlip || reordered)) {
         const overlapSec = droppedStartSec + clipDurationSec - rightNeighbour.absoluteStart;
         if (overlapSec > 0.1) {
-          engine.playlist.setTransition(dragged.entryId, rightNeighbour.entryId, overlapSec);
+          const existing = existingTransitions.find(
+            (t) => t.fromEntryId === dragged.entryId && t.toEntryId === rightNeighbour.entryId,
+          );
+          engine.playlist.setTransition(
+            dragged.entryId,
+            rightNeighbour.entryId,
+            overlapSec,
+            existing?.fadeOutType,
+            existing?.fadeInType,
+          );
         } else {
           engine.playlist.removeTransition(dragged.entryId, rightNeighbour.entryId);
         }
@@ -307,10 +337,10 @@ export default function Timeline({ sfxClips, libraryItems, onSfxChange }: Timeli
       }
     };
 
-    const onMouseUp = () => {
+    const onMouseUp = (e: MouseEvent) => {
       if (!dragRef.current) return;
       if (dragRef.current.kind === 'music') {
-        commitMusicDrop(dragRef.current);
+        commitMusicDrop(dragRef.current, e.altKey);
         setMusicDragOverride(null);
       } else {
         commitSfxDrop(dragRef.current);
@@ -540,10 +570,14 @@ export default function Timeline({ sfxClips, libraryItems, onSfxChange }: Timeli
       const mouseTimeSec = (el.scrollLeft + mouseOffsetInViewport) / oldPps;
       const newScrollLeft = mouseTimeSec * newPps - mouseOffsetInViewport;
 
-      setPxPerSec(newPps);
-      requestAnimationFrame(() => {
-        el.scrollLeft = Math.max(0, newScrollLeft);
-      });
+      // Keep the ref fresh so rapid back-to-back wheel events don't read a
+      // stale oldPps (the useEffect that syncs the ref won't have run yet)
+      pxPerSecRef.current = newPps;
+      // flushSync commits the wider/narrower timeline before we set scrollLeft,
+      // otherwise the browser clamps against the stale scrollWidth and the
+      // zoom anchor drifts
+      flushSync(() => setPxPerSec(newPps));
+      el.scrollLeft = Math.max(0, newScrollLeft);
     };
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => el.removeEventListener('wheel', onWheel);
@@ -593,47 +627,62 @@ export default function Timeline({ sfxClips, libraryItems, onSfxChange }: Timeli
             />
 
             {/* Music clips */}
-            {timeline.map((entry, idx) => {
-              const isDragging = musicDragOverride?.entryId === entry.entryId;
-              const leftPx = isDragging ? musicDragOverride.leftPx : entry.absoluteStart * pxPerSec;
-              const widthPx = (entry.absoluteEnd - entry.absoluteStart) * pxPerSec;
+            {(() => {
+              const transitions = engine.playlist.getTransitions();
+              return timeline.map((entry, idx) => {
+                const isDragging = musicDragOverride?.entryId === entry.entryId;
+                const leftPx = isDragging
+                  ? musicDragOverride.leftPx
+                  : entry.absoluteStart * pxPerSec;
+                const widthPx = (entry.absoluteEnd - entry.absoluteStart) * pxPerSec;
 
-              let overlapWidthPx = 0;
-              if (idx > 0) {
-                const leftNeighbour = timeline[idx - 1];
-                // If the left neighbour is also being dragged (shouldn't happen, but shit happens lol)
-                const neighbourRightPx =
-                  musicDragOverride?.entryId === leftNeighbour.entryId
-                    ? musicDragOverride.leftPx +
-                      (leftNeighbour.absoluteEnd - leftNeighbour.absoluteStart) * pxPerSec
-                    : leftNeighbour.absoluteEnd * pxPerSec;
-                overlapWidthPx = Math.max(0, neighbourRightPx - leftPx);
-              }
+                let overlapWidthPx = 0;
+                let fadeOutType: FadeTypeValue | undefined;
+                let fadeInType: FadeTypeValue | undefined;
+                if (idx > 0) {
+                  const leftNeighbour = timeline[idx - 1];
+                  // If the left neighbour is also being dragged (shouldn't happen, but shit happens lol)
+                  const neighbourRightPx =
+                    musicDragOverride?.entryId === leftNeighbour.entryId
+                      ? musicDragOverride.leftPx +
+                        (leftNeighbour.absoluteEnd - leftNeighbour.absoluteStart) * pxPerSec
+                      : leftNeighbour.absoluteEnd * pxPerSec;
+                  overlapWidthPx = Math.max(0, neighbourRightPx - leftPx);
 
-              return (
-                <TimelineClip
-                  key={entry.entryId}
-                  entryId={entry.entryId}
-                  title={entry.title}
-                  bufferId={entry.bufferId}
-                  bufferOffset={entry.bufferOffset}
-                  playDuration={entry.playDuration}
-                  leftPx={leftPx}
-                  widthPx={widthPx}
-                  pxPerSecond={pxPerSec}
-                  clipTop={musicClipTop}
-                  clipHeight={clipHeight}
-                  zIndex={idx}
-                  isDragging={isDragging}
-                  isSelected={selection?.kind === 'music' && selection.entryId === entry.entryId}
-                  overlapWidthPx={overlapWidthPx}
-                  variant="music"
-                  onMouseDown={onMusicClipMouseDown}
-                  onContextMenu={onMusicClipContextMenu}
-                  onOverlapClick={onOverlapClick}
-                />
-              );
-            })}
+                  const transition = transitions.find(
+                    (t) => t.fromEntryId === leftNeighbour.entryId && t.toEntryId === entry.entryId,
+                  );
+                  fadeOutType = transition?.fadeOutType;
+                  fadeInType = transition?.fadeInType;
+                }
+
+                return (
+                  <TimelineClip
+                    key={entry.entryId}
+                    entryId={entry.entryId}
+                    title={entry.title}
+                    bufferId={entry.bufferId}
+                    bufferOffset={entry.bufferOffset}
+                    playDuration={entry.playDuration}
+                    leftPx={leftPx}
+                    widthPx={widthPx}
+                    pxPerSecond={pxPerSec}
+                    clipTop={musicClipTop}
+                    clipHeight={clipHeight}
+                    zIndex={idx}
+                    isDragging={isDragging}
+                    isSelected={selection?.kind === 'music' && selection.entryId === entry.entryId}
+                    overlapWidthPx={overlapWidthPx}
+                    fadeOutType={fadeOutType}
+                    fadeInType={fadeInType}
+                    variant="music"
+                    onMouseDown={onMusicClipMouseDown}
+                    onContextMenu={onMusicClipContextMenu}
+                    onOverlapClick={onOverlapClick}
+                  />
+                );
+              });
+            })()}
 
             {/* SFX clips */}
             {sfxClips.map((clip, idx) => {

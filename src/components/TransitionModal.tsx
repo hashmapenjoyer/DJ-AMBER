@@ -1,6 +1,7 @@
 import { useState, useEffect, type CSSProperties } from 'react';
 import { FadeType } from '../../types/Fade';
 import type { FadeType as FadeTypeValue } from '../../types/Fade';
+import { curvePath, FADE_OUT_COLOR, FADE_IN_COLOR } from './fadeCurves';
 import '../styles/transition-modal.css';
 
 interface TransitionModalProps {
@@ -27,39 +28,6 @@ const FADE_OPTIONS: { value: FadeTypeValue; label: string; description: string }
   },
 ];
 
-// ---- Curve helpers ----
-
-function fadeGain(type: FadeTypeValue, t: number): number {
-  switch (type) {
-    case FadeType.LINEAR:
-      return 1 - t;
-    case FadeType.EXPONENTIAL:
-      return Math.pow(1 - t, 2);
-    case FadeType.EQUAL_POWER:
-      return Math.cos((t * Math.PI) / 2);
-    default: // NONE
-      return 1;
-  }
-}
-
-function curvePath(
-  type: FadeTypeValue,
-  w: number,
-  h: number,
-  invert: boolean,
-  pad: number,
-  steps: number,
-): string {
-  const inner = h - 2 * pad;
-  return Array.from({ length: steps + 1 }, (_, i) => {
-    const t = i / steps;
-    const g = invert ? fadeGain(type, 1 - t) : fadeGain(type, t);
-    const x = (t * w).toFixed(1);
-    const y = (pad + (1 - g) * inner).toFixed(1);
-    return `${i === 0 ? 'M' : 'L'} ${x},${y}`;
-  }).join(' ');
-}
-
 // ---- SVG components ----
 
 function MiniCurveIcon({ type }: { type: FadeTypeValue }) {
@@ -75,14 +43,14 @@ function MiniCurveIcon({ type }: { type: FadeTypeValue }) {
       <svg viewBox={`0 0 ${w} ${h}`} className="fade-mini-icon" aria-hidden="true">
         <path
           d={`M 0,${pad} H ${overlapEnd}`}
-          stroke="#f5a834"
+          stroke={FADE_OUT_COLOR}
           strokeWidth="1.5"
           fill="none"
           strokeLinecap="round"
         />
         <path
           d={`M ${overlapStart},${pad} H ${w}`}
-          stroke="#4de0c0"
+          stroke={FADE_IN_COLOR}
           strokeWidth="1.5"
           fill="none"
           strokeLinecap="round"
@@ -96,8 +64,14 @@ function MiniCurveIcon({ type }: { type: FadeTypeValue }) {
 
   return (
     <svg viewBox={`0 0 ${w} ${h}`} className="fade-mini-icon" aria-hidden="true">
-      <path d={outPath} stroke="#f5a834" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-      <path d={inPath} stroke="#4de0c0" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+      <path
+        d={outPath}
+        stroke={FADE_OUT_COLOR}
+        strokeWidth="1.5"
+        fill="none"
+        strokeLinecap="round"
+      />
+      <path d={inPath} stroke={FADE_IN_COLOR} strokeWidth="1.5" fill="none" strokeLinecap="round" />
     </svg>
   );
 }
@@ -141,22 +115,22 @@ function CrossfadePreview({ type }: { type: FadeTypeValue }) {
         />
         <path
           d={`M ${pad + 2},${lineY} H ${overlapEnd}`}
-          stroke="#f5a834"
+          stroke={FADE_OUT_COLOR}
           strokeWidth="2.5"
           fill="none"
           strokeLinecap="round"
         />
         <path
           d={`M ${overlapStart},${lineY} H ${w - pad - 2}`}
-          stroke="#4de0c0"
+          stroke={FADE_IN_COLOR}
           strokeWidth="2.5"
           fill="none"
           strokeLinecap="round"
         />
-        <text x={pad + 8} y={h - pad - 4} fill="#f5a834" fontSize="10" opacity="0.7">
+        <text x={pad + 8} y={h - pad - 4} fill={FADE_OUT_COLOR} fontSize="10" opacity="0.7">
           A
         </text>
-        <text x={w - pad - 14} y={h - pad - 4} fill="#4de0c0" fontSize="10" opacity="0.7">
+        <text x={w - pad - 14} y={h - pad - 4} fill={FADE_IN_COLOR} fontSize="10" opacity="0.7">
           B
         </text>
       </svg>
@@ -173,12 +147,12 @@ function CrossfadePreview({ type }: { type: FadeTypeValue }) {
       <rect x={0} y={0} width={w} height={h} fill="rgba(0,0,0,0.2)" rx="6" />
       <path d={aFill} fill="rgba(245,168,52,0.15)" />
       <path d={bFill} fill="rgba(77,224,192,0.12)" />
-      <path d={outFull} stroke="#f5a834" strokeWidth="2" fill="none" strokeLinecap="round" />
-      <path d={inFull} stroke="#4de0c0" strokeWidth="2" fill="none" strokeLinecap="round" />
-      <text x={pad + 8} y={pad + 14} fill="#f5a834" fontSize="10" opacity="0.7">
+      <path d={outFull} stroke={FADE_OUT_COLOR} strokeWidth="2" fill="none" strokeLinecap="round" />
+      <path d={inFull} stroke={FADE_IN_COLOR} strokeWidth="2" fill="none" strokeLinecap="round" />
+      <text x={pad + 8} y={pad + 14} fill={FADE_OUT_COLOR} fontSize="10" opacity="0.7">
         A
       </text>
-      <text x={w - pad - 14} y={h - pad - 4} fill="#4de0c0" fontSize="10" opacity="0.7">
+      <text x={w - pad - 14} y={h - pad - 4} fill={FADE_IN_COLOR} fontSize="10" opacity="0.7">
         B
       </text>
     </svg>

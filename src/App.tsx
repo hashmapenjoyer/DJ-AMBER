@@ -71,6 +71,7 @@ function App() {
 
     const processFile = async (file: File): Promise<void> => {
       try {
+        // Read the raw bytes first - needed for both hashing and decoding.
         const arrayBuffer = await file.arrayBuffer();
 
         const [hashBuffer, { title, artist, coverUrl }] = await Promise.all([
@@ -103,7 +104,7 @@ function App() {
         };
 
         // Stream results into the library as each file finishes rather than
-        // waiting for the whole batch — makes large uploads feel responsive.
+        // waiting for the whole batch
         setLibraryItems((prev) => [...prev, newItem]);
       } catch {
         failures.push(file.name);
