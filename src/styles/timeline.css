@@ -239,6 +239,58 @@
   flex-shrink: 0;
 }
 
+.timeline_clip--selected {
+  outline: 2px solid var(--color-primary-light);
+  outline-offset: 1px;
+  box-shadow:
+    var(--shadow-md),
+    0 0 6px rgba(91, 155, 255, 0.5);
+}
+
+.timeline_clip--sfx.timeline_clip--selected {
+  outline-color: rgb(110, 220, 221);
+  box-shadow:
+    var(--shadow-md),
+    0 0 6px rgba(56, 189, 190, 0.6);
+}
+
+.timeline_context_menu {
+  position: fixed;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--br-sm);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-1);
+  z-index: var(--z-modal, 9999);
+  font-family: var(--font-mono);
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline_context_menu_item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--fs-sm);
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  cursor: pointer;
+  border-radius: var(--br-sm);
+}
+
+.timeline_context_menu_item:hover:not(:disabled) {
+  background-color: var(--bg-tertiary);
+}
+
+.timeline_context_menu_item:disabled {
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
 .timeline_clip_overlap {
   position: absolute;
   background-color: var(--timeline-overlap-bg);

@@ -11,6 +11,7 @@ interface TimelineClipProps {
   clipHeight: number;
   zIndex: number;
   isDragging: boolean;
+  isSelected: boolean;
   overlapWidthPx: number;
   variant: 'music' | 'sfx';
   onMouseDown: (e: React.MouseEvent, entryId: string) => void;
@@ -28,6 +29,7 @@ export default function TimelineClip({
   clipTop,
   clipHeight,
   isDragging,
+  isSelected,
   overlapWidthPx,
   variant,
   onMouseDown,
@@ -36,10 +38,11 @@ export default function TimelineClip({
 }: TimelineClipProps) {
   const clipDuration = widthPx / pxPerSecond;
 
+  const selectedSuffix = isSelected ? ' timeline_clip--selected' : '';
   const baseClass =
     variant === 'sfx'
-      ? `timeline_clip timeline_clip--sfx${isDragging ? ' timeline_clip--sfx-dragging' : ''}`
-      : `timeline_clip${isDragging ? ' timeline_clip--dragging' : ''}`;
+      ? `timeline_clip timeline_clip--sfx${isDragging ? ' timeline_clip--sfx-dragging' : ''}${selectedSuffix}`
+      : `timeline_clip${isDragging ? ' timeline_clip--dragging' : ''}${selectedSuffix}`;
 
   return (
     <>
