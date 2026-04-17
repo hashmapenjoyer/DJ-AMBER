@@ -93,6 +93,10 @@ export default function HelpModal({ onClose }: HelpModalProps) {
                 <kbd>Esc</kbd> - Close this help modal / deselect clip
               </li>
               <li>
+                <kbd>Alt</kbd> + drag clip - Slip mode: let the clip overlap freely with the next
+                clip instead of pushing it along
+              </li>
+              <li>
                 <kbd>Delete</kbd> / <kbd>Backspace</kbd> - Delete selected clip
               </li>
             </ul>
@@ -117,6 +121,11 @@ export default function HelpModal({ onClose }: HelpModalProps) {
               <li>Layer multiple clips to create rich soundscapes</li>
               <li>Adjust timing and fades for smooth transitions</li>
               <li>Use the progress bar to navigate through your project</li>
+              <li>
+                Dragging a clip on the timeline only edits the transition on its left side. Clips to
+                the right ripple along to preserve their existing transitions. Hold <kbd>Alt</kbd>{' '}
+                while dragging to override and let the clip overlap freely.
+              </li>
               <li>Save your projects frequently to avoid losing work</li>
             </ul>
           </section>

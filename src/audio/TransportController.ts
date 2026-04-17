@@ -76,7 +76,7 @@ export class TransportController {
       this.transportTimeAtPlay = this.pausedAt;
       this.scheduler.start(this.pausedAt, this.contextTimeAtPlay);
     } else {
-      // paused/stopped: playhead moves but no audio — notify so song title updates
+      // paused/stopped: playhead moves but no audio, notify so song title updates
       this.onSeek(this.pausedAt);
     }
   }
