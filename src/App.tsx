@@ -59,16 +59,21 @@ function App() {
   // --- Library handlers ---
 
   const handleLibraryUpload = async (files: File[], category: 'music' | 'sfx'): Promise<void> => {
-    const newItems: LibraryItem[] = [];
     const duplicates: string[] = [];
     const failures: string[] = [];
 
-    for (const file of files) {
+    // Snapshot existing hashes once so we don't restart the scan as items stream in
+    const existingHashes = new Set(
+      libraryItems.filter((item) => item.category === category).map((item) => item.hash),
+    );
+    // Claimed within this batch, prevents two identical files from both being added
+    const claimedHashes = new Set<string>();
+
+    const processFile = async (file: File): Promise<void> => {
       try {
         // Read the raw bytes first - needed for both hashing and decoding.
         const arrayBuffer = await file.arrayBuffer();
 
-        // Hash and metadata extraction can run in parallel.
         const [hashBuffer, { title, artist, coverUrl }] = await Promise.all([
           crypto.subtle.digest('SHA-256', arrayBuffer),
           extractMetadata(file),
@@ -78,19 +83,16 @@ function App() {
           .map((b) => b.toString(16).padStart(2, '0'))
           .join('');
 
-        const isDuplicate =
-          libraryItems.some((item) => item.hash === hash && item.category === category) ||
-          newItems.some((item) => item.hash === hash);
-
-        if (isDuplicate) {
+        if (existingHashes.has(hash) || claimedHashes.has(hash)) {
           duplicates.push(file.name);
-          continue;
+          return;
         }
+        claimedHashes.add(hash);
 
         const bufferId = crypto.randomUUID();
         const audioBuffer = await engine.buffers.add(bufferId, arrayBuffer);
 
-        newItems.push({
+        const newItem: LibraryItem = {
           id: bufferId,
           title,
           filename: file.name,
@@ -99,15 +101,17 @@ function App() {
           duration: Math.round(audioBuffer.duration),
           category,
           coverUrl,
-        });
+        };
+
+        // Stream results into the library as each file finishes rather than
+        // waiting for the whole batch
+        setLibraryItems((prev) => [...prev, newItem]);
       } catch {
         failures.push(file.name);
       }
-    }
+    };
 
-    if (newItems.length > 0) {
-      setLibraryItems((prev) => [...prev, ...newItems]);
-    }
+    await Promise.all(files.map(processFile));
 
     if (duplicates.length > 0) {
       window.alert(`Skipped duplicate(s): ${duplicates.join(', ')}`);
