@@ -25,6 +25,8 @@
 .middle-section {
   width: 100%;
   flex: 1;
+  min-height: 0; /* Prevents flex children from overflowing and pushing the timeline off-screen */
+  overflow: hidden;
   display: flex;
   gap: 0;
 }
