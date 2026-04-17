@@ -6,6 +6,8 @@ import type { SfxClip } from '../../audio/types';
 import type { LibraryItem } from '../../../types/LibraryItem';
 import TimelineTicks from './TimelineTicks';
 import TimelineClip from './TimelineClip';
+import TimelineContextMenu from './TimelineContextMenu';
+import type { TimelineContextMenuItem } from './TimelineContextMenu';
 import TransitionModal from '../TransitionModal';
 import '../../styles/timeline.css';
 
@@ -36,6 +38,14 @@ interface SfxDragState {
 }
 
 type DragState = MusicDragState | SfxDragState;
+
+type Selection = { kind: 'music'; entryId: string } | { kind: 'sfx'; sfxId: string };
+
+interface ContextMenuState {
+  x: number;
+  y: number;
+  items: TimelineContextMenuItem[];
+}
 
 interface TimelineProps {
   sfxClips: SfxClip[];
@@ -139,8 +149,15 @@ export default function Timeline({ sfxClips, libraryItems, onSfxChange }: Timeli
     maxDuration: number;
   } | null>(null);
 
+  // Clip selection (for delete-via-keyboard and visual highlight)
+  const [selection, setSelection] = useState<Selection | null>(null);
+
+  // Custom right-click context menu
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
+
   const onMusicClipMouseDown = useCallback(
     (e: React.MouseEvent, entryId: string) => {
+      if (e.button !== 0) return;
       e.preventDefault();
       e.stopPropagation();
 
@@ -161,6 +178,7 @@ export default function Timeline({ sfxClips, libraryItems, onSfxChange }: Timeli
         currentLeftPx: clipLeftPx,
       };
       setMusicDragOverride({ entryId, leftPx: clipLeftPx });
+      setSelection({ kind: 'music', entryId });
     },
     [timeline],
   );
@@ -168,6 +186,7 @@ export default function Timeline({ sfxClips, libraryItems, onSfxChange }: Timeli
   // SFX dragging
   const onSfxClipMouseDown = useCallback(
     (e: React.MouseEvent, sfxId: string) => {
+      if (e.button !== 0) return;
       e.preventDefault();
       e.stopPropagation();
 
@@ -186,6 +205,7 @@ export default function Timeline({ sfxClips, libraryItems, onSfxChange }: Timeli
         currentLeftPx: clipLeftPx,
       };
       setSfxDragOverride({ sfxId, leftPx: clipLeftPx });
+      setSelection({ kind: 'sfx', sfxId });
     },
     [sfxClips],
   );
@@ -307,47 +327,16 @@ export default function Timeline({ sfxClips, libraryItems, onSfxChange }: Timeli
     };
   }, [commitMusicDrop, commitSfxDrop]);
 
-  // Right-clicking a music clip opens the TransitionModal for the nearest boundary.
-  const onClipContextMenu = useCallback(
-    (e: React.MouseEvent, entryId: string) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      const idx = timeline.findIndex((en) => en.entryId === entryId);
-      if (idx === -1 || timeline.length < 2) return;
-
-      const entry = timeline[idx];
-      const scrollLeft = scrollRef.current?.scrollLeft ?? 0;
-      const rectLeft = scrollRef.current?.getBoundingClientRect().left ?? 0;
-      const clickCanvasPx = e.clientX - rectLeft + scrollLeft;
-      const clipLeftPx = entry.absoluteStart * pxPerSecRef.current;
-      const clipWidthPx = (entry.absoluteEnd - entry.absoluteStart) * pxPerSecRef.current;
-      const clickedLeftHalf = clickCanvasPx - clipLeftPx < clipWidthPx / 2;
-
-      let fromIdx: number;
-      let toIdx: number;
-
-      if (clickedLeftHalf && idx > 0) {
-        fromIdx = idx - 1;
-        toIdx = idx;
-      } else if (!clickedLeftHalf && idx < timeline.length - 1) {
-        fromIdx = idx;
-        toIdx = idx + 1;
-      } else if (idx > 0) {
-        fromIdx = idx - 1;
-        toIdx = idx;
-      } else {
-        fromIdx = idx;
-        toIdx = idx + 1;
-      }
-
+  // Opens the TransitionModal for the boundary between two adjacent timeline entries.
+  const openTransitionModal = useCallback(
+    (fromIdx: number, toIdx: number) => {
       const fromEntry = timeline[fromIdx];
       const toEntry = timeline[toIdx];
+      if (!fromEntry || !toEntry) return;
       const maxDur = Math.min(
         fromEntry.absoluteEnd - fromEntry.absoluteStart,
         toEntry.absoluteEnd - toEntry.absoluteStart,
       );
-
       setTransitionTarget({
         fromEntryId: fromEntry.entryId,
         fromTitle: fromEntry.title,
@@ -357,6 +346,66 @@ export default function Timeline({ sfxClips, libraryItems, onSfxChange }: Timeli
       });
     },
     [timeline],
+  );
+
+  // Right-clicking a music clip opens a custom context menu with transition + delete options.
+  const onMusicClipContextMenu = useCallback(
+    (e: React.MouseEvent, entryId: string) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const idx = timeline.findIndex((en) => en.entryId === entryId);
+      if (idx === -1) return;
+
+      setSelection({ kind: 'music', entryId });
+
+      const items: TimelineContextMenuItem[] = [
+        {
+          label: 'Add transition before',
+          disabled: idx === 0,
+          onClick: () => openTransitionModal(idx - 1, idx),
+        },
+        {
+          label: 'Add transition after',
+          disabled: idx === timeline.length - 1,
+          onClick: () => openTransitionModal(idx, idx + 1),
+        },
+        {
+          label: 'Delete clip',
+          onClick: () => {
+            engine.playlist.remove(entryId);
+            setSelection(null);
+          },
+        },
+      ];
+
+      setContextMenu({ x: e.clientX, y: e.clientY, items });
+    },
+    [timeline, engine, openTransitionModal],
+  );
+
+  // Right-clicking an SFX clip opens a simpler menu since SFX has no transitions.
+  const onSfxClipContextMenu = useCallback(
+    (e: React.MouseEvent, sfxId: string) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      setSelection({ kind: 'sfx', sfxId });
+
+      const items: TimelineContextMenuItem[] = [
+        {
+          label: 'Delete clip',
+          onClick: () => {
+            engine.sfx.remove(sfxId);
+            onSfxChange();
+            setSelection(null);
+          },
+        },
+      ];
+
+      setContextMenu({ x: e.clientX, y: e.clientY, items });
+    },
+    [engine, onSfxChange],
   );
 
   // Clicking the crossfade overlap indicator opens the TransitionModal directly.
@@ -403,6 +452,45 @@ export default function Timeline({ sfxClips, libraryItems, onSfxChange }: Timeli
     engine.playlist.removeTransition(transitionTarget.fromEntryId, transitionTarget.toEntryId);
     setTransitionTarget(null);
   }, [engine, transitionTarget]);
+
+  const deleteSelection = useCallback(() => {
+    if (!selection) return;
+    if (selection.kind === 'music') {
+      engine.playlist.remove(selection.entryId);
+    } else {
+      engine.sfx.remove(selection.sfxId);
+      onSfxChange();
+    }
+    setSelection(null);
+  }, [selection, engine, onSfxChange]);
+
+  // Delete / Backspace removes the selected clip; Escape clears selection + menu.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const isTyping =
+        e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement;
+      if (isTyping) return;
+
+      if (e.key === 'Escape') {
+        setSelection(null);
+        setContextMenu(null);
+        return;
+      }
+
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selection) {
+        e.preventDefault();
+        deleteSelection();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [selection, deleteSelection]);
+
+  // Clicking empty timeline area deselects. Clip mousedown handlers stopPropagation,
+  // so this only fires for background clicks.
+  const onCanvasMouseDown = useCallback(() => {
+    setSelection(null);
+  }, []);
 
   // The playhead will seek to where the user clicks on the ticks
   const handleTicksClick = useCallback(
@@ -471,7 +559,11 @@ export default function Timeline({ sfxClips, libraryItems, onSfxChange }: Timeli
         </div>
 
         <div ref={scrollRef} className="timeline_scroll_area">
-          <div className="timeline_canvas" style={{ width: timelineWidth, height: canvasHeight }}>
+          <div
+            className="timeline_canvas"
+            style={{ width: timelineWidth, height: canvasHeight }}
+            onMouseDown={onCanvasMouseDown}
+          >
             {/* Time ticks */}
             <TimelineTicks
               totalTime={effectiveDuration}
@@ -523,10 +615,11 @@ export default function Timeline({ sfxClips, libraryItems, onSfxChange }: Timeli
                   clipHeight={clipHeight}
                   zIndex={idx}
                   isDragging={isDragging}
+                  isSelected={selection?.kind === 'music' && selection.entryId === entry.entryId}
                   overlapWidthPx={overlapWidthPx}
                   variant="music"
                   onMouseDown={onMusicClipMouseDown}
-                  onContextMenu={onClipContextMenu}
+                  onContextMenu={onMusicClipContextMenu}
                   onOverlapClick={onOverlapClick}
                 />
               );
@@ -550,9 +643,11 @@ export default function Timeline({ sfxClips, libraryItems, onSfxChange }: Timeli
                   clipHeight={clipHeight}
                   zIndex={idx}
                   isDragging={isDragging}
+                  isSelected={selection?.kind === 'sfx' && selection.sfxId === clip.id}
                   overlapWidthPx={0}
                   variant="sfx"
                   onMouseDown={onSfxClipMouseDown}
+                  onContextMenu={onSfxClipContextMenu}
                 />
               );
             })}
@@ -593,6 +688,15 @@ export default function Timeline({ sfxClips, libraryItems, onSfxChange }: Timeli
             />
           );
         })()}
+
+      {contextMenu && (
+        <TimelineContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          items={contextMenu.items}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
     </div>
   );
 }
