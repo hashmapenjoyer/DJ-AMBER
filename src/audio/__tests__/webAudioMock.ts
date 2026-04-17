@@ -104,7 +104,7 @@ export class MockAudioBuffer {
     this.duration = duration;
     this.sampleRate = sampleRate;
     this.numberOfChannels = numberOfChannels;
-    // WaveformCache iterates over samples; keep this tiny so tests stay fast.
+    // WaveformCache iterates over samples, so I'm keeping this small
     this.length = Math.min(Math.floor(duration * sampleRate), 1024);
   }
 
