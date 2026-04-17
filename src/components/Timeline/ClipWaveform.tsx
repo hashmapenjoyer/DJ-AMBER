@@ -14,7 +14,7 @@ interface ClipWaveformProps {
 
 /**
  * canvas-backed waveform that reads pre-computed peaks from engine.waveforms.
- * redraw cost is O(widthPx) regardless of clip length or zoom level — the
+ * redraw cost is O(widthPx) regardless of clip length or zoom level.
  * mipmap level is chosen by WaveformCache to match the requested bucket count.
  */
 export default function ClipWaveform({
