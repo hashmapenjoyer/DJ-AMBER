@@ -517,10 +517,17 @@ export default function Timeline({ sfxClips, libraryItems, onSfxChange }: Timeli
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
 
+      // Shift+scroll or horizontal trackpad swipe -> pan left/right
+      const isPan = e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY);
+      if (isPan) {
+        const scrollDelta = e.shiftKey ? e.deltaY : e.deltaX;
+        el.scrollLeft = Math.max(0, el.scrollLeft + scrollDelta);
+        return;
+      }
+
+      // Vertical scroll -> zoom, anchored to mouse position
       const oldPps = pxPerSecRef.current;
-      const delta = e.deltaY !== 0 ? e.deltaY : -e.deltaX;
-      const factor = 1 - delta * ZOOM_SENSITIVITY;
-      // prevent zooming out enough to see the canvas end
+      const factor = 1 - e.deltaY * ZOOM_SENSITIVITY;
       const minPps = Math.max(
         MIN_PX_PER_SEC,
         containerWidthRef.current / effectiveDurationRef.current,
