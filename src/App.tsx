@@ -65,7 +65,7 @@ function App() {
 
     for (const file of files) {
       try {
-        // Read the raw bytes first — needed for both hashing and decoding.
+        // Read the raw bytes first - needed for both hashing and decoding.
         const arrayBuffer = await file.arrayBuffer();
 
         // Hash and metadata extraction can run in parallel.
