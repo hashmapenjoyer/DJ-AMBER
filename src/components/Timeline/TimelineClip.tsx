@@ -14,6 +14,8 @@ interface TimelineClipProps {
   overlapWidthPx: number;
   variant: 'music' | 'sfx';
   onMouseDown: (e: React.MouseEvent, entryId: string) => void;
+  onContextMenu?: (e: React.MouseEvent, entryId: string) => void;
+  onOverlapClick?: (entryId: string) => void;
 }
 
 export default function TimelineClip({
@@ -29,6 +31,8 @@ export default function TimelineClip({
   overlapWidthPx,
   variant,
   onMouseDown,
+  onContextMenu,
+  onOverlapClick,
 }: TimelineClipProps) {
   const clipDuration = widthPx / pxPerSecond;
 
@@ -42,6 +46,7 @@ export default function TimelineClip({
       <div
         className={baseClass}
         onMouseDown={(e) => onMouseDown(e, entryId)}
+        onContextMenu={onContextMenu ? (e) => onContextMenu(e, entryId) : undefined}
         style={{
           left: leftPx,
           top: clipTop,
@@ -69,6 +74,14 @@ export default function TimelineClip({
             cursor: isDragging ? 'grabbing' : 'pointer',
           }}
           title={`Crossfade: ${formatDuration(overlapWidthPx / pxPerSecond)}`}
+          onClick={
+            onOverlapClick
+              ? (e) => {
+                  e.stopPropagation();
+                  onOverlapClick(entryId);
+                }
+              : undefined
+          }
         />
       )}
     </>

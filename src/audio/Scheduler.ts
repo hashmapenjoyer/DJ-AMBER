@@ -2,6 +2,8 @@ import { FadeType } from '../../types/Fade';
 import type { ID, Seconds, Fade, ScheduledEntry, SfxClip, ActiveNode } from './types';
 import type { BufferCache } from './BufferCache';
 
+const EQUAL_POWER_CURVE_LENGTH = 128;
+
 /** how often the scheduling loop fires (ms) */
 const LOOKAHEAD_INTERVAL_MS = 25;
 
@@ -10,8 +12,6 @@ const SCHEDULE_AHEAD_S: Seconds = 0.2;
 
 /** grace period, nodes within this window of ctx.currentTime are considered "audible" */
 const AUDIBLE_GRACE_S = 0.05;
-
-const EQUAL_POWER_CURVE_LENGTH = 128;
 
 // fade-out: cos(t * pi/2), 1 -> 0
 const EQUAL_POWER_FADE_OUT = new Float32Array(EQUAL_POWER_CURVE_LENGTH).map((_, i) =>
@@ -394,17 +394,19 @@ export class Scheduler {
 
       gainNode.gain.setValueAtTime(Math.max(startGain, 0.0001), fadeStartCtx);
 
-      if (fade.type === FadeType.LINEAR) {
+      if (fade.type === FadeType.EQUAL_POWER) {
+        const duration = fadeEndCtx - fadeStartCtx;
+        if (duration > 0) {
+          const isFadeIn = fade.endGain > fade.startGain;
+          const fullCurve = isFadeIn ? EQUAL_POWER_FADE_IN : EQUAL_POWER_FADE_OUT;
+          // slice from the fraction we've already passed (mid-fade seek)
+          const startIdx = Math.round(fadeFraction * (EQUAL_POWER_CURVE_LENGTH - 1));
+          const curve = startIdx > 0 ? fullCurve.slice(startIdx) : fullCurve;
+          gainNode.gain.setValueCurveAtTime(curve, fadeStartCtx, duration);
+        }
+      } else if (fade.type === FadeType.LINEAR) {
         gainNode.gain.linearRampToValueAtTime(Math.max(fade.endGain, 0.0001), fadeEndCtx);
-      } else if (fade.type === FadeType.EQUAL_POWER) {
-        const isFadeIn = fade.endGain > fade.startGain;
-        const fullCurve = isFadeIn ? EQUAL_POWER_FADE_IN : EQUAL_POWER_FADE_OUT;
-        // slice from the fraction we've already passed (mid-fade seek)
-        const startIdx = Math.round(fadeFraction * (EQUAL_POWER_CURVE_LENGTH - 1));
-        const curve = startIdx > 0 ? fullCurve.slice(startIdx) : fullCurve;
-        gainNode.gain.setValueCurveAtTime(curve, fadeStartCtx, fadeEndCtx - fadeStartCtx);
       } else {
-        // exponentialRamp can't reach 0, so we use an epsilon
         gainNode.gain.exponentialRampToValueAtTime(Math.max(fade.endGain, 0.0001), fadeEndCtx);
       }
     }

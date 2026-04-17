@@ -1,8 +1,11 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
+import { FadeType } from '../../../types/Fade';
+import type { FadeType as FadeTypeValue } from '../../../types/Fade';
 import { useAudioEngine } from '../../audio/UseAudioEngine';
 import type { SfxClip } from '../../audio/types';
 import TimelineTicks from './TimelineTicks';
 import TimelineClip from './TimelineClip';
+import TransitionModal from '../TransitionModal';
 import '../../styles/timeline.css';
 
 // Zoom limits (px per second)
@@ -124,6 +127,15 @@ export default function Timeline({ sfxClips, onSfxChange }: TimelineProps) {
 
   // Music dragging
   const dragRef = useRef<DragState | null>(null);
+
+  // Transition modal state
+  const [transitionTarget, setTransitionTarget] = useState<{
+    fromEntryId: string;
+    fromTitle: string;
+    toEntryId: string;
+    toTitle: string;
+    maxDuration: number;
+  } | null>(null);
 
   const onMusicClipMouseDown = useCallback(
     (e: React.MouseEvent, entryId: string) => {
@@ -293,6 +305,103 @@ export default function Timeline({ sfxClips, onSfxChange }: TimelineProps) {
     };
   }, [commitMusicDrop, commitSfxDrop]);
 
+  // Right-clicking a music clip opens the TransitionModal for the nearest boundary.
+  const onClipContextMenu = useCallback(
+    (e: React.MouseEvent, entryId: string) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const idx = timeline.findIndex((en) => en.entryId === entryId);
+      if (idx === -1 || timeline.length < 2) return;
+
+      const entry = timeline[idx];
+      const scrollLeft = scrollRef.current?.scrollLeft ?? 0;
+      const rectLeft = scrollRef.current?.getBoundingClientRect().left ?? 0;
+      const clickCanvasPx = e.clientX - rectLeft + scrollLeft;
+      const clipLeftPx = entry.absoluteStart * pxPerSecRef.current;
+      const clipWidthPx = (entry.absoluteEnd - entry.absoluteStart) * pxPerSecRef.current;
+      const clickedLeftHalf = clickCanvasPx - clipLeftPx < clipWidthPx / 2;
+
+      let fromIdx: number;
+      let toIdx: number;
+
+      if (clickedLeftHalf && idx > 0) {
+        fromIdx = idx - 1;
+        toIdx = idx;
+      } else if (!clickedLeftHalf && idx < timeline.length - 1) {
+        fromIdx = idx;
+        toIdx = idx + 1;
+      } else if (idx > 0) {
+        fromIdx = idx - 1;
+        toIdx = idx;
+      } else {
+        fromIdx = idx;
+        toIdx = idx + 1;
+      }
+
+      const fromEntry = timeline[fromIdx];
+      const toEntry = timeline[toIdx];
+      const maxDur = Math.min(
+        fromEntry.absoluteEnd - fromEntry.absoluteStart,
+        toEntry.absoluteEnd - toEntry.absoluteStart,
+      );
+
+      setTransitionTarget({
+        fromEntryId: fromEntry.entryId,
+        fromTitle: fromEntry.title,
+        toEntryId: toEntry.entryId,
+        toTitle: toEntry.title,
+        maxDuration: maxDur,
+      });
+    },
+    [timeline],
+  );
+
+  // Clicking the crossfade overlap indicator opens the TransitionModal directly.
+  const onOverlapClick = useCallback(
+    (entryId: string) => {
+      const idx = timeline.findIndex((en) => en.entryId === entryId);
+      if (idx <= 0) return;
+
+      const fromEntry = timeline[idx - 1];
+      const toEntry = timeline[idx];
+      const maxDur = Math.min(
+        fromEntry.absoluteEnd - fromEntry.absoluteStart,
+        toEntry.absoluteEnd - toEntry.absoluteStart,
+      );
+
+      setTransitionTarget({
+        fromEntryId: fromEntry.entryId,
+        fromTitle: fromEntry.title,
+        toEntryId: toEntry.entryId,
+        toTitle: toEntry.title,
+        maxDuration: maxDur,
+      });
+    },
+    [timeline],
+  );
+
+  const handleTransitionApply = useCallback(
+    (duration: number, fadeOutType: FadeTypeValue, fadeInType: FadeTypeValue) => {
+      if (!transitionTarget) return;
+      engine.playlist.setTransition(
+        transitionTarget.fromEntryId,
+        transitionTarget.toEntryId,
+        duration,
+        fadeOutType,
+        fadeInType,
+      );
+      setTransitionTarget(null);
+    },
+    [engine, transitionTarget],
+  );
+
+  const handleTransitionRemove = useCallback(() => {
+    if (!transitionTarget) return;
+    engine.playlist.removeTransition(transitionTarget.fromEntryId, transitionTarget.toEntryId);
+    setTransitionTarget(null);
+  }, [engine, transitionTarget]);
+
   // The playhead will seek to where the user clicks on the ticks
   const handleTicksClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -415,6 +524,8 @@ export default function Timeline({ sfxClips, onSfxChange }: TimelineProps) {
                   overlapWidthPx={overlapWidthPx}
                   variant="music"
                   onMouseDown={onMusicClipMouseDown}
+                  onContextMenu={onClipContextMenu}
+                  onOverlapClick={onOverlapClick}
                 />
               );
             })}
@@ -455,6 +566,31 @@ export default function Timeline({ sfxClips, onSfxChange }: TimelineProps) {
           </div>
         </div>
       </div>
+
+      {transitionTarget &&
+        (() => {
+          const existing = engine.playlist
+            .getTransitions()
+            .find(
+              (t) =>
+                t.fromEntryId === transitionTarget.fromEntryId &&
+                t.toEntryId === transitionTarget.toEntryId,
+            );
+          return (
+            <TransitionModal
+              fromTitle={transitionTarget.fromTitle}
+              toTitle={transitionTarget.toTitle}
+              currentDuration={existing?.duration ?? 3}
+              currentFadeOutType={existing?.fadeOutType ?? FadeType.LINEAR}
+              currentFadeInType={existing?.fadeInType ?? FadeType.LINEAR}
+              maxDuration={transitionTarget.maxDuration}
+              hasExistingTransition={!!existing}
+              onApply={handleTransitionApply}
+              onRemove={handleTransitionRemove}
+              onClose={() => setTransitionTarget(null)}
+            />
+          );
+        })()}
     </div>
   );
 }
