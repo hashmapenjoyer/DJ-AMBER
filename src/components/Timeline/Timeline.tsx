@@ -3,6 +3,7 @@ import { FadeType } from '../../../types/Fade';
 import type { FadeType as FadeTypeValue } from '../../../types/Fade';
 import { useAudioEngine } from '../../audio/UseAudioEngine';
 import type { SfxClip } from '../../audio/types';
+import type { LibraryItem } from '../../../types/LibraryItem';
 import TimelineTicks from './TimelineTicks';
 import TimelineClip from './TimelineClip';
 import TransitionModal from '../TransitionModal';
@@ -38,10 +39,11 @@ type DragState = MusicDragState | SfxDragState;
 
 interface TimelineProps {
   sfxClips: SfxClip[];
+  libraryItems: LibraryItem[];
   onSfxChange: () => void;
 }
 
-export default function Timeline({ sfxClips, onSfxChange }: TimelineProps) {
+export default function Timeline({ sfxClips, libraryItems, onSfxChange }: TimelineProps) {
   const { engine, timeline } = useAudioEngine();
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -540,7 +542,7 @@ export default function Timeline({ sfxClips, onSfxChange }: TimelineProps) {
                 <TimelineClip
                   key={clip.id}
                   entryId={clip.id}
-                  title={clip.bufferId}
+                  title={libraryItems.find((i) => i.id === clip.bufferId)?.title ?? clip.bufferId}
                   leftPx={leftPx}
                   widthPx={widthPx}
                   pxPerSecond={pxPerSec}

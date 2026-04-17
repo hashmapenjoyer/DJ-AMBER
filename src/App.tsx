@@ -272,7 +272,7 @@ function App() {
         />
       </div>
       <div className="timeline-container">
-        <Timeline sfxClips={sfxClips} onSfxChange={handleSfxChange} />
+        <Timeline sfxClips={sfxClips} libraryItems={libraryItems} onSfxChange={handleSfxChange} />
       </div>
     </div>
   );
