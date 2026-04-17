@@ -64,27 +64,37 @@ function App() {
     const failures: string[] = [];
 
     for (const file of files) {
-      const isDuplicate =
-        libraryItems.some((item) => item.filename === file.name && item.category === category) ||
-        newItems.some((item) => item.filename === file.name);
-
-      if (isDuplicate) {
-        duplicates.push(file.name);
-        continue;
-      }
-
       try {
-        const bufferId = crypto.randomUUID();
-        const [arrayBuffer, { title, artist, coverUrl }] = await Promise.all([
-          file.arrayBuffer(),
+        // Read the raw bytes first — needed for both hashing and decoding.
+        const arrayBuffer = await file.arrayBuffer();
+
+        // Hash and metadata extraction can run in parallel.
+        const [hashBuffer, { title, artist, coverUrl }] = await Promise.all([
+          crypto.subtle.digest('SHA-256', arrayBuffer),
           extractMetadata(file),
         ]);
+
+        const hash = Array.from(new Uint8Array(hashBuffer))
+          .map((b) => b.toString(16).padStart(2, '0'))
+          .join('');
+
+        const isDuplicate =
+          libraryItems.some((item) => item.hash === hash && item.category === category) ||
+          newItems.some((item) => item.hash === hash);
+
+        if (isDuplicate) {
+          duplicates.push(file.name);
+          continue;
+        }
+
+        const bufferId = crypto.randomUUID();
         const audioBuffer = await engine.buffers.add(bufferId, arrayBuffer);
 
         newItems.push({
           id: bufferId,
           title,
           filename: file.name,
+          hash,
           artist,
           duration: Math.round(audioBuffer.duration),
           category,

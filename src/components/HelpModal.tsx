@@ -90,12 +90,28 @@ export default function HelpModal({ onClose }: HelpModalProps) {
                 <kbd>Spacebar</kbd> - Play/Pause
               </li>
               <li>
-                <kbd>Esc</kbd> - Close this help modal
+                <kbd>Esc</kbd> - Close this help modal / deselect clip
               </li>
               <li>
                 <kbd>Alt</kbd> + drag clip - Slip mode: let the clip overlap freely with the next
                 clip instead of pushing it along
               </li>
+              <li>
+                <kbd>Delete</kbd> / <kbd>Backspace</kbd> - Delete selected clip
+              </li>
+            </ul>
+          </section>
+
+          <section className="help-section">
+            <h3 className="help-section-title">Timeline Navigation</h3>
+            <ul className="help-shortcuts">
+              <li>
+                <kbd>Scroll</kbd> - Zoom in / out
+              </li>
+              <li>
+                <kbd>Shift</kbd> + <kbd>Scroll</kbd> - Pan earlier / later
+              </li>
+              <li>Horizontal trackpad swipe also pans the timeline</li>
             </ul>
           </section>
 
