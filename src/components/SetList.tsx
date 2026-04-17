@@ -161,6 +161,15 @@ export default function SetList({
   };
 
   const handleShuffleToggle = () => {
+    // Warn the user if shuffling will discard existing transitions.
+    if (engine.playlist.getTransitions().length > 0) {
+      const confirmed = window.confirm(
+        (!isShuffled ? 'Shuffling' : 'Restoring original order') +
+          ' will discard all transitions between tracks. Continue?',
+      );
+      if (!confirmed) return;
+    }
+
     // Capture current playback position before reordering changes the timeline.
     const currentEntry = engine.getCurrentEntry();
     const offsetWithinSong = currentEntry
