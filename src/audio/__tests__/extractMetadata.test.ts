@@ -107,64 +107,72 @@ describe('extractMetadataWithShazam', () => {
     vi.unstubAllGlobals();
   });
 
-  // --- Short-circuit: both tags present ---
+  // ── Case 1: both tags present, cover art embedded ────────────────────────
 
-  it('returns tag data and does NOT call fetch when both title and artist tags are present', async () => {
+  it('returns tag data immediately and does NOT call fetch when both tags and cover art are present', async () => {
+    const createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:embedded');
+    vi.mocked(mm.parseBlob).mockResolvedValue({
+      common: {
+        title: 'Tag Title',
+        artist: 'Tag Artist',
+        picture: [{ data: new Uint8Array([1]), format: 'image/jpeg' }],
+      },
+    } as any);
+
+    const result = await extractMetadataWithShazam(makeFile('song.mp3'));
+
+    expect(result.metadata.title).toBe('Tag Title');
+    expect(result.metadata.artist).toBe('Tag Artist');
+    expect(result.metadata.coverUrl).toBe('blob:embedded');
+    expect(result.shazamSuggestion).toBeUndefined();
+    expect(fetch).not.toHaveBeenCalled();
+    createObjectURLSpy.mockRestore();
+  });
+
+  // ── Case 1: both tags present, cover art missing -> silent search ─────────
+
+  it('silently searches for cover art by audio fingerprint when both tags are present but art is missing', async () => {
     vi.mocked(mm.parseBlob).mockResolvedValue({
       common: { title: 'Tag Title', artist: 'Tag Artist' },
     } as any);
-
-    const meta = await extractMetadataWithShazam(makeFile('song.mp3'));
-
-    expect(meta.title).toBe('Tag Title');
-    expect(meta.artist).toBe('Tag Artist');
-    expect(fetch).not.toHaveBeenCalled();
-  });
-
-  // --- Shazam called: title tag missing ---
-
-  it('calls fetch and fills title from Shazam when title tag is absent', async () => {
-    vi.mocked(mm.parseBlob).mockResolvedValue({
-      common: { artist: 'Tag Artist' },
-    } as any);
     vi.mocked(fetch as any).mockResolvedValue({
       ok: true,
-      json: async () => ({ title: 'Shazam Title', artist: 'Shazam Artist', coverUrl: null }),
+      json: async () => ({ coverUrl: 'https://example.com/cover.jpg' }),
     });
 
-    const meta = await extractMetadataWithShazam(makeFile('song.mp3'));
+    const result = await extractMetadataWithShazam(makeFile('song.mp3'));
 
+    // Should call /api/shazam/search with the audio file, not /api/shazam
     expect(fetch).toHaveBeenCalledOnce();
-    expect(meta.title).toBe('Shazam Title');
-    // Tag artist should be preserved over the Shazam artist
-    expect(meta.artist).toBe('Tag Artist');
+    const [url, init] = vi.mocked(fetch as any).mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('/api/shazam/search');
+    expect(init.body).toBeInstanceOf(FormData);
+
+    expect(result.metadata.title).toBe('Tag Title');
+    expect(result.metadata.artist).toBe('Tag Artist');
+    expect(result.metadata.coverUrl).toBe('https://example.com/cover.jpg');
+    // No user confirmation needed - only cover art is used from the result
+    expect(result.shazamSuggestion).toBeUndefined();
   });
 
-  // --- Shazam called: artist tag missing ---
-
-  it('calls fetch and fills artist from Shazam when artist tag is absent', async () => {
+  it('returns no coverUrl and no suggestion when cover art search server is unavailable', async () => {
     vi.mocked(mm.parseBlob).mockResolvedValue({
-      common: { title: 'Tag Title' },
+      common: { title: 'Tag Title', artist: 'Tag Artist' },
     } as any);
-    vi.mocked(fetch as any).mockResolvedValue({
-      ok: true,
-      json: async () => ({ title: 'Shazam Title', artist: 'Shazam Artist', coverUrl: null }),
-    });
+    vi.mocked(fetch as any).mockRejectedValue(new Error('Failed to fetch'));
 
-    const meta = await extractMetadataWithShazam(makeFile('song.mp3'));
+    const result = await extractMetadataWithShazam(makeFile('song.mp3'));
 
-    expect(fetch).toHaveBeenCalledOnce();
-    // Tag title should be preserved over the Shazam title
-    expect(meta.title).toBe('Tag Title');
-    expect(meta.artist).toBe('Shazam Artist');
+    expect(result.metadata.title).toBe('Tag Title');
+    expect(result.metadata.artist).toBe('Tag Artist');
+    expect(result.metadata.coverUrl).toBeUndefined();
+    expect(result.shazamSuggestion).toBeUndefined();
   });
 
-  // --- Shazam called: both tags missing ---
+  // ── Case 2: missing tags → fingerprint -> suggestion returned ─────────────
 
-  it('uses Shazam title and artist when both tags are absent', async () => {
-    vi.mocked(mm.parseBlob).mockResolvedValue({
-      common: {},
-    } as any);
+  it('fingerprints and returns a shazamSuggestion when both tags are missing', async () => {
+    vi.mocked(mm.parseBlob).mockResolvedValue({ common: {} } as any);
     vi.mocked(fetch as any).mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -174,21 +182,97 @@ describe('extractMetadataWithShazam', () => {
       }),
     });
 
-    const meta = await extractMetadataWithShazam(makeFile('song.mp3'));
+    const result = await extractMetadataWithShazam(makeFile('unknown.mp3'));
 
-    expect(meta.title).toBe('Shazam Title');
-    expect(meta.artist).toBe('Shazam Artist');
-    expect(meta.coverUrl).toBe('https://example.com/cover.jpg');
+    // metadata uses safe fallbacks
+    expect(result.metadata.title).toBe('unknown');
+    expect(result.metadata.artist).toBe('Unknown Artist');
+    // suggestion is present for user to confirm
+    expect(result.shazamSuggestion).toBeDefined();
+    expect(result.shazamSuggestion?.title).toBe('Shazam Title');
+    expect(result.shazamSuggestion?.artist).toBe('Shazam Artist');
+    expect(result.shazamSuggestion?.coverUrl).toBe('https://example.com/cover.jpg');
   });
 
-  // --- Embedded cover art takes priority over Shazam cover ---
+  it('fingerprints when title tag is missing even if artist tag is present', async () => {
+    vi.mocked(mm.parseBlob).mockResolvedValue({
+      common: { artist: 'Tag Artist' },
+    } as any);
+    vi.mocked(fetch as any).mockResolvedValue({
+      ok: true,
+      json: async () => ({ title: 'Shazam Title', artist: 'Shazam Artist', coverUrl: null }),
+    });
 
-  it('prefers embedded cover art over Shazam coverUrl', async () => {
+    const result = await extractMetadataWithShazam(makeFile('partial.mp3'));
+
+    // Safe fallback in metadata (tag artist preserved, filename used for title)
+    expect(result.metadata.title).toBe('partial');
+    expect(result.metadata.artist).toBe('Tag Artist');
+    // Shazam suggestion surfaced for confirmation
+    expect(result.shazamSuggestion?.title).toBe('Shazam Title');
+  });
+
+  it('fingerprints when artist tag is missing even if title tag is present', async () => {
+    vi.mocked(mm.parseBlob).mockResolvedValue({
+      common: { title: 'Tag Title' },
+    } as any);
+    vi.mocked(fetch as any).mockResolvedValue({
+      ok: true,
+      json: async () => ({ title: 'Shazam Title', artist: 'Shazam Artist', coverUrl: null }),
+    });
+
+    const result = await extractMetadataWithShazam(makeFile('partial.mp3'));
+
+    expect(result.metadata.title).toBe('Tag Title');
+    expect(result.metadata.artist).toBe('Unknown Artist');
+    expect(result.shazamSuggestion?.artist).toBe('Shazam Artist');
+  });
+
+  // ── Case 2: fingerprint returns no result -> no suggestion ────────────────
+
+  it('returns no suggestion when fingerprinting server returns 404', async () => {
+    vi.mocked(mm.parseBlob).mockResolvedValue({ common: {} } as any);
+    vi.mocked(fetch as any).mockResolvedValue({ ok: false });
+
+    const result = await extractMetadataWithShazam(makeFile('obscure.mp3'));
+
+    expect(result.metadata.title).toBe('obscure');
+    expect(result.metadata.artist).toBe('Unknown Artist');
+    expect(result.shazamSuggestion).toBeUndefined();
+  });
+
+  it('returns no suggestion when fingerprinting server is unavailable', async () => {
+    vi.mocked(mm.parseBlob).mockResolvedValue({ common: {} } as any);
+    vi.mocked(fetch as any).mockRejectedValue(new Error('Failed to fetch'));
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const result = await extractMetadataWithShazam(makeFile('offline.mp3'));
+
+    expect(result.metadata.title).toBe('offline');
+    expect(result.metadata.artist).toBe('Unknown Artist');
+    expect(result.shazamSuggestion).toBeUndefined();
+    warnSpy.mockRestore();
+  });
+
+  it('returns no suggestion when Shazam response has no title', async () => {
+    vi.mocked(mm.parseBlob).mockResolvedValue({ common: {} } as any);
+    vi.mocked(fetch as any).mockResolvedValue({
+      ok: true,
+      json: async () => ({ title: null, artist: 'Shazam Artist', coverUrl: null }),
+    });
+
+    const result = await extractMetadataWithShazam(makeFile('unrecognized.mp3'));
+
+    expect(result.shazamSuggestion).toBeUndefined();
+  });
+
+  // ── Embedded cover art is preserved in metadata regardless of Shazam ─────
+
+  it('keeps embedded cover art in metadata even when fingerprinting', async () => {
     const createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:embedded');
     vi.mocked(mm.parseBlob).mockResolvedValue({
       common: {
-        title: 'T',
-        picture: [{ data: new Uint8Array([1, 2, 3]), format: 'image/jpeg' }],
+        picture: [{ data: new Uint8Array([1]), format: 'image/jpeg' }],
       },
     } as any);
     vi.mocked(fetch as any).mockResolvedValue({
@@ -196,82 +280,23 @@ describe('extractMetadataWithShazam', () => {
       json: async () => ({
         title: 'Shazam Title',
         artist: 'Shazam Artist',
-        coverUrl: 'https://example.com/shazam-cover.jpg',
+        coverUrl: 'https://example.com/shazam.jpg',
       }),
     });
 
-    const meta = await extractMetadataWithShazam(makeFile('song.mp3'));
+    const result = await extractMetadataWithShazam(makeFile('art.mp3'));
 
-    expect(meta.coverUrl).toBe('blob:embedded');
+    // Embedded art stays in metadata; Shazam art is in the suggestion only
+    expect(result.metadata.coverUrl).toBe('blob:embedded');
+    expect(result.shazamSuggestion?.coverUrl).toBe('https://example.com/shazam.jpg');
     createObjectURLSpy.mockRestore();
   });
 
-  // --- Graceful degradation: server not running ---
-
-  it('falls back to filename + Unknown Artist when fetch rejects (server not running)', async () => {
-    vi.mocked(mm.parseBlob).mockResolvedValue({ common: {} } as any);
-    vi.mocked(fetch as any).mockRejectedValue(new Error('Failed to fetch'));
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-    const meta = await extractMetadataWithShazam(makeFile('my-song.mp3'));
-
-    expect(meta.title).toBe('my-song');
-    expect(meta.artist).toBe('Unknown Artist');
-    expect(meta.coverUrl).toBeUndefined();
-    warnSpy.mockRestore();
-  });
-
-  // --- Graceful degradation: server returns non-ok status ---
-
-  it('falls back to filename + Unknown Artist when Shazam server returns a non-ok response', async () => {
-    vi.mocked(mm.parseBlob).mockResolvedValue({ common: {} } as any);
-    vi.mocked(fetch as any).mockResolvedValue({ ok: false });
-
-    const meta = await extractMetadataWithShazam(makeFile('unknown-track.wav'));
-
-    expect(meta.title).toBe('unknown-track');
-    expect(meta.artist).toBe('Unknown Artist');
-  });
-
-  // --- Graceful degradation: partial Shazam response ---
-
-  it('falls back to filename when Shazam title is null', async () => {
-    vi.mocked(mm.parseBlob).mockResolvedValue({ common: {} } as any);
-    vi.mocked(fetch as any).mockResolvedValue({
-      ok: true,
-      json: async () => ({ title: null, artist: 'Shazam Artist', coverUrl: null }),
-    });
-
-    const meta = await extractMetadataWithShazam(makeFile('my-track.flac'));
-
-    expect(meta.title).toBe('my-track');
-    expect(meta.artist).toBe('Shazam Artist');
-  });
-
-  // --- Graceful degradation: parseBlob rejects, Shazam succeeds ---
-
-  it('still tries Shazam and returns its data when tag parsing throws', async () => {
+  it('never rejects - always resolves to a MetadataResult', async () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     vi.mocked(mm.parseBlob).mockRejectedValue(new Error('parse error'));
-    vi.mocked(fetch as any).mockResolvedValue({
-      ok: true,
-      json: async () => ({ title: 'Shazam Title', artist: 'Shazam Artist', coverUrl: null }),
-    });
-
-    const meta = await extractMetadataWithShazam(makeFile('corrupt.mp3'));
-
-    expect(meta.title).toBe('Shazam Title');
-    expect(meta.artist).toBe('Shazam Artist');
-    errorSpy.mockRestore();
-  });
-
-  // --- Does not throw in any failure scenario ---
-
-  it('never rejects - always resolves to a TrackMetadata object', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    vi.mocked(mm.parseBlob).mockRejectedValue(new Error('boom'));
-    vi.mocked(fetch as any).mockRejectedValue(new Error('also boom'));
+    vi.mocked(fetch as any).mockRejectedValue(new Error('network error'));
 
     await expect(extractMetadataWithShazam(makeFile('a.mp3'))).resolves.toBeDefined();
     errorSpy.mockRestore();

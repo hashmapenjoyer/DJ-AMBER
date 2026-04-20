@@ -6,7 +6,6 @@ import NowPlaying from './components/NowPlaying';
 import SetList from './components/SetList';
 import Timeline from './components/Timeline/Timeline';
 import { useAudioEngine } from './audio/UseAudioEngine';
-// import { extractMetadata } from './audio/extractMetadata';
 import { extractMetadataWithShazam } from './audio/extractMetadata';
 import type { SetListRecord } from '../types/SetListRecord';
 import type { LibraryItem } from '../types/LibraryItem';
@@ -25,24 +24,18 @@ function App() {
   const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([]);
   const [sfxClips, setSfxClips] = useState(() => [...engine.sfx.getClips()]);
 
-  // Called by Timeline after a drag-drop repositions an SFX clip, and by
-  // handleAddSfxToTimeline after adding one from the library.
   const handleSfxChange = () => setSfxClips([...engine.sfx.getClips()]);
 
   // --- Keyboard Shortcuts ---
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      // Ignore shortcuts if the user is typing in an input or textarea
       const isTyping =
         e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement;
       if (isTyping) return;
 
-      // Spacebar: Play/Pause
       if (e.code === 'Space') {
-        e.preventDefault(); // Prevents the page from jumping down
-
+        e.preventDefault();
         const state = engine.transport.getState();
-
         if (state === 'playing') {
           engine.transport.pause();
         } else {
@@ -63,19 +56,16 @@ function App() {
     const duplicates: string[] = [];
     const failures: string[] = [];
 
-    // Snapshot existing hashes once so we don't restart the scan as items stream in
     const existingHashes = new Set(
       libraryItems.filter((item) => item.category === category).map((item) => item.hash),
     );
-    // Claimed within this batch, prevents two identical files from both being added
     const claimedHashes = new Set<string>();
 
     const processFile = async (file: File): Promise<void> => {
       try {
-        // Read the raw bytes first - needed for both hashing and decoding.
         const arrayBuffer = await file.arrayBuffer();
 
-        const [hashBuffer, { title, artist, coverUrl }] = await Promise.all([
+        const [hashBuffer, { metadata, shazamSuggestion }] = await Promise.all([
           crypto.subtle.digest('SHA-256', arrayBuffer),
           extractMetadataWithShazam(file),
         ]);
@@ -95,17 +85,17 @@ function App() {
 
         const newItem: LibraryItem = {
           id: bufferId,
-          title,
+          title: metadata.title,
           filename: file.name,
           hash,
-          artist,
+          artist: metadata.artist,
           duration: Math.round(audioBuffer.duration),
           category,
-          coverUrl,
+          coverUrl: metadata.coverUrl,
+          // Only present when Shazam fingerprinted the file - user must confirm.
+          shazamSuggestion,
         };
 
-        // Stream results into the library as each file finishes rather than
-        // waiting for the whole batch
         setLibraryItems((prev) => [...prev, newItem]);
       } catch {
         failures.push(file.name);
@@ -117,7 +107,6 @@ function App() {
     if (duplicates.length > 0) {
       window.alert(`Skipped duplicate(s): ${duplicates.join(', ')}`);
     }
-
     if (failures.length > 0) {
       window.alert(
         `Could not decode: ${failures.join(', ')}\nMake sure the files are valid audio.`,
@@ -187,8 +176,45 @@ function App() {
     setLibraryItems((prev) =>
       prev.map((item) => (item.id === id ? { ...item, title: newTitle } : item)),
     );
-
     engine.playlist.updateTitleByBufferId(id, newTitle);
+  };
+
+  // --- Shazam suggestion handlers ---
+
+  /**
+   * Applies the Shazam suggestion to the library item and clears the pending
+   * suggestion.  The playlist entry title is updated to match if the item is
+   * already in the active set list.
+   */
+  const handleAcceptShazam = (id: string) => {
+    setLibraryItems((prev) =>
+      prev.map((item) => {
+        if (item.id !== id || !item.shazamSuggestion) return item;
+        return {
+          ...item,
+          title: item.shazamSuggestion.title,
+          artist: item.shazamSuggestion.artist,
+          coverUrl: item.shazamSuggestion.coverUrl ?? undefined,
+          shazamSuggestion: undefined,
+        };
+      }),
+    );
+
+    // Keep the active playlist in sync with the accepted title.
+    const item = libraryItems.find((i) => i.id === id);
+    if (item?.shazamSuggestion) {
+      engine.playlist.updateTitleByBufferId(id, item.shazamSuggestion.title);
+    }
+  };
+
+  /**
+   * Discards the Shazam suggestion and keeps the existing tag / filename
+   * values.  Nothing is written to the item's title, artist, or coverUrl.
+   */
+  const handleDismissShazam = (id: string) => {
+    setLibraryItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, shazamSuggestion: undefined } : item)),
+    );
   };
 
   // --- Set list handlers ---
@@ -227,7 +253,6 @@ function App() {
       name: `Set List ${setLists.length + 1}`,
       tracks: [],
     };
-
     loadSetListIntoEngine(newSetList);
     setSetLists((prev) => [...prev, newSetList]);
     setActiveSetListId(newId);
@@ -237,7 +262,6 @@ function App() {
     if (id === activeSetListId) return;
     const target = setLists.find((sl) => sl.id === id);
     if (!target) return;
-
     loadSetListIntoEngine(target);
     setActiveSetListId(id);
   };
@@ -248,10 +272,8 @@ function App() {
 
   const handleDeleteSetList = (id: string) => {
     if (setLists.length <= 1) return;
-
     const remaining = setLists.filter((sl) => sl.id !== id);
     setSetLists(remaining);
-
     if (id === activeSetListId) {
       const next = remaining[0];
       loadSetListIntoEngine(next);
@@ -275,6 +297,8 @@ function App() {
           onAddToSetList={handleAddToSetList}
           onAddSfxToTimeline={handleAddSfxToTimeline}
           onRename={handleLibraryRename}
+          onAcceptShazam={handleAcceptShazam}
+          onDismissShazam={handleDismissShazam}
         />
         <NowPlaying libraryItems={libraryItems} />
         <SetList

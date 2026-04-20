@@ -1,4 +1,5 @@
 import * as mm from 'music-metadata-browser';
+import type { ShazamSuggestion } from '../../types/LibraryItem';
 
 function stripExtension(filename: string): string {
   return filename.replace(/\.[^/.]+$/, '');
@@ -10,20 +11,31 @@ export interface TrackMetadata {
   coverUrl?: string;
 }
 
+/**
+ * Returned by extractMetadataWithShazam.
+ *
+ * `metadata` is always safe to display immediately - it contains tag values
+ * with filename / "Unknown Artist" fallbacks applied.
+ *
+ * `shazamSuggestion` is present only when Shazam fingerprinted the file and
+ * returned a result.  The caller should surface this to the user for
+ * confirmation before overwriting `metadata`, because fingerprinting can
+ * misidentify songs.
+ */
+export interface MetadataResult {
+  metadata: TrackMetadata;
+  shazamSuggestion?: ShazamSuggestion;
+}
+
 interface TagResult {
-  /** Title from the embedded tag, or undefined if absent. */
   tagTitle: string | undefined;
-  /** Artist from the embedded tag, or undefined if absent. */
   tagArtist: string | undefined;
-  /** Object URL for the embedded cover art, or undefined if absent. */
   coverUrl: string | undefined;
 }
 
 /**
- * Parses ID3/Vorbis/etc. tags from `file` and returns the raw tag values
- * without applying any fallbacks.  Callers decide what to do with gaps.
- *
- * Resolves to all-undefined fields (never rejects) when parsing fails.
+ * Parses embedded tags without applying any fallbacks.
+ * Never rejects - returns all-undefined fields on failure.
  */
 async function parseTags(file: File): Promise<TagResult> {
   try {
@@ -48,9 +60,63 @@ async function parseTags(file: File): Promise<TagResult> {
 }
 
 /**
- * Attempts to read ID3/Vorbis/etc. tags from an audio File.
- * Falls back to the stripped filename and 'Unknown Artist' when tags are
- * absent (e.g. WAV files) or parsing fails.
+ * Asks the local Shazam server to fetch cover art for a file whose title and
+ * artist are already known from embedded tags.  The server fingerprints the
+ * audio and returns only the cover art URL - it never overwrites the title or
+ * artist, so a misidentification cannot corrupt metadata the user already has.
+ *
+ * Returns null silently on any failure (server not running, not found, etc.).
+ */
+async function fetchCoverArtBySearch(file: File): Promise<string | null> {
+  try {
+    const formData = new FormData();
+    formData.append('audio', file, file.name);
+    const response = await fetch('/api/shazam/search', { method: 'POST', body: formData });
+    if (!response.ok) return null;
+    const data = (await response.json()) as { coverUrl: string | null };
+    return data.coverUrl ?? null;
+  } catch {
+    // Server not running - not an error the user needs to see.
+    return null;
+  }
+}
+
+/**
+ * Asks the local Shazam server to fingerprint the file.
+ * Returns null silently on any failure.
+ */
+async function fetchShazamFingerprint(file: File): Promise<ShazamSuggestion | null> {
+  try {
+    const formData = new FormData();
+    formData.append('audio', file, file.name);
+
+    const response = await fetch('/api/shazam', { method: 'POST', body: formData });
+    if (!response.ok) return null;
+
+    const data = (await response.json()) as {
+      title: string | null;
+      artist: string | null;
+      coverUrl: string | null;
+    };
+
+    // Only treat it as a successful identification if we got at least a title.
+    if (!data.title) return null;
+
+    return {
+      title: data.title,
+      artist: data.artist ?? 'Unknown Artist',
+      coverUrl: data.coverUrl,
+    };
+  } catch (err) {
+    console.warn('[extractMetadataWithShazam] Shazam server unavailable:', err);
+    return null;
+  }
+}
+
+/**
+ * Reads embedded tags and applies filename / "Unknown Artist" fallbacks.
+ * Never calls the network.  Behaviour is identical to the original
+ * extractMetadata implementation.
  */
 export async function extractMetadata(file: File): Promise<TrackMetadata> {
   const { tagTitle, tagArtist, coverUrl } = await parseTags(file);
@@ -61,60 +127,58 @@ export async function extractMetadata(file: File): Promise<TrackMetadata> {
   };
 }
 
-interface ShazamPayload {
-  title: string | null;
-  artist: string | null;
-  coverUrl: string | null;
-}
-
 /**
- * Like `extractMetadata`, but when either the title or the artist tag is
- * absent it also tries the optional local Shazam server at `/api/shazam`.
+ * Smart metadata extraction with optional Shazam assistance.
  *
- * If the server is not running (or returns an error) this function catches
- * the failure silently and returns the same filename/Unknown-Artist fallback
- * as `extractMetadata`, so callers don't need to handle a different error
- * surface.
+ * Strategy:
  *
- * Tag values always win over Shazam values when both are available, so a
- * file that has a title tag but no artist tag keeps its embedded title while
- * filling the artist from Shazam.
+ * 1. Both title AND artist present in tags
+ *    - Use tag values directly.
+ *    - If cover art is also embedded, done.
+ *    - If cover art is missing, silently search Shazam by title + artist
+ *      (low misidentification risk since we already know the song identity).
+ *    - Returns no shazamSuggestion - nothing for the user to confirm.
+ *
+ * 2. Title OR artist (or both) missing from tags
+ *    - Fingerprint the audio via the Shazam server.
+ *    - Keep tag values for any fields that were present.
+ *    - Apply filename / "Unknown Artist" fallbacks for missing fields.
+ *    - If Shazam identified the song, attach the result as shazamSuggestion
+ *      for the user to accept or dismiss - never apply it silently.
+ *    - Returns shazamSuggestion when Shazam succeeded.
+ *
+ * In all cases the returned `metadata` is immediately safe to display.
+ * If the Shazam server is not running, every path degrades gracefully to
+ * the same result as extractMetadata().
  */
-export async function extractMetadataWithShazam(file: File): Promise<TrackMetadata> {
-  const { tagTitle, tagArtist, coverUrl } = await parseTags(file);
+export async function extractMetadataWithShazam(file: File): Promise<MetadataResult> {
+  const { tagTitle, tagArtist, coverUrl: embeddedCoverUrl } = await parseTags(file);
 
-  // Both fields present in tags - no need to hit the network at all.
+  // --- Case 1: both identity fields are present in tags ---
   if (tagTitle !== undefined && tagArtist !== undefined) {
-    return { title: tagTitle, artist: tagArtist, coverUrl };
-  }
+    let coverUrl = embeddedCoverUrl;
 
-  // At least one field is missing; ask the Shazam server.
-  try {
-    const formData = new FormData();
-    formData.append('audio', file, file.name);
-
-    const response = await fetch('/api/shazam', { method: 'POST', body: formData });
-
-    if (response.ok) {
-      const data = (await response.json()) as ShazamPayload;
-      return {
-        // Tag value wins; Shazam fills gaps; filename is the last resort.
-        title: tagTitle ?? data.title ?? stripExtension(file.name),
-        artist: tagArtist ?? data.artist ?? 'Unknown Artist',
-        // Prefer embedded art; fall back to Shazam's CDN URL if present.
-        coverUrl: coverUrl ?? data.coverUrl ?? undefined,
-      };
+    // Silently try to fill missing cover art via a title+artist search.
+    // This is safe because we are doing a lookup, not a fingerprint.
+    if (!coverUrl) {
+      const searched = await fetchCoverArtBySearch(file);
+      coverUrl = searched ?? undefined;
     }
-  } catch (err) {
-    // Network error = server not running.  Warn and continue to fallback.
-    console.warn('[extractMetadataWithShazam] Shazam server unavailable, using fallback:', err);
+
+    return { metadata: { title: tagTitle, artist: tagArtist, coverUrl } };
   }
 
-  // Final fallback -
-  // - identical behaviour to extractMetadata.
-  return {
+  // --- Case 2: at least one identity field is missing - fingerprint ---
+  const suggestion = await fetchShazamFingerprint(file);
+
+  const metadata: TrackMetadata = {
     title: tagTitle ?? stripExtension(file.name),
     artist: tagArtist ?? 'Unknown Artist',
-    coverUrl,
+    coverUrl: embeddedCoverUrl,
+  };
+
+  return {
+    metadata,
+    shazamSuggestion: suggestion ?? undefined,
   };
 }

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { LibraryItem } from '../../types/LibraryItem';
 import { formatDuration } from '../../types/FormatDuration';
+import '../styles/music-library-shazam.css';
 
 type Tab = 'music' | 'sfx';
 
@@ -11,6 +12,8 @@ interface MusicLibraryProps {
   onAddToSetList: (id: string) => void;
   onAddSfxToTimeline: (id: string) => void;
   onRename: (id: string, newTitle: string) => void;
+  onAcceptShazam: (id: string) => void;
+  onDismissShazam: (id: string) => void;
 }
 
 export default function MusicLibrary({
@@ -20,6 +23,8 @@ export default function MusicLibrary({
   onAddToSetList,
   onAddSfxToTimeline,
   onRename,
+  onAcceptShazam,
+  onDismissShazam,
 }: MusicLibraryProps) {
   const [activeTab, setActiveTab] = useState<Tab>('music');
   const [searchQuery, setSearchQuery] = useState('');
@@ -41,7 +46,6 @@ export default function MusicLibrary({
     .filter((item) => item.category === activeTab)
     .filter((item) => item.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
-  // Auto-focus the rename input whenever rename mode activates
   useEffect(() => {
     if (renamingId !== null) {
       renameInputRef.current?.focus();
@@ -70,13 +74,11 @@ export default function MusicLibrary({
   };
 
   const handleTitleDoubleClick = (e: React.MouseEvent, item: LibraryItem) => {
-    // Prevent the <li>'s onDoubleClick (add to set list) from also firing
     e.stopPropagation();
     startRenaming(item);
   };
 
   const handleTitleContextMenu = (e: React.MouseEvent, item: LibraryItem) => {
-    // Suppress the browser's native context menu and enter rename mode instead
     e.preventDefault();
     e.stopPropagation();
     startRenaming(item);
@@ -147,56 +149,104 @@ export default function MusicLibrary({
         ) : (
           <ul className="library-list">
             {filteredItems.map((item) => (
-              <li
-                key={item.id}
-                className="library-item"
-                onDoubleClick={() => onAddToSetList(item.id)}
-              >
-                <span className="library-item-icon">
-                  {item.category === 'music' ? '\u266A' : '\u26A1'}
-                </span>
-
-                {renamingId === item.id ? (
-                  <input
-                    ref={renameInputRef}
-                    className="library-item-rename-input"
-                    type="text"
-                    value={renameValue}
-                    onChange={(e) => setRenameValue(e.target.value)}
-                    onKeyDown={handleRenameKeyDown}
-                    onBlur={commitRename}
-                    aria-label={`Rename ${item.title}`}
-                  />
-                ) : (
-                  <span
-                    className="library-item-title"
-                    onDoubleClick={(e) => handleTitleDoubleClick(e, item)}
-                    onContextMenu={(e) => handleTitleContextMenu(e, item)}
-                    title="Double-click or right-click to rename"
-                  >
-                    {item.title}
+              <li key={item.id} className="library-item-wrapper">
+                <div className="library-item" onDoubleClick={() => onAddToSetList(item.id)}>
+                  <span className="library-item-icon">
+                    {item.category === 'music' ? '\u266A' : '\u26A1'}
                   </span>
-                )}
 
-                <div className="library-item-actions">
-                  <button
-                    className="library-action-btn library-add-btn"
-                    onClick={() => handleAddItem(item.id)}
-                    title={activeTab === 'sfx' ? 'Add to SFX timeline' : 'Add to set list'}
-                    aria-label={`Add ${item.title} to ${activeTab === 'sfx' ? 'SFX timeline' : 'set list'}`}
-                  >
-                    +
-                  </button>
-                  <button
-                    className="library-action-btn library-delete-btn"
-                    onClick={() => onDelete(item.id)}
-                    title="Remove from library"
-                    aria-label={`Delete ${item.title}`}
-                  >
-                    {'\u{1F5D1}'}
-                  </button>
-                  <span className="library-item-duration">{formatDuration(item.duration)}</span>
+                  {renamingId === item.id ? (
+                    <input
+                      ref={renameInputRef}
+                      className="library-item-rename-input"
+                      type="text"
+                      value={renameValue}
+                      onChange={(e) => setRenameValue(e.target.value)}
+                      onKeyDown={handleRenameKeyDown}
+                      onBlur={commitRename}
+                      aria-label={`Rename ${item.title}`}
+                    />
+                  ) : (
+                    <span
+                      className="library-item-title"
+                      onDoubleClick={(e) => handleTitleDoubleClick(e, item)}
+                      onContextMenu={(e) => handleTitleContextMenu(e, item)}
+                      title="Double-click or right-click to rename"
+                    >
+                      {item.title}
+                    </span>
+                  )}
+
+                  <div className="library-item-actions">
+                    <button
+                      className="library-action-btn library-add-btn"
+                      onClick={() => handleAddItem(item.id)}
+                      title={activeTab === 'sfx' ? 'Add to SFX timeline' : 'Add to set list'}
+                      aria-label={`Add ${item.title} to ${activeTab === 'sfx' ? 'SFX timeline' : 'set list'}`}
+                    >
+                      +
+                    </button>
+                    <button
+                      className="library-action-btn library-delete-btn"
+                      onClick={() => onDelete(item.id)}
+                      title="Remove from library"
+                      aria-label={`Delete ${item.title}`}
+                    >
+                      {'\u{1F5D1}'}
+                    </button>
+                    <span className="library-item-duration">{formatDuration(item.duration)}</span>
+                  </div>
                 </div>
+
+                {item.shazamSuggestion && (
+                  <div
+                    className="shazam-suggestion"
+                    role="region"
+                    aria-label="Shazam identification suggestion"
+                  >
+                    {item.shazamSuggestion.coverUrl ? (
+                      <img
+                        className="shazam-suggestion__cover"
+                        src={item.shazamSuggestion.coverUrl}
+                        alt={`Cover art for ${item.shazamSuggestion.title}`}
+                      />
+                    ) : (
+                      <div className="shazam-suggestion__cover--placeholder" aria-hidden="true">
+                        {'\u{1F3B5}'}
+                      </div>
+                    )}
+
+                    <div className="shazam-suggestion__body">
+                      <div className="shazam-suggestion__label">Shazam identified this as</div>
+                      <div className="shazam-suggestion__title" title={item.shazamSuggestion.title}>
+                        {item.shazamSuggestion.title}
+                      </div>
+                      <div
+                        className="shazam-suggestion__artist"
+                        title={item.shazamSuggestion.artist}
+                      >
+                        {item.shazamSuggestion.artist}
+                      </div>
+                    </div>
+
+                    <div className="shazam-suggestion__actions">
+                      <button
+                        className="btn btn-success btn-sm"
+                        onClick={() => onAcceptShazam(item.id)}
+                        aria-label={`Accept Shazam identification: ${item.shazamSuggestion.title} by ${item.shazamSuggestion.artist}`}
+                      >
+                        ✓ Accept
+                      </button>
+                      <button
+                        className="btn btn-outline btn-sm"
+                        onClick={() => onDismissShazam(item.id)}
+                        aria-label="Dismiss Shazam identification"
+                      >
+                        ✗ Dismiss
+                      </button>
+                    </div>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
