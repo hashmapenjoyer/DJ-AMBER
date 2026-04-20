@@ -5,8 +5,29 @@ import os from 'os';
 import path from 'path';
 import { createRequire } from 'module';
 
+interface ShazamImages {
+  coverart?: string;
+  coverarthq?: string;
+}
+
+interface ShazamTrack {
+  title?: string;
+  subtitle?: string; // Shazam's raw API field for the artist name
+  images?: ShazamImages;
+}
+
+interface ShazamRecogniseResult {
+  track?: ShazamTrack;
+}
+
+interface ShazamInstance {
+  recognise(filePath: string, language: string): Promise<ShazamRecogniseResult>;
+}
+
+// node-shazam is a CommonJS module - use createRequire to load it from ESM.
 const require = createRequire(import.meta.url);
-const { Shazam } = require('node-shazam');
+const shazamModule = require('node-shazam') as Record<string, unknown>;
+const ShazamConstructor = shazamModule['Shazam'] as new () => ShazamInstance;
 
 const app = express();
 const PORT = 3001;
@@ -17,7 +38,7 @@ app.use(express.json());
 // Shazam needs a file path rather than a buffer.
 const upload = multer({ storage: multer.memoryStorage() });
 
-const shazam = new Shazam();
+const shazam: ShazamInstance = new ShazamConstructor();
 
 interface ShazamResponse {
   title: string | null;
@@ -28,12 +49,12 @@ interface ShazamResponse {
 async function recogniseBuffer(
   buffer: Buffer,
   originalName: string,
-): Promise<Record<string, unknown> | null> {
+): Promise<ShazamRecogniseResult> {
   const safeName = path.basename(originalName).replace(/[^a-zA-Z0-9._-]/g, '_');
   const tmpPath = path.join(os.tmpdir(), `shazam-${Date.now()}-${safeName}`);
   try {
     fs.writeFileSync(tmpPath, buffer);
-    return (await shazam.recognise(tmpPath, 'en-US')) as Record<string, unknown>;
+    return await shazam.recognise(tmpPath, 'en-US');
   } finally {
     try {
       fs.unlinkSync(tmpPath);
@@ -56,7 +77,7 @@ app.post('/api/shazam', upload.single('audio'), async (req, res) => {
 
     console.log('[shazam-server] Fingerprint raw result:', JSON.stringify(result, null, 2));
 
-    const track = (result as any)?.track;
+    const track = result.track;
 
     if (!track?.title) {
       console.log('[shazam-server] Song not recognized.');
@@ -66,7 +87,7 @@ app.post('/api/shazam', upload.single('audio'), async (req, res) => {
 
     const payload: ShazamResponse = {
       title: track.title ?? null,
-      artist: track.subtitle ?? null, // raw Shazam API uses "subtitle" for the artist
+      artist: track.subtitle ?? null,
       coverUrl: track.images?.coverarthq ?? track.images?.coverart ?? null,
     };
 
@@ -91,10 +112,7 @@ app.post('/api/shazam/search', upload.single('audio'), async (req, res) => {
 
     console.log('[shazam-server] Search raw result:', JSON.stringify(result, null, 2));
 
-    const track = (result as any)?.track;
-
-    // Only extract cover art - never use the recognised title/artist, since
-    // the caller already has trusted tag values for those fields.
+    const track = result.track;
     const coverUrl: string | null = track?.images?.coverarthq ?? track?.images?.coverart ?? null;
 
     console.log(`[shazam-server] Cover art URL: ${coverUrl}`);
