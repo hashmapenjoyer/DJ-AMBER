@@ -37,7 +37,10 @@ export default defineConfig([
       // Variables
       'no-var': 'error',
       'prefer-const': 'error',
-      '@typescript-eslint/no-unused-vars': ['error', { varsIgnorePattern: '^_', argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { varsIgnorePattern: '^_', argsIgnorePattern: '^_' },
+      ],
 
       // Naming conventions
       '@typescript-eslint/naming-convention': [
@@ -86,7 +89,7 @@ export default defineConfig([
         },
       ],
 
-      // No #private fields — use TypeScript private keyword
+      // No #private fields - use TypeScript private keyword
       'no-restricted-syntax': [
         'error',
         {
@@ -116,7 +119,7 @@ export default defineConfig([
       // Strict equality
       eqeqeq: ['error', 'always'],
 
-      // No parseInt / parseFloat — use Number()
+      // No parseInt / parseFloat - use Number()
       'no-restricted-globals': [
         'error',
         { name: 'parseInt', message: 'Use Number() instead.' },
@@ -153,7 +156,7 @@ export default defineConfig([
     },
   },
   {
-    // Relaxed rules for test files and mocks — tests need flexibility
+    // Relaxed rules for test files and mocks - tests need flexibility
     // to spy on internals, stub untyped globals, and assert on mock shapes.
     files: ['src/**/__tests__/**/*.ts', 'src/**/*.{test,spec}.ts', 'vitest.config.ts'],
     rules: {

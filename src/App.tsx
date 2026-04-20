@@ -6,7 +6,8 @@ import NowPlaying from './components/NowPlaying';
 import SetList from './components/SetList';
 import Timeline from './components/Timeline/Timeline';
 import { useAudioEngine } from './audio/UseAudioEngine';
-import { extractMetadata } from './audio/extractMetadata';
+// import { extractMetadata } from './audio/extractMetadata';
+import { extractMetadataWithShazam } from './audio/extractMetadata';
 import type { SetListRecord } from '../types/SetListRecord';
 import type { LibraryItem } from '../types/LibraryItem';
 
@@ -76,7 +77,7 @@ function App() {
 
         const [hashBuffer, { title, artist, coverUrl }] = await Promise.all([
           crypto.subtle.digest('SHA-256', arrayBuffer),
-          extractMetadata(file),
+          extractMetadataWithShazam(file),
         ]);
 
         const hash = Array.from(new Uint8Array(hashBuffer))

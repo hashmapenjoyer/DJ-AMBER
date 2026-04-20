@@ -218,8 +218,8 @@ export default function Timeline({ sfxClips, libraryItems, onSfxChange }: Timeli
   // absoluteStart values for music clips. So on drop we translate the pixel
   // position into up to two engine operations:
   //
-  // 1. reorderPlaylist(fromIdx, toIdx)  — if the clip moved past a neighbour
-  // 2. setTransition / removeTransition — based on overlap with neighbours
+  // 1. reorderPlaylist(fromIdx, toIdx)  - if the clip moved past a neighbour
+  // 2. setTransition / removeTransition - based on overlap with neighbours
   //
   // Overlap in pixels / pxPerSec = the crossfade duration in seconds.
   // Ripple vs slip semantics:
