@@ -318,9 +318,7 @@ export default function SetList({
           <div className="setlist-empty">
             <span className="setlist-empty-icon">{'\u266A'}</span>
             <p className="setlist-empty-text">No tracks yet</p>
-            <p className="setlist-empty-hint">
-              Upload songs and drag them onto the timeline to build your set.
-            </p>
+            <p className="setlist-empty-hint">Add songs to curate your set list.</p>
           </div>
         ) : (
           <ul className="setlist-track-list">
