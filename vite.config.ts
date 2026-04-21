@@ -15,4 +15,5 @@ export default defineConfig({
   optimizeDeps: {
     include: ['buffer'],
   },
+  base: '/DJ-AMBER/'
 })
