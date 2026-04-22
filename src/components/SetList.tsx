@@ -54,8 +54,14 @@ export default function SetList({
     currentEntryIdRef.current = engine.getCurrentEntry()?.entryId ?? null;
 
     const unsubSong = engine.on('songChange', ({ entryId }) => {
-      if (repeatModeRef.current === 'one' && currentEntryIdRef.current !== null) {
-        // Song changed - seek back to the start of the previous song.
+      // Only handle real track changes. songChange also fires on seek within the same track,
+      // so without this guard, Repeat One would override seeks by jumping back to absoluteStart.
+      if (
+        repeatModeRef.current === 'one' &&
+        currentEntryIdRef.current !== null &&
+        entryId !== currentEntryIdRef.current
+      ) {
+        // A genuine song transition occurred - seek back to the start of the previous song.
         const prev = engine.getTimeline().find((e) => e.entryId === currentEntryIdRef.current);
         if (prev) {
           engine.transport.seek(prev.absoluteStart);
