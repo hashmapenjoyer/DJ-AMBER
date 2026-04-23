@@ -80,6 +80,17 @@ export default function SetList({
           wasPlayingRef.current = false;
           engine.transport.seek(0);
           void engine.transport.play();
+        } else if (repeatModeRef.current === 'one' && wasPlayingRef.current) {
+          // When the last song finishes, songChange doesn't fire, so Repeat One would silently fall through
+          // This seeks back to the start of the current song and replays it, similar to how songChange handles mid-playlist transitions
+          wasPlayingRef.current = false;
+          const entry = engine.getTimeline().find((e) => e.entryId === currentEntryIdRef.current);
+          if (entry) {
+            engine.transport.seek(entry.absoluteStart);
+            engine.transport.play().catch((err: unknown) => {
+              console.error('Repeat One: playback failed to restart:', err);
+            });
+          }
         } else {
           wasPlayingRef.current = false;
         }
