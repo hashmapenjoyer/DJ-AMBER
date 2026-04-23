@@ -70,14 +70,14 @@ export class TransportController {
     const totalDuration = this.getDuration();
     this.pausedAt = Math.max(0, Math.min(time, totalDuration));
 
+    // Notify before restarting the scheduler to ensure seeked fires before songChange
+    this.onSeek(this.pausedAt);
+
     if (this.state === 'playing') {
       this.scheduler.stopAll();
       this.contextTimeAtPlay = this.ctx.currentTime;
       this.transportTimeAtPlay = this.pausedAt;
       this.scheduler.start(this.pausedAt, this.contextTimeAtPlay);
-    } else {
-      // paused/stopped: playhead moves but no audio, notify so song title updates
-      this.onSeek(this.pausedAt);
     }
   }
 

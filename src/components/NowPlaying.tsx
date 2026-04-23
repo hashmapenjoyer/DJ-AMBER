@@ -116,10 +116,15 @@ export default function NowPlaying({ libraryItems }: NowPlayingProps) {
   };
 
   const handlePlayPause = () => {
-    if (isPlaying) {
+    // Read state directly from the engine, not React state.
+    // play() is async (awaits ctx.resume), so transportState can lag or miss errors,
+    // leaving isPlaying stale and causing no-op play() calls. getState() stays accurate.
+    if (engine.transport.getState() === 'playing') {
       engine.transport.pause();
     } else {
-      void engine.transport.play();
+      engine.transport.play().catch((err: unknown) => {
+        console.error('Playback failed to start:', err);
+      });
     }
   };
 

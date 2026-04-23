@@ -54,8 +54,14 @@ export default function SetList({
     currentEntryIdRef.current = engine.getCurrentEntry()?.entryId ?? null;
 
     const unsubSong = engine.on('songChange', ({ entryId }) => {
-      if (repeatModeRef.current === 'one' && currentEntryIdRef.current !== null) {
-        // Song changed - seek back to the start of the previous song.
+      // Only handle real track changes. songChange also fires on seek within the same track,
+      // so without this guard, Repeat One would override seeks by jumping back to absoluteStart.
+      if (
+        repeatModeRef.current === 'one' &&
+        currentEntryIdRef.current !== null &&
+        entryId !== currentEntryIdRef.current
+      ) {
+        // A genuine automatic song transition occurred - seek back to the start of the previous song.
         const prev = engine.getTimeline().find((e) => e.entryId === currentEntryIdRef.current);
         if (prev) {
           engine.transport.seek(prev.absoluteStart);
@@ -63,6 +69,17 @@ export default function SetList({
         }
       }
       currentEntryIdRef.current = entryId;
+    });
+
+    // When the user seeks on the timeline, update currentEntryIdRef to the song at the new position
+    // to prevent Repeat One from interfering with intentional navigation
+    const unsubSeeked = engine.on('seeked', ({ time }) => {
+      const entry = engine
+        .getTimeline()
+        .find((e) => time >= e.absoluteStart && time < e.absoluteEnd);
+      if (entry) {
+        currentEntryIdRef.current = entry.entryId;
+      }
     });
 
     const unsubState = engine.on('stateChange', ({ state }) => {
@@ -74,6 +91,17 @@ export default function SetList({
           wasPlayingRef.current = false;
           engine.transport.seek(0);
           void engine.transport.play();
+        } else if (repeatModeRef.current === 'one' && wasPlayingRef.current) {
+          // When the last song finishes, songChange doesn't fire, so Repeat One would silently fall through
+          // This seeks back to the start of the current song and replays it, similar to how songChange handles mid-playlist transitions
+          wasPlayingRef.current = false;
+          const entry = engine.getTimeline().find((e) => e.entryId === currentEntryIdRef.current);
+          if (entry) {
+            engine.transport.seek(entry.absoluteStart);
+            engine.transport.play().catch((err: unknown) => {
+              console.error('Repeat One: playback failed to restart:', err);
+            });
+          }
         } else {
           wasPlayingRef.current = false;
         }
@@ -82,6 +110,7 @@ export default function SetList({
 
     return () => {
       unsubSong();
+      unsubSeeked();
       unsubState();
     };
     // engine is a stable singleton - this runs exactly once on mount.

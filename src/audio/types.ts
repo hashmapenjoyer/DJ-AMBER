@@ -66,6 +66,7 @@ export type AudioEngineEvents = {
   timelineChange: { entries: ScheduledEntry[] };
   playlistChange: { entries: PlaylistEntry[] };
   error: { message: string; error?: unknown };
+  seeked: { time: Seconds };
 };
 
 export type { ID, Seconds, Gain, Fade, FadeType };
