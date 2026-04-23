@@ -65,6 +65,9 @@ export class AudioEngine extends EventEmitter<AudioEngineEvents> {
       () => this.playlistManager.getTotalDuration(),
       (state) => this.emit('stateChange', { state }),
       (time) => {
+        // emit seeked first so listeners can update their tracking refs
+        // before the subsequent songChange fires
+        this.emit('seeked', { time });
         const entry = this.playlist.getEntryAtTime(time);
         if (entry)
           this.emit('songChange', {

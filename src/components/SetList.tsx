@@ -61,7 +61,7 @@ export default function SetList({
         currentEntryIdRef.current !== null &&
         entryId !== currentEntryIdRef.current
       ) {
-        // A genuine song transition occurred - seek back to the start of the previous song.
+        // A genuine automatic song transition occurred - seek back to the start of the previous song.
         const prev = engine.getTimeline().find((e) => e.entryId === currentEntryIdRef.current);
         if (prev) {
           engine.transport.seek(prev.absoluteStart);
@@ -69,6 +69,17 @@ export default function SetList({
         }
       }
       currentEntryIdRef.current = entryId;
+    });
+
+    // When the user seeks on the timeline, update currentEntryIdRef to the song at the new position
+    // to prevent Repeat One from interfering with intentional navigation
+    const unsubSeeked = engine.on('seeked', ({ time }) => {
+      const entry = engine
+        .getTimeline()
+        .find((e) => time >= e.absoluteStart && time < e.absoluteEnd);
+      if (entry) {
+        currentEntryIdRef.current = entry.entryId;
+      }
     });
 
     const unsubState = engine.on('stateChange', ({ state }) => {
@@ -99,6 +110,7 @@ export default function SetList({
 
     return () => {
       unsubSong();
+      unsubSeeked();
       unsubState();
     };
     // engine is a stable singleton - this runs exactly once on mount.
