@@ -1,6 +1,7 @@
 # Getting Started
 
 [![CodeQL](https://github.com/hashmapenjoyer/DJ-AMBER/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/hashmapenjoyer/DJ-AMBER/actions/workflows/github-code-scanning/codeql)
+[![Deploy to GitHub Pages](https://github.com/hashmapenjoyer/DJ-AMBER/actions/workflows/deploy.yml/badge.svg)](https://github.com/hashmapenjoyer/DJ-AMBER/actions/workflows/deploy.yml)
 [![Format](https://github.com/hashmapenjoyer/DJ-AMBER/actions/workflows/format.yml/badge.svg)](https://github.com/hashmapenjoyer/DJ-AMBER/actions/workflows/format.yml)
 [![Lint](https://github.com/hashmapenjoyer/DJ-AMBER/actions/workflows/lint.yml/badge.svg)](https://github.com/hashmapenjoyer/DJ-AMBER/actions/workflows/lint.yml)
 [![Test](https://github.com/hashmapenjoyer/DJ-AMBER/actions/workflows/test.yml/badge.svg)](https://github.com/hashmapenjoyer/DJ-AMBER/actions/workflows/test.yml)
